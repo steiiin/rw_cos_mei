@@ -323,10 +323,16 @@ namespace rw_cos_mei
                         dialogError = new AlertDialog.Builder(this)
                             .SetTitle(Resource.String.main_dialog_error_title)
                             .SetMessage(Resource.String.main_dialog_error_msg)
-                            .SetPositiveButton(Resource.String.dialog_retry, (ss, ee) => { RefreshCloud(); })
-                            .SetCancelable(false)
+                            .SetPositiveButton(Resource.String.dialog_retry, (ss, ee) => { })
+                            .SetCancelable(true)
                             .Show();
-                        
+                        dialogError.GetButton((int)DialogButtonType.Positive).Click += delegate {
+
+                            dialogError.Dismiss();
+                            RefreshCloud();
+
+                        };
+
                     }
                     else
                     {
