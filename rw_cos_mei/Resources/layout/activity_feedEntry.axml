@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+	
+    android:background="@color/background">
+	
+	<android.support.design.widget.AppBarLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		
+		android:fitsSystemWindows="true"
+		android:clipToPadding="true">
+		
+		<android.support.v7.widget.Toolbar
+			android:id="@+id/appbar"
+			
+			android:layout_width="match_parent"
+			android:layout_height="@dimen/actionbar_height"
+			
+			app:contentInsetStartWithNavigation="0dp"
+			app:contentInsetRight="0dp"
+			app:contentInsetEnd="0dp"
+			app:contentInsetEndWithActions="0dp"
+			app:elevation="8dp">
+			
+			<TextView
+				android:id="@+id/appbar_title"
+				
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				
+				android:text="#TITLE#"
+				android:layout_gravity="center_vertical"
+				android:singleLine="true"
+				android:ellipsize="end"
+				style="@style/Text.AppTitle"/>
+		
+		</android.support.v7.widget.Toolbar>
+	
+	</android.support.design.widget.AppBarLayout>
+	
+	<android.support.v4.widget.NestedScrollView
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		
+		app:layout_behavior="@string/appbar_scrolling_view_behavior">
+		
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			
+			android:orientation="vertical"
+			android:padding="16dp">
+			
+			<TextView
+				android:id="@+id/txt_date"
+				
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="#DATE#"
+				style="@style/Text.List.Overline"/>
+			
+			<TextView
+				android:id="@+id/txt_title"
+				
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+			
+				android:text="#TITLE#"
+				style="@style/Text.Subhead.Main"/>
+			
+			<TextView
+				android:id="@+id/txt_author"
+				
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+			
+				android:text="Von: #AUTHOR#"
+				style="@style/Text.List.Overline"/>
+			
+			<View
+				android:layout_width="match_parent"
+				android:layout_height="1dp"
+				android:layout_marginTop="8dp"
+				android:layout_marginBottom="8dp"
+				
+				android:background="@color/divider_dim" />
+			
+			<TextView
+				android:id="@+id/txt_body"
+				
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+			
+				android:autoLink="all"
+				android:clickable="true"
+				
+				android:text="#BODYTEXT#"
+				android:textColor="#000"
+				style="@style/Text.List.Subtitle" />
+			
+			<View
+				android:id="@+id/divider_body"
+				
+				android:layout_width="match_parent"
+				android:layout_height="1dp"
+				android:layout_marginTop="8dp"
+				android:layout_marginBottom="8dp"
+				
+				android:background="@color/divider_dim" />
+			
+			<LinearLayout
+				android:id="@+id/list_attachments"
+				
+				android:layout_height="wrap_content"
+				android:layout_width="match_parent">
+
+				<FrameLayout
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content">
+
+				<Button
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+						
+					android:text="#ATTECHMENT.EXT#"
+					style="@style/Widget.AppCompat.Button.Colored"
+						
+					android:textAlignment="textStart" 
+					android:layout_marginRight="72dp" />
+					
+					<ProgressBar
+						android:layout_height="36dp"
+						android:layout_width="36dp"
+						android:layout_marginRight="22dp"
+						
+						android:layout_gravity="right|center_vertical"/>
+					
+				</FrameLayout>
+				
+			</LinearLayout>
+		
+		</LinearLayout>
+	
+	</android.support.v4.widget.NestedScrollView>
+
+</android.support.design.widget.CoordinatorLayout>

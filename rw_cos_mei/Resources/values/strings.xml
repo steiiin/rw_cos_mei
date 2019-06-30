@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  
+  <!-- Metadata -->
+  <string name="app_name">RW Coswig</string>
+  <string name="app_title_top">Neuigkeiten</string>
+  <string name="app_title_bottom">RW Coswig</string>
+  
+  <string name="app_notify_channel_default">Benachrichtigungen</string>
+  <string name="app_notify_channel_default_desc">Benachrichtigungen</string>
+
+  <string name="app_notify_title">Neues von der Rettungswache</string>
+  <string name="app_notify_msg_feed_one">Meldung</string>
+  <string name="app_notify_msg_feed">Meldungen</string>
+  <string name="app_notify_msg_new">Neu:</string>
+  <string name="app_notify_msg_version">Neue Version:</string>
+  
+  <!-- Main -->
+  <string name="main_list_feed_unread_title">Ungelesen (%1$d)</string>
+  <string name="main_list_feed_nounread_title">Keine ungelesenen Neuigkeiten</string>
+  <string name="main_list_feed_read_title">Ältere</string>
+  
+  <string name="main_list_feed_item_update">Aktualisiert: %1$s</string>
+  <string name="main_list_feed_item_version">Version: %1$s</string>
+
+  <string name="main_dialog_login_title">Anmeldung</string>
+  <string name="main_dialog_login_msg">Um Neuigkeiten anzuzeigen, musst du dich mit dem wachenbezogenen Konto anmelden.</string>
+
+  <string name="main_dialog_error_title">Synchronisation</string>
+  <string name="main_dialog_error_msg">Die Neuigkeiten konnten nicht abgerufen werden. Ist das Internet verfügbar?</string>
+
+  <string name="main_dialog_error_attachment_snack">Der Anhang konnte nicht geladen werden. Ist das Internet verfügbar?</string>
+  
+  <!-- FeedEntry -->
+  <string name="feedentry_from">Von: %1$s</string>
+  
+  <!-- Dialoge -->
+  <string name="dialog_toSettings">Zu den Einstellungen</string>
+  <string name="dialog_retry">Wiederholen</string>
+  <string name="dialog_cancel">Abbrechen</string>
+  <string name="dialog_login">Anmelden</string>
+  
+  <!-- Menues -->
+  <string name="menu_settings">Einstellungen</string>
+  <string name="menu_sync">Aktualisieren</string>
+  
+  <string name="menu_shifts">Dienstplan</string>
+  <string name="menu_feed">Neuigkeiten</string>
+  
+  <!-- Einstellungen -->
+  <string name="settings_cred_subhead">Zugang</string>
+  <string name="settings_cred_btn_title">Aktueller Benutzer</string>
+  <string name="settings_cred_btn_noone">Niemand</string>
+
+  <string name="settings_sync_subhead">Synchronisation</string>
+  <string name="settings_sync_time_title">Häufigkeit</string> 
+  <string name="settings_sync_time_desc">Wie oft soll nach Neuigkeiten gesucht werden?</string>
+  <string name="settings_sync_time_op1">Zweimal Täglich</string>
+  <string name="settings_sync_time_op2">Täglich</string>
+  <string name="settings_sync_time_op3">Alle Drei Tage</string>
+
+  <string name="settings_sync_noti_title">Benachrichtigung</string>
+  <string name="settings_sync_noti_newFeed">Neue Meldungen</string>
+  <string name="settings_sync_noti_newShifts">Neuer Dienstpläne</string>
+  <string name="settings_sync_noti_versShifts">Neue Dienstplanversionen</string>
+  
+  <string name="settings_dialog_cred_title">Anmeldung</string>
+  <string name="settings_dialog_cred_msg">Gib die Zugangsdaten ein, die du vom Chef bekommen hast.</string>
+  <string name="settings_dialog_cred_error_email">Gib die wachenbezogenen E-Mailadresse ein.</string>
+  <string name="settings_dialog_cred_error_pass">Gib das Passwort ein.</string>
+    
+</resources>

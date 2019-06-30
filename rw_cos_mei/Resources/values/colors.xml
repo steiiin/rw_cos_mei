@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+  <color name="primary">#ED1C29</color>
+  <color name="primary_dark">#C61723</color>
+  <color name="accent">#ED1C29</color>
+  
+  <color name="background">#ffffff</color>
+
+  <color name="text_list_overline">#99000000</color>
+  <color name="text_list_title">#de000000</color>
+  <color name="text_list_title_inactive">#66000000</color>
+  <color name="text_list_subtitle">#88000000</color>
+  
+  <color name="divider_black">#000000</color>
+  <color name="divider_dim">#1f000000</color>
+  
+</resources>

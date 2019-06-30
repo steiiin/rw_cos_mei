@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout 
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	
+	android:layout_width="match_parent"
+    android:layout_height="match_parent"
+	android:padding="24dp"
+	
+    android:orientation="vertical">
+
+	<android.support.design.widget.TextInputLayout
+		android:id="@+id/layout_username"
+		
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		
+		app:errorEnabled="true">
+
+		<android.support.design.widget.TextInputEditText
+			android:id="@+id/text_username"
+			
+			android:layout_height="wrap_content"
+			android:layout_width="match_parent"
+			
+			android:hint="jemand@malteser.org"
+			android:inputType="textEmailAddress" />
+
+	</android.support.design.widget.TextInputLayout>
+
+	<android.support.design.widget.TextInputLayout
+		android:id="@+id/layout_password"
+		
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		
+		app:errorEnabled="true">
+
+		<android.support.design.widget.TextInputEditText
+			android:id="@+id/text_password"
+			
+			android:layout_height="wrap_content"
+			android:layout_width="match_parent"
+			
+			android:hint="Passwort"
+			android:inputType="textPassword" />
+
+	</android.support.design.widget.TextInputLayout>
+
+</LinearLayout>

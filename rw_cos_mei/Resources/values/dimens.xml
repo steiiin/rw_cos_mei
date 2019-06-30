@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<resources>
+  <dimen name="actionbar_height">56dp</dimen>
+  
+  <dimen name="tool_toolbar_height">36dp</dimen>
+  <dimen name="tool_iconframe_width">36dp</dimen>
+  <dimen name="tool_icon_size">24dp</dimen>
+</resources>

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:local="http://schemas.android.com/apk/res-auto">
+
+  <item android:id="@+id/menu_feed"
+        local:showAsAction="ifRoom"
+        android:title="@string/menu_feed"
+        android:icon="@drawable/ic_nav_feed"/>
+
+  <item android:id="@+id/menu_shifts"
+        local:showAsAction="ifRoom"
+        android:title="@string/menu_shifts"
+        android:icon="@drawable/ic_nav_shifts"/>
+
+</menu>

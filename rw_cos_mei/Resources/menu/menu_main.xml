@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:local="http://schemas.android.com/apk/res-auto">
+
+  <item android:id="@+id/menu_sync"
+        local:showAsAction="always"
+        android:title="@string/menu_sync"
+        android:icon="@drawable/ic_action_sync" />
+  
+  <item android:id="@+id/menu_settings"
+        local:showAsAction="ifRoom"
+        android:title="@string/menu_settings"
+        android:icon="@drawable/ic_action_settings" />
+
+</menu>

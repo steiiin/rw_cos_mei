@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+	
+    android:background="@color/background">
+	
+	<android.support.design.widget.AppBarLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		
+		android:fitsSystemWindows="true"
+		android:clipToPadding="true">
+		
+		<android.support.v7.widget.Toolbar
+			android:id="@+id/appbar"
+			
+			android:layout_width="match_parent"
+			android:layout_height="@dimen/actionbar_height"
+			
+			app:contentInsetStartWithNavigation="0dp"
+			app:contentInsetRight="0dp"
+			app:contentInsetEnd="0dp"
+			app:contentInsetEndWithActions="0dp"
+			app:elevation="8dp">
+			
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				
+				android:text="@string/menu_settings"
+				android:layout_gravity="center_vertical"
+				android:singleLine="true"
+				android:ellipsize="end"
+				style="@style/Text.AppTitle" />
+		
+		</android.support.v7.widget.Toolbar>
+	
+	</android.support.design.widget.AppBarLayout>
+	
+	<android.support.v4.widget.NestedScrollView
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		
+		app:layout_behavior="@string/appbar_scrolling_view_behavior">
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="vertical">
+			<FrameLayout
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="12dp"
+				android:layout_marginBottom="2dp">
+				<TextView
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginLeft="16dp"
+					android:layout_marginStart="16dp"
+					android:layout_gravity="center_vertical"
+					android:text="@string/settings_cred_subhead"
+					style="@style/Text.Subhead.Main" />
+			</FrameLayout>
+			<FrameLayout
+				android:id="@+id/btn_credentialsInput"
+				android:layout_height="72dp"
+				android:layout_width="match_parent"
+				android:background="?android:attr/selectableItemBackground"
+				android:clickable="true">
+				<ImageView
+					android:id="@+id/icon_credentialsInput_ok"
+					android:layout_width="40dp"
+					android:layout_height="40dp"
+					android:layout_margin="16dp"
+					android:src="@drawable/ic_theme_user" />
+				<ImageView
+					android:id="@+id/icon_credentialsInput_error"
+					android:layout_width="40dp"
+					android:layout_height="40dp"
+					android:layout_margin="16dp"
+					android:src="@drawable/ic_theme_noconnection" />
+				<ProgressBar
+					android:id="@+id/icon_credentialsInput_working"
+					android:layout_width="40dp"
+					android:layout_height="40dp"
+					android:layout_margin="16dp"
+					style="@style/Widget.AppCompat.ProgressBar" />
+				<TextView
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="16dp"
+					android:layout_marginLeft="72dp"
+					android:layout_marginStart="72dp"
+					android:text="@string/settings_cred_btn_title"
+					android:gravity="bottom"
+					style="@style/Text.List.Title" />
+				<TextView
+					android:id="@+id/txt_credentialsInput_current"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="34dp"
+					android:layout_marginLeft="72dp"
+					android:layout_marginStart="72dp"
+					android:text="@string/settings_cred_btn_noone"
+					android:singleLine="true"
+					android:ellipsize="end"
+					android:gravity="bottom"
+					style="@style/Text.List.Subtitle" />
+			</FrameLayout>
+			<FrameLayout
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="12dp"
+				android:layout_marginBottom="2dp">
+				<TextView
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginLeft="16dp"
+					android:layout_marginStart="16dp"
+					android:layout_gravity="center_vertical"
+					android:text="@string/settings_sync_subhead"
+					style="@style/Text.Subhead.Main" />
+			</FrameLayout>
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginLeft="16dp"
+				android:layout_marginStart="16dp"
+				android:layout_marginTop="8dp"
+				android:layout_gravity="center_vertical"
+				android:text="@string/settings_sync_time_title"
+				style="@style/Text.List.Title" />
+			<Spinner
+				android:id="@+id/spinner_sync_time"
+				android:layout_width="wrap_content"
+				android:layout_height="32dp"
+				android:layout_marginLeft="12dp"
+				android:layout_marginStart="12dp" />
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginLeft="16dp"
+				android:layout_marginStart="16dp"
+				android:layout_marginTop="16dp"
+				android:layout_gravity="center_vertical"
+				android:text="@string/settings_sync_noti_title"
+				style="@style/Text.List.Title" />
+			<CheckBox
+				android:id="@+id/check_noti_feed"
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:layout_marginLeft="16dp"
+				android:layout_marginStart="16dp"
+				android:text="@string/settings_sync_noti_newFeed" />
+			<CheckBox
+				android:id="@+id/check_noti_shifts"
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:layout_marginLeft="16dp"
+				android:layout_marginStart="16dp"
+				android:text="@string/settings_sync_noti_newShifts" />
+			<CheckBox
+				android:id="@+id/check_noti_shiftsVersion"
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:layout_marginLeft="16dp"
+				android:layout_marginStart="16dp"
+				android:text="@string/settings_sync_noti_versShifts" />
+		</LinearLayout>
+	
+	</android.support.v4.widget.NestedScrollView>
+
+</android.support.design.widget.CoordinatorLayout>

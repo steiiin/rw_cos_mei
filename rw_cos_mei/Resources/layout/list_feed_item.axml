@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout 
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	
+	android:id="@+id/item"
+
+	android:layout_height="64dp"
+	android:layout_width="match_parent"
+					
+	android:background="?android:attr/selectableItemBackground"
+	android:clickable="true">
+					
+	<TextView
+		android:id="@+id/txt_date"
+		
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="14dp"
+		android:layout_marginLeft="16dp"
+		android:layout_marginStart="16dp"
+		
+		android:text="#DATE#"
+		android:gravity="bottom"
+		style="@style/Text.List.Overline" />
+					
+	<TextView
+		android:id="@+id/txt_title"
+						
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="28dp"
+		android:layout_marginLeft="16dp"
+		android:layout_marginStart="16dp"
+						
+		android:text="#TITLE#"
+		android:singleLine="true"
+		android:ellipsize="end"
+		
+		android:gravity="bottom"
+		style="@style/Text.List.Title" />
+	
+	<View
+		android:id="@+id/item_divider"
+		
+		android:layout_width="match_parent"
+		android:layout_height="1dp"
+		
+		android:background="@color/divider_dim"
+		android:layout_gravity="top" />
+				
+</FrameLayout>

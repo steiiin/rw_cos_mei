@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout 
+	xmlns:android="http://schemas.android.com/apk/res/android"
+					
+	android:layout_width="match_parent"
+	android:layout_height="36dp"
+	android:layout_marginTop="8dp"
+	android:layout_marginBottom="8dp"
+	android:background="@color/primary">
+
+	<TextView
+		android:id="@+id/txt_unreadCount"
+		
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginLeft="16dp"
+		android:layout_marginStart="16dp"
+						
+		android:layout_gravity="center_vertical"
+		android:text="#UNREAD_COUNT#"
+		style="@style/Text.Subhead.Main" />
+
+	<FrameLayout
+		android:id="@+id/btn_markAllRead"
+		
+		android:layout_width="36dp"
+		android:layout_height="36dp"
+		android:layout_marginRight="16dp"
+		android:layout_marginEnd="16dp"
+		
+		android:layout_gravity="center_vertical|right"
+		android:background="?android:attr/selectableItemBackgroundBorderless"
+		android:clickable="true">
+
+		<ImageView
+			android:layout_width="24dp"
+			android:layout_height="24dp"
+			android:layout_gravity="center"
+			android:src="@drawable/ic_action_doneall" />
+					
+	</FrameLayout>
+
+</FrameLayout>
