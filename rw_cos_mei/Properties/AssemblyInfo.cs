@@ -8,8 +8,8 @@ using Android.App;
 
 /// <summary>
 /// 
-/// Version: 1.3
-/// !: Abschluss
+/// Version: 1.4
+/// !: Progressbars nicht sichtbar
 /// 
 /// </summary>
 
