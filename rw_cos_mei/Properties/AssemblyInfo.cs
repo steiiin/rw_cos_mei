@@ -12,6 +12,7 @@ using Android.App;
 /// !: Progressbars nicht sichtbar
 /// !: NotifyIntent auf die richtige Seite
 /// !: Zeiten hinzufügen: (3h)
+/// !: Entries ohne Body & Attach ausblenden
 /// 
 /// </summary>
 
