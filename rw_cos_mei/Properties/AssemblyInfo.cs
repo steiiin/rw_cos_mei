@@ -11,6 +11,7 @@ using Android.App;
 /// Version: 1.4
 /// !: Progressbars nicht sichtbar
 /// !: NotifyIntent auf die richtige Seite
+/// !: Zeiten hinzufügen: (3h)
 /// 
 /// </summary>
 
