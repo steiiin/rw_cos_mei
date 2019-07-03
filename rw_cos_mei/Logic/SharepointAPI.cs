@@ -32,11 +32,11 @@ namespace rw_cos_mei
 
         //#########################################################
 
-        private string _url_malteserHost = "https://maltesercloud.sharepoint.com";
-        private string _url_getAdfs = "https://login.microsoftonline.com/GetUserRealm.srf";
-        private string _url_getSpToken = "https://login.microsoftonline.com/rst2.srf";
+        private readonly string _url_malteserHost = "https://maltesercloud.sharepoint.com";
+        private readonly string _url_getAdfs = "https://login.microsoftonline.com/GetUserRealm.srf";
+        private readonly string _url_getSpToken = "https://login.microsoftonline.com/rst2.srf";
 
-        private string _url_endpoint = "https://maltesercloud.sharepoint.com/sites/mhd/DD/RD/RW_Mei/";
+        private readonly string _url_endpoint = "https://maltesercloud.sharepoint.com/sites/mhd/DD/RD/RW_Mei/";
 
         //#########################################################
 
@@ -287,7 +287,8 @@ namespace rw_cos_mei
                             }
 
                             FeedEntry entry = new FeedEntry(key, title, body, date, author, attachmentList);
-                            listFeed.Add(entry);
+                            if (string.IsNullOrWhiteSpace(entry.Body) && entry.Attachments.Count == 0) { }
+                            else { listFeed.Add(entry); }
 
                         }
 
@@ -319,7 +320,19 @@ namespace rw_cos_mei
             
             //Request erstellen
             if (!IsOnline()) { onError(0); return; }
+            if (State == SharepointAPIState.WORKING)
+            {
 
+                onError(1);
+                return;
+
+            }
+            else if (State == SharepointAPIState.ERROR || State == SharepointAPIState.WRONG_LOGIN)
+            {
+                onError(0);
+                return;
+            }
+            
             var client = new DownloadClient(fileAdress, filePath, _cookieJar, _digest);
             client.DownloadProgressChanged += (ss, ee) => { };
             client.DownloadFinished += async (ss, ee) =>
@@ -508,10 +521,10 @@ namespace rw_cos_mei
 
             //##################################################################################
 
-            private string _filePath;
-            private Uri _remotePath;
-            private CookieContainer _cookieJar;
-            private string _digest;
+            private readonly string _filePath;
+            private readonly Uri _remotePath;
+            private readonly CookieContainer _cookieJar;
+            private readonly string _digest;
 
             //##################################################################################
 

@@ -4,25 +4,31 @@
 					
 	android:layout_width="match_parent"
 	android:layout_height="wrap_content">
-
+	
 	<Button
 		android:id="@+id/btn_attachment"
 		
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:layout_marginRight="72dp"
+		android:paddingRight="72dp"
 				
-		android:text="#ATTECHMENT.EXT#"
+		android:text="#ATTECHMENT.EXT# 12345677892039428"
 		android:textAlignment="textStart" 
 		style="@style/Widget.AppCompat.Button.Colored" />
 
 	<ProgressBar
 		android:id="@+id/progress_working"
 						
-		android:layout_height="36dp"
-		android:layout_width="36dp"
-		android:layout_marginRight="22dp"
+		android:elevation="8dp"
 		
-		android:layout_gravity="right|center_vertical" />
+		android:layout_height="30dp"
+		android:layout_width="30dp"
+		android:layout_marginRight="8dp"
+		
+		android:layout_gravity="right|center_vertical"
+	
+	    android:indeterminateTint="#fff"
+		android:indeterminateTintMode="src_atop"
+	    android:indeterminateOnly="true" />
 
 </FrameLayout>

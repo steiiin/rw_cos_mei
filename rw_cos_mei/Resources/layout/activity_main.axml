@@ -57,7 +57,9 @@
 						
 						android:layout_gravity="center"
 						
-						android:indeterminateTint="#fff" />
+						android:indeterminateTint="#fff"
+					    android:indeterminateTintMode="src_atop"
+					    android:indeterminateOnly="true" />
 				
 				</FrameLayout>
 				
@@ -167,8 +169,23 @@
 			android:layout_width="72dp"
 			android:layout_height="72dp"
 			
-			android:layout_gravity="center" />
+			android:layout_gravity="center"
+			
+			android:indeterminateTint="#ED1C29"
+		    android:indeterminateTintMode="src_atop"
+			android:indeterminateOnly="true" />
 
 	</FrameLayout>
+	<FrameLayout
+		android:id="@+id/main_login_overlay"
+		
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:clickable="true"
+		
+		android:visibility="gone"
+		
+		app:layout_behavior="@string/appbar_scrolling_view_behavior"
+		android:background="#aaffffff" />
 		
 </android.support.design.widget.CoordinatorLayout>

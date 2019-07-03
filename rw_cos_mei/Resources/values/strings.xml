@@ -55,6 +55,7 @@
   <string name="settings_sync_subhead">Synchronisation</string>
   <string name="settings_sync_time_title">Häufigkeit</string> 
   <string name="settings_sync_time_desc">Wie oft soll nach Neuigkeiten gesucht werden?</string>
+  <string name="settings_sync_time_op0">Alle drei Stunden</string>
   <string name="settings_sync_time_op1">Zweimal Täglich</string>
   <string name="settings_sync_time_op2">Täglich</string>
   <string name="settings_sync_time_op3">Alle Drei Tage</string>

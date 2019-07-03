@@ -144,7 +144,7 @@ namespace rw_cos_mei
             SupportActionBar.SetDisplayShowCustomEnabled(true);
             SupportActionBar.SetDisplayShowTitleEnabled(false);
 
-            SupportActionBar.SetHomeAsUpIndicator(Resource.Drawable.ic_action_upArrow);
+            SupportActionBar.SetHomeAsUpIndicator(Resource.Drawable.ic_action_uparrow);
             SupportActionBar.SetDisplayHomeAsUpEnabled(true);
 
             c.APPBAR_TITLE.Text = _currentEntry.Date.ToString("dd. MMMM yyyy");
@@ -206,7 +206,7 @@ namespace rw_cos_mei
         public class ListFeedAttachmentAdapter
         {
 
-            private Context _context;
+            private readonly Context _context;
             private FeedEntry _entry;
             
             //####################################################################################
@@ -244,8 +244,11 @@ namespace rw_cos_mei
                 foreach (var item in _entry.Attachments)
                 {
 
-                    Viewholder hold = new Viewholder();
-                    hold.CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feedEntry_attachment, parent, false);
+                    Viewholder hold = new Viewholder
+                    {
+                        CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feedEntry_attachment, parent, false)
+                    };
+
                     hold.BTN_ATTACHMENT = hold.CONVERTVIEW.FindViewById<Button>(Resource.Id.btn_attachment);
                     hold.PROGRESS_INDICATOR = hold.CONVERTVIEW.FindViewById<ProgressBar>(Resource.Id.progress_working);
                     

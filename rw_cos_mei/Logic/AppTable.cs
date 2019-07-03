@@ -45,6 +45,7 @@ namespace rw_cos_mei
 
         public enum SyncIntervalSetting
         {
+            THREE_HOURS,
             TWO_A_DAY,
             ONE_A_DAY,
             ONE_IN_THREE_DAYS
@@ -61,6 +62,9 @@ namespace rw_cos_mei
 
             switch (interval)
             {
+                case SyncIntervalSetting.THREE_HOURS:
+                    return c.GetString(Resource.String.settings_sync_time_op0);
+
                 case SyncIntervalSetting.TWO_A_DAY:
                     return c.GetString(Resource.String.settings_sync_time_op1);
 
@@ -80,6 +84,9 @@ namespace rw_cos_mei
 
             switch (interval)
             {
+                case SyncIntervalSetting.THREE_HOURS:
+                    return 3 * 60 * 60 * 1000;
+
                 case SyncIntervalSetting.TWO_A_DAY:
                     return 12 * 60 * 60 * 1000;
 

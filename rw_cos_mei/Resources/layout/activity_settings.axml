@@ -87,6 +87,11 @@
 					android:layout_width="40dp"
 					android:layout_height="40dp"
 					android:layout_margin="16dp"
+					
+			        android:indeterminateTint="#ED1C29"
+				    android:indeterminateTintMode="src_atop"
+			        android:indeterminateOnly="true"
+					
 					style="@style/Widget.AppCompat.ProgressBar" />
 				<TextView
 					android:layout_width="match_parent"

@@ -99,6 +99,19 @@ namespace rw_cos_mei
 
                 }
             }
+            public bool HasOnlyShifts
+            {
+                get
+                {
+                    if (_type == NotifySettingsType.ONLY_FEED ||
+                        _type == NotifySettingsType.FEED_AND_SHIFTS ||
+                        _type == NotifySettingsType.FEED_AND_SHIFTS_AND_VERSIONS)
+                    {
+                        if (_feedCount > 0) { return false; }
+                    }
+                    return true;
+                }
+            }
 
             public void AddFeedEntry()
             {
@@ -116,7 +129,7 @@ namespace rw_cos_mei
             }
 
             //###########################################
-
+            
             public NotificationCompat.InboxStyle GetInbox()
             {
                 var inbox = new NotificationCompat.InboxStyle();
@@ -168,6 +181,10 @@ namespace rw_cos_mei
 
             Intent intent = new Intent(NotificationContext, typeof(Activity_Main));
             intent.SetFlags(ActivityFlags.NewTask);
+            
+            if(settings.HasOnlyShifts) { intent.PutExtra(Activity_Main.BUNDLE_BOTTOMID_INTENT, Resource.Id.menu_shifts); }
+            else { intent.PutExtra(Activity_Main.BUNDLE_BOTTOMID_INTENT, Resource.Id.menu_feed); }
+
             PendingIntent target = PendingIntent.GetActivity(NotificationContext, 0, intent, 0);
 
             var notify = new NotificationCompat.Builder(NotificationContext, CHANNEL_ID);

@@ -28,6 +28,7 @@ namespace rw_cos_mei
     {
 
         private const string BUNDLE_VIEWSWITCHER_INDEX = "bundle_viewflipper";
+        public const string BUNDLE_BOTTOMID_INTENT = "bundle_bottomid_intent";
 
         private const int VIEWSWITCHER_FEED = 0;
         private const int VIEWSWITCHER_SHIFTS = 1;
@@ -42,6 +43,7 @@ namespace rw_cos_mei
 
             public View REFRESH_PROGRESS;
             public View REFRESH_PROGRESS_OVERLAY;
+            public View REFRESH_DISABLE_OVERLAY;
 
             public LinearLayout LIST_FEED;
             public LinearLayout LIST_SHIFTS;
@@ -121,7 +123,12 @@ namespace rw_cos_mei
             {
                 case (Resource.Id.menu_sync):
 
-                    RefreshCloud();
+                    if (TBL.SP_Object.State == SharepointAPIState.ERROR || TBL.SP_Object.State == SharepointAPIState.OK)
+                    {
+
+                        RefreshCloud();
+
+                    }
                     break;
 
                 case (Resource.Id.menu_settings):
@@ -152,6 +159,7 @@ namespace rw_cos_mei
 
                 REFRESH_PROGRESS = FindViewById(Resource.Id.main_progress),
                 REFRESH_PROGRESS_OVERLAY = FindViewById(Resource.Id.main_progress_overlay),
+                REFRESH_DISABLE_OVERLAY = FindViewById(Resource.Id.main_login_overlay),
 
                 LIST_FEED = FindViewById<LinearLayout>(Resource.Id.main_list_feed),
                 LIST_SHIFTS = FindViewById<LinearLayout>(Resource.Id.main_list_shifts)
@@ -223,8 +231,13 @@ namespace rw_cos_mei
 
         //###################################################################################
 
+        private int _currentBottomId = -1;
+
         private void OnBottomNavigationItemSelected(object sender, BottomNavigationView.NavigationItemSelectedEventArgs e)
         {
+
+            if(_currentBottomId == e.Item.ItemId) { return; }
+            _currentBottomId = e.Item.ItemId;
 
             switch (e.Item.ItemId)
             {
@@ -279,11 +292,13 @@ namespace rw_cos_mei
                     if (c.ADAPTER_FEED.IsEmpty)
                     {
                         c.REFRESH_PROGRESS.Visibility = ViewStates.Gone;
+                        c.REFRESH_DISABLE_OVERLAY.Visibility = ViewStates.Gone;
                         c.REFRESH_PROGRESS_OVERLAY.Visibility = ViewStates.Visible;
                     }
                     else
                     {
                         c.REFRESH_PROGRESS_OVERLAY.Visibility = ViewStates.Gone;
+                        c.REFRESH_DISABLE_OVERLAY.Visibility = ViewStates.Visible;
                         c.REFRESH_PROGRESS.Visibility = ViewStates.Visible;
                     }
 
@@ -315,6 +330,7 @@ namespace rw_cos_mei
 
                     c.REFRESH_PROGRESS.Visibility = ViewStates.Gone;
                     c.REFRESH_PROGRESS_OVERLAY.Visibility = ViewStates.Gone;
+                    c.REFRESH_DISABLE_OVERLAY.Visibility = ViewStates.Gone;
 
                     if (c.ADAPTER_FEED.IsEmpty)
                     {
@@ -337,6 +353,8 @@ namespace rw_cos_mei
                     else
                     {
 
+                        c.REFRESH_DISABLE_OVERLAY.Visibility = ViewStates.Gone;
+
                         //Snackbar anzeigen, mit WIEDERHOLEN
                         View rootView = this.Window.DecorView.FindViewById(Android.Resource.Id.Content);
                         Snackbar snack = Snackbar.Make(rootView, Resource.String.main_dialog_error_msg, Snackbar.LengthLong);
@@ -355,6 +373,7 @@ namespace rw_cos_mei
                     if (dialogError != null) { dialogError.Dismiss(); }
 
                     c.REFRESH_PROGRESS.Visibility = ViewStates.Gone;
+                    c.REFRESH_DISABLE_OVERLAY.Visibility = ViewStates.Gone;
                     c.REFRESH_PROGRESS_OVERLAY.Visibility = ViewStates.Gone;
 
                     //Zeige Datenbank-Zeug

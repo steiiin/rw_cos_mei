@@ -135,12 +135,12 @@ namespace rw_cos_mei
             SupportActionBar.SetDisplayShowCustomEnabled(true);
             SupportActionBar.SetDisplayShowTitleEnabled(false);
 
-            SupportActionBar.SetHomeAsUpIndicator(Resource.Drawable.ic_action_upArrow);
+            SupportActionBar.SetHomeAsUpIndicator(Resource.Drawable.ic_action_uparrow);
             SupportActionBar.SetDisplayHomeAsUpEnabled(true);
 
         }
 
-        private List<TBL.SyncIntervalSetting> listSpinnerIntervalValues = new List<TBL.SyncIntervalSetting>() { TBL.SyncIntervalSetting.TWO_A_DAY, TBL.SyncIntervalSetting.ONE_A_DAY, TBL.SyncIntervalSetting.ONE_IN_THREE_DAYS };
+        private List<TBL.SyncIntervalSetting> listSpinnerIntervalValues = new List<TBL.SyncIntervalSetting>() { TBL.SyncIntervalSetting.THREE_HOURS, TBL.SyncIntervalSetting.TWO_A_DAY, TBL.SyncIntervalSetting.ONE_A_DAY, TBL.SyncIntervalSetting.ONE_IN_THREE_DAYS };
         private void CreateSpinner()
         {
 
