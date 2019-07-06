@@ -8,8 +8,8 @@ using Android.App;
 
 /// <summary>
 /// 
-/// Version: 1.5
-/// 
+/// Version: 1.7
+/// !: IssueFix - Settings Update SharepointState
 /// 
 /// </summary>
 
