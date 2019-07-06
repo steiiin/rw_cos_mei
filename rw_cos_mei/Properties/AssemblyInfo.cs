@@ -8,8 +8,8 @@ using Android.App;
 
 /// <summary>
 /// 
-/// Version: 1.4
-/// !: Attachment erst abfragen, wenn Login fertig      # 
+/// Version: 1.7
+/// !: IssueFix - Settings Update SharepointState
 /// 
 /// </summary>
 
