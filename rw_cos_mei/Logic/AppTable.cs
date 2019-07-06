@@ -25,6 +25,7 @@ namespace rw_cos_mei
 
         public const string SETTINGS_SYNCINTERVAL = "settings_sync_interval";
         public const string SETTINGS_SYNCNOTIFY = "settings_sync_notification";
+        public const string SETTINGS_LASTREFRESH = "settings_sync_lastrefresh";
 
         public const string SETTINGS_BOTTOMNAV_ID = "settings_bottomnav_id";
 
@@ -39,6 +40,7 @@ namespace rw_cos_mei
             Password = password;
 
             SP_Object.SetCredentials(username, password);
+            SaveSettings(cc);
         }
 
         //###################################################################################
@@ -105,10 +107,12 @@ namespace rw_cos_mei
         public static void UpdateSyncInterval(SyncIntervalSetting interval)
         {
             SyncInterval = interval;
+            SaveSettings(cc);
         }
         public static void UpdateSyncNotification(Notification.NotifySettings.NotifySettingsType type)
         {
             NotificationType = type;
+            SaveSettings(cc);
         }
 
         public static void BlockSyncService() { IsSyncBlocked = true; }
@@ -120,9 +124,13 @@ namespace rw_cos_mei
         public static void UpdateBottomNavigationSelectedId(int id)
         {
             BottomNavigationSelectedId = id;
+            SaveSettings(cc);
         }
 
         //###################################################################################
+
+        private static DateTime _tableRefresh;
+        public static DateTime LastTableRefresh { get => _tableRefresh; }
 
         private static Dictionary<string, FeedEntry> _tableFeed;
         private static Dictionary<string, ShiftsEntry> _tableShifts;
@@ -183,7 +191,7 @@ namespace rw_cos_mei
                     {
 
                         _tableFeed.Add(item.Key, item);
-                        notify.AddFeedEntry();
+                        notify.AddFeedEntry(item);
 
                         DB_Object.SaveFeedEntry(item, false);
 
@@ -197,7 +205,10 @@ namespace rw_cos_mei
             {
                 Notify_Object.CreateNotification(notify);
             }
-                
+
+            _tableRefresh = DateTime.Now;
+            SaveSettings(cc);
+
             DB_Object.Close();
 
         }
@@ -238,6 +249,11 @@ namespace rw_cos_mei
                     }
                 }
 
+            }
+
+            if(feed.Count > 0 || shifts.Count > 0)
+            {
+                if(LastTableRefresh == DateTime.MinValue) { _tableRefresh = DateTime.Now; SaveSettings(cc); }
             }
 
         }
@@ -314,6 +330,8 @@ namespace rw_cos_mei
 
         //###################################################################################
 
+        private static Context cc;
+
         public static SharepointAPI SP_Object;
         public static DataSource DB_Object;
         public static Notification Notify_Object;
@@ -343,6 +361,7 @@ namespace rw_cos_mei
         public static void LoadSettings(Context context)
         {
             ISharedPreferences prefs = PreferenceManager.GetDefaultSharedPreferences(context);
+            cc = context;
 
             //Anmeldung
             string get_username = prefs.GetString(SETTINGS_USERNAME, string.Empty);
@@ -357,6 +376,7 @@ namespace rw_cos_mei
             //Listen
             _tableFeed = new Dictionary<string, FeedEntry>();
             _tableShifts = new Dictionary<string, ShiftsEntry>();
+            _tableRefresh = DateTime.Parse(prefs.GetString(SETTINGS_LASTREFRESH, DateTime.MinValue.ToString()));
 
             //Sync-Einstellungen
             SyncInterval = (SyncIntervalSetting)prefs.GetInt(SETTINGS_SYNCINTERVAL, (int)SyncIntervalSetting.ONE_A_DAY);
@@ -381,6 +401,7 @@ namespace rw_cos_mei
 
             editor.PutInt(SETTINGS_SYNCINTERVAL, (int)SyncInterval);
             editor.PutInt(SETTINGS_SYNCNOTIFY, (int)NotificationType);
+            editor.PutString(SETTINGS_LASTREFRESH, LastTableRefresh.ToString());
 
             editor.PutInt(SETTINGS_BOTTOMNAV_ID, BottomNavigationSelectedId);
 

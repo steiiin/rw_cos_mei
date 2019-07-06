@@ -55,10 +55,55 @@ namespace rw_cos_mei
             CreateViewholder();
             CreateToolbar();
             CreateSpinner();
+                        
+        }
 
-            //Oberfläche an Sharepoint-Status anpassen
-            SP_StateChanged(null, new SharepointAPIStateChangedEventArgs(TBL.SP_Object.State));
-            
+        protected override void OnResume()
+        {
+            TBL.SP_Object.StateChanged += SP_Object_StateChanged;
+            SP_Object_StateChanged(null, new SharepointAPIStateChangedEventArgs(TBL.SP_Object.State));
+
+            base.OnResume();
+        }
+        public override void OnPanelClosed(int featureId, IMenu menu)
+        {
+            TBL.SP_Object.StateChanged -= SP_Object_StateChanged;
+            base.OnPanelClosed(featureId, menu);
+        }
+
+        private void SP_Object_StateChanged(object sender, SharepointAPIStateChangedEventArgs e)
+        {
+
+            //Theme-Icon
+            switch (e.State)
+            {
+                case SharepointAPIState.WORKING:
+                    c.BTN_CRED.Tag = "#WORKING#";
+                    c.BTN_ICON_OK.Visibility = ViewStates.Invisible;
+                    c.BTN_ICON_ERROR.Visibility = ViewStates.Invisible;
+                    c.BTN_ICON_WORKING.Visibility = ViewStates.Visible;
+
+                    break;
+                case SharepointAPIState.WRONG_LOGIN:
+                case SharepointAPIState.ERROR:
+                    c.BTN_CRED.Tag = null;
+                    c.BTN_ICON_OK.Visibility = ViewStates.Invisible;
+                    c.BTN_ICON_WORKING.Visibility = ViewStates.Invisible;
+                    c.BTN_ICON_ERROR.Visibility = ViewStates.Visible;
+
+                    break;
+                case SharepointAPIState.OK:
+                case SharepointAPIState.LOGGED_IN:
+                    c.BTN_CRED.Tag = null;
+                    c.BTN_ICON_ERROR.Visibility = ViewStates.Invisible;
+                    c.BTN_ICON_WORKING.Visibility = ViewStates.Invisible;
+                    c.BTN_ICON_OK.Visibility = ViewStates.Visible;
+
+                    break;
+            }
+
+            UpdateLoginButton();
+
         }
 
         //###################################################################################
@@ -119,10 +164,7 @@ namespace rw_cos_mei
             c.CHECK_NOTIFY_NEWFEED.CheckedChange += CHECK_NOTIFY_CHANGED;
             c.CHECK_NOTIFY_NEWSHIFTS.CheckedChange += CHECK_NOTIFY_CHANGED;
             c.CHECK_NOTIFY_NEWSHIFTSVERSION.CheckedChange += CHECK_NOTIFY_CHANGED;
-
-            //SharepointAPI
-            TBL.SP_Object.StateChanged += SP_StateChanged;
-
+            
         }
         
         private void CreateToolbar()
@@ -168,7 +210,6 @@ namespace rw_cos_mei
                 var interval = listSpinnerIntervalValues[e.Position];
 
                 TBL.UpdateSyncInterval(interval);
-                TBL.SaveSettings(this);
 
                 JobSchedulerHelper.CreateSyncJob(this, TBL.GetSyncIntervalSettingTiming(interval));
             }
@@ -219,45 +260,9 @@ namespace rw_cos_mei
             }
 
             TBL.UpdateSyncNotification(state);
-            TBL.SaveSettings(this);
 
         }
-
-        private void SP_StateChanged(object sender, SharepointAPIStateChangedEventArgs e)
-        {
-
-            //Theme-Icon
-            switch (e.State)
-            {
-                case SharepointAPIState.WORKING:
-                    c.BTN_CRED.Tag = "#WORKING#";
-                    c.BTN_ICON_OK.Visibility = ViewStates.Invisible;
-                    c.BTN_ICON_ERROR.Visibility = ViewStates.Invisible;
-                    c.BTN_ICON_WORKING.Visibility = ViewStates.Visible;
-
-                    break;
-                case SharepointAPIState.WRONG_LOGIN:
-                case SharepointAPIState.ERROR:
-                    c.BTN_CRED.Tag = null;
-                    c.BTN_ICON_OK.Visibility = ViewStates.Invisible;
-                    c.BTN_ICON_WORKING.Visibility = ViewStates.Invisible;
-                    c.BTN_ICON_ERROR.Visibility = ViewStates.Visible;
-                    
-                    break;
-                case SharepointAPIState.OK:
-                case SharepointAPIState.LOGGED_IN:
-                    c.BTN_CRED.Tag = null;
-                    c.BTN_ICON_ERROR.Visibility = ViewStates.Invisible;
-                    c.BTN_ICON_WORKING.Visibility = ViewStates.Invisible;
-                    c.BTN_ICON_OK.Visibility = ViewStates.Visible;
-                    
-                    break;
-            }
-
-            UpdateLoginButton();
-
-        }
-        
+                
         //###################################################################################
 
         private void UpdateLoginButton()
@@ -282,7 +287,6 @@ namespace rw_cos_mei
                 async (object ss, Dialogs.DialogCredentialsInputEventArgs ee) => 
                 {
                     TBL.UpdateCredentials(ee.Username, ee.Password);
-                    TBL.SaveSettings(this);
                     
                     await TBL.SP_Object.UpdateNewsFeed();
                 });

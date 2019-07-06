@@ -291,6 +291,8 @@ namespace rw_cos_mei
                     delegate (int error) {
 
                         hold.PROGRESS_INDICATOR.Visibility = ViewStates.Gone;
+                        hold.BTN_ATTACHMENT.Tag = null;
+
                         AttachmentRetrieveError?.Invoke(this, new EventArgs());
 
                     },

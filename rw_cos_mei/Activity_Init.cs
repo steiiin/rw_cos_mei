@@ -34,6 +34,8 @@ namespace rw_cos_mei
             TBL.Init(this);                 //AppTable initialisieren (AppTable = TaBLe)
             TBL.DB_Object.LoadDatabase();   //Feed aus der lokalen Datenbank laden
 
+            TBL.UnBlockSyncService();       //BackgroundSync entsperren
+
             //Job erstellen
             JobSchedulerHelper.CreateSyncJob(this, TBL.GetSyncIntervalSettingTiming(TBL.SyncInterval));
 

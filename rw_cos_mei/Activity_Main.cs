@@ -40,10 +40,10 @@ namespace rw_cos_mei
 
             public BottomNavigationView BOTTOMNAVIGATION;
             public ViewSwitcher VIEWSWITCHER_LISTS;
+            public TextView TOOLBAR_REFRESHTIMER;
 
             public View REFRESH_PROGRESS;
             public View REFRESH_PROGRESS_OVERLAY;
-            public View REFRESH_DISABLE_OVERLAY;
 
             public LinearLayout LIST_FEED;
             public LinearLayout LIST_SHIFTS;
@@ -92,15 +92,24 @@ namespace rw_cos_mei
             base.OnResume();
 
             //Oberfläche an Sharepoint-Status anpassen
+            TBL.SP_Object.StateChanged += SP_Object_StateChanged;
             ViewStateChanger(TBL.SP_Object.State);
 
             //Refresh erst beginnen, wenn App startet
             if (onStartup)
             {
                 onStartup = false;
-                RefreshCloud();
+                if((DateTime.Now - TBL.LastTableRefresh).TotalMinutes > 30)
+                {
+                    RefreshCloud();
+                }
             }
 
+        }
+        protected override void OnPause()
+        {
+            TBL.SP_Object.StateChanged -= SP_Object_StateChanged;
+            base.OnPause();
         }
 
         protected override void OnDestroy()
@@ -123,7 +132,7 @@ namespace rw_cos_mei
             {
                 case (Resource.Id.menu_sync):
 
-                    if (TBL.SP_Object.State == SharepointAPIState.ERROR || TBL.SP_Object.State == SharepointAPIState.OK)
+                    if (TBL.SP_Object.State != SharepointAPIState.WORKING)
                     {
 
                         RefreshCloud();
@@ -156,10 +165,10 @@ namespace rw_cos_mei
             {
                 BOTTOMNAVIGATION = FindViewById<BottomNavigationView>(Resource.Id.main_bottomNavigation),
                 VIEWSWITCHER_LISTS = FindViewById<ViewSwitcher>(Resource.Id.main_viewSwitcher),
+                TOOLBAR_REFRESHTIMER = FindViewById<TextView>(Resource.Id.main_lastrefresh),
 
                 REFRESH_PROGRESS = FindViewById(Resource.Id.main_progress),
                 REFRESH_PROGRESS_OVERLAY = FindViewById(Resource.Id.main_progress_overlay),
-                REFRESH_DISABLE_OVERLAY = FindViewById(Resource.Id.main_login_overlay),
 
                 LIST_FEED = FindViewById<LinearLayout>(Resource.Id.main_list_feed),
                 LIST_SHIFTS = FindViewById<LinearLayout>(Resource.Id.main_list_shifts)
@@ -171,11 +180,9 @@ namespace rw_cos_mei
             //Events
             c.BOTTOMNAVIGATION.NavigationItemSelected += OnBottomNavigationItemSelected;
             c.BOTTOMNAVIGATION.SelectedItemId = TBL.BottomNavigationSelectedId;
-
-            TBL.SP_Object.StateChanged += (s,e) => { ViewStateChanger(e.State); };
-
+            
         }
-        
+
         private void CreateToolbar()
         {
 
@@ -185,9 +192,29 @@ namespace rw_cos_mei
 
             SupportActionBar.SetDisplayShowCustomEnabled(true);
             SupportActionBar.SetDisplayShowTitleEnabled(false);
+            
+        }
+        private void UpdateRefreshTimer()
+        {
+
+            string timer = GetString(Resource.String.main_norefresh);
+
+            if(TBL.LastTableRefresh != DateTime.MinValue)
+            {
+                if(TBL.LastTableRefresh.Day == DateTime.Now.Day && TBL.LastTableRefresh.Month == DateTime.Now.Month && TBL.LastTableRefresh.Year == DateTime.Now.Year)
+                {
+                    timer = TBL.LastTableRefresh.ToString("t");
+                }
+                else
+                {
+                    timer = TBL.LastTableRefresh.ToString("g");
+                }
+            }
+
+            c.TOOLBAR_REFRESHTIMER.Text = GetString(Resource.String.main_list_feed_item_update, timer);
 
         }
-
+        
         private void CreateListAdapters()
         {
 
@@ -224,9 +251,6 @@ namespace rw_cos_mei
 
             };
             
-            c.ADAPTER_FEED.Inflate();
-            c.ADAPTER_SHIFTS.Inflate();
-
         }
 
         //###################################################################################
@@ -260,9 +284,7 @@ namespace rw_cos_mei
 
                     break;
             }
-
-            TBL.SaveSettings(this);
-
+            
         }
         
         //###################################################################################
@@ -272,8 +294,13 @@ namespace rw_cos_mei
             TBL.BlockSyncService();
             await TBL.SP_Object.UpdateNewsFeed();
         }
-        
+
         //###################################################################################
+
+        private void SP_Object_StateChanged(object sender, SharepointAPIStateChangedEventArgs e)
+        {
+            ViewStateChanger(e.State);
+        }
 
         private void ViewStateChanger(SharepointAPIState state)
         {
@@ -284,7 +311,6 @@ namespace rw_cos_mei
             switch (state)
             {
                 case SharepointAPIState.WORKING:
-                case SharepointAPIState.LOGGED_IN:
 
                     TBL.BlockSyncService();
 
@@ -292,13 +318,11 @@ namespace rw_cos_mei
                     if (c.ADAPTER_FEED.IsEmpty)
                     {
                         c.REFRESH_PROGRESS.Visibility = ViewStates.Gone;
-                        c.REFRESH_DISABLE_OVERLAY.Visibility = ViewStates.Gone;
                         c.REFRESH_PROGRESS_OVERLAY.Visibility = ViewStates.Visible;
                     }
                     else
                     {
                         c.REFRESH_PROGRESS_OVERLAY.Visibility = ViewStates.Gone;
-                        c.REFRESH_DISABLE_OVERLAY.Visibility = ViewStates.Visible;
                         c.REFRESH_PROGRESS.Visibility = ViewStates.Visible;
                     }
 
@@ -330,7 +354,6 @@ namespace rw_cos_mei
 
                     c.REFRESH_PROGRESS.Visibility = ViewStates.Gone;
                     c.REFRESH_PROGRESS_OVERLAY.Visibility = ViewStates.Gone;
-                    c.REFRESH_DISABLE_OVERLAY.Visibility = ViewStates.Gone;
 
                     if (c.ADAPTER_FEED.IsEmpty)
                     {
@@ -352,9 +375,7 @@ namespace rw_cos_mei
                     }
                     else
                     {
-
-                        c.REFRESH_DISABLE_OVERLAY.Visibility = ViewStates.Gone;
-
+                        
                         //Snackbar anzeigen, mit WIEDERHOLEN
                         View rootView = this.Window.DecorView.FindViewById(Android.Resource.Id.Content);
                         Snackbar snack = Snackbar.Make(rootView, Resource.String.main_dialog_error_msg, Snackbar.LengthLong);
@@ -366,6 +387,8 @@ namespace rw_cos_mei
                     break;
 
                 case SharepointAPIState.OK:
+                case SharepointAPIState.LOGGED_IN:
+                case SharepointAPIState.OFFLINE:
 
                     TBL.UnBlockSyncService();
 
@@ -373,8 +396,9 @@ namespace rw_cos_mei
                     if (dialogError != null) { dialogError.Dismiss(); }
 
                     c.REFRESH_PROGRESS.Visibility = ViewStates.Gone;
-                    c.REFRESH_DISABLE_OVERLAY.Visibility = ViewStates.Gone;
                     c.REFRESH_PROGRESS_OVERLAY.Visibility = ViewStates.Gone;
+
+                    UpdateRefreshTimer();
 
                     //Zeige Datenbank-Zeug
                     c.ADAPTER_FEED.Inflate();
@@ -726,6 +750,7 @@ namespace rw_cos_mei
 
                         c.PROGRESS_ATTACHDOWNLOAD.Visibility = ViewStates.Gone;
                         c.TXT_VERSION.Visibility = ViewStates.Visible;
+                        c.SENDER.Tag = null;
 
                         AttachmentRetrieveError?.Invoke(this, new EventArgs());
 

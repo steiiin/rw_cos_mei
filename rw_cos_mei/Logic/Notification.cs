@@ -49,10 +49,10 @@ namespace rw_cos_mei
 
             //###########################################
 
-            private NotifySettingsType _type;
+            private readonly NotifySettingsType _type;
             private Context _context;
 
-            private int _feedCount = 0;
+            private List<string> _newFeed = new List<string>();
             private List<string> _newShifts = new List<string>();
             private List<string> _newShiftsVersion = new List<string>();
 
@@ -63,7 +63,7 @@ namespace rw_cos_mei
                 _context = context;
                 _type = type;
 
-                _feedCount = 0;
+                _newFeed = new List<string>();
                 _newShifts = new List<string>();
                 _newShiftsVersion = new List<string>();
             }
@@ -78,7 +78,7 @@ namespace rw_cos_mei
                         _type == NotifySettingsType.FEED_AND_SHIFTS ||
                         _type == NotifySettingsType.FEED_AND_SHIFTS_AND_VERSIONS)
                     {
-                        if(_feedCount > 0) { empty = false; }
+                        if(_newFeed.Count > 0) { empty = false; }
                     }
 
                     if (_type == NotifySettingsType.ONLY_SHIFTS ||
@@ -107,15 +107,15 @@ namespace rw_cos_mei
                         _type == NotifySettingsType.FEED_AND_SHIFTS ||
                         _type == NotifySettingsType.FEED_AND_SHIFTS_AND_VERSIONS)
                     {
-                        if (_feedCount > 0) { return false; }
+                        if (_newFeed.Count > 0) { return false; }
                     }
                     return true;
                 }
             }
 
-            public void AddFeedEntry()
+            public void AddFeedEntry(FeedEntry item)
             {
-                _feedCount += 1;
+                _newFeed.Add(item.Title);
             }
             public void AddNewShifts(ShiftsEntry item)
             {
@@ -138,14 +138,19 @@ namespace rw_cos_mei
                    _type == NotifySettingsType.FEED_AND_SHIFTS ||
                    _type == NotifySettingsType.FEED_AND_SHIFTS_AND_VERSIONS)
                 {
-                    if (_feedCount == 1)
+
+                    if(_newFeed.Count > 10)
                     {
-                        inbox.AddLine("1 " + _context.GetString(Resource.String.app_notify_msg_feed_one));
+                        inbox.AddLine(_newFeed.Count + " " + _context.GetString(Resource.String.app_notify_msg_feed));
                     }
-                    else if (_feedCount >= 2)
+                    else
                     {
-                        inbox.AddLine(_feedCount + " " + _context.GetString(Resource.String.app_notify_msg_feed));
+                        foreach (var item in _newFeed)
+                        {
+                            inbox.AddLine(item);
+                        }
                     }
+                    
                 }
 
                 if (_type == NotifySettingsType.ONLY_SHIFTS ||

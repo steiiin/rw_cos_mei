@@ -80,11 +80,13 @@
 						style="@style/Text.AppTitle.Top" />
 				
 					<TextView
+						android:id="@+id/main_lastrefresh"
+						
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						android:layout_marginTop="9dp"
 					
-						android:text="@string/app_title_bottom"
+						android:text="#LASTREFRESH#"
 						android:layout_gravity="center_vertical"
 					
 						style="@style/Text.AppTitle.Bottom"  />
@@ -176,16 +178,5 @@
 			android:indeterminateOnly="true" />
 
 	</FrameLayout>
-	<FrameLayout
-		android:id="@+id/main_login_overlay"
-		
-		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		android:clickable="true"
-		
-		android:visibility="gone"
-		
-		app:layout_behavior="@string/appbar_scrolling_view_behavior"
-		android:background="#aaffffff" />
 		
 </android.support.design.widget.CoordinatorLayout>

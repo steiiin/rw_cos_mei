@@ -58,7 +58,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Jsoup">
-      <HintPath>D:\Dateien\Arbeitsplatz\rw_cos_mei\rw_cos_mei\bin\Debug\Jsoup.dll</HintPath>
+      <HintPath>C:\Users\Gordian Steinmann\Desktop\weg\bbbbbbbbb\packages\Jsoup.1.0.0\lib\Jsoup.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
@@ -81,7 +81,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Properties\AndroidManifest.xml" />
+    <None Include="Properties\AndroidManifest.xml">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\AboutAssets.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -368,9 +370,6 @@
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\drawable-xhdpi\ic_notifications_off.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Jsoup.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

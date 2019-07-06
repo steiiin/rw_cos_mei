@@ -3461,26 +3461,26 @@ namespace rw_cos_mei
 			// aapt resource value: 0x7f0a0070
 			public const int list_item = 2131361904;
 			
-			// aapt resource value: 0x7f0a00aa
-			public const int main_bottomNavigation = 2131361962;
+			// aapt resource value: 0x7f0a00ab
+			public const int main_bottomNavigation = 2131361963;
 			
-			// aapt resource value: 0x7f0a00a8
-			public const int main_list_feed = 2131361960;
+			// aapt resource value: 0x7f0a00a7
+			public const int main_lastrefresh = 2131361959;
 			
 			// aapt resource value: 0x7f0a00a9
-			public const int main_list_shifts = 2131361961;
+			public const int main_list_feed = 2131361961;
 			
-			// aapt resource value: 0x7f0a00ac
-			public const int main_login_overlay = 2131361964;
+			// aapt resource value: 0x7f0a00aa
+			public const int main_list_shifts = 2131361962;
 			
 			// aapt resource value: 0x7f0a00a6
 			public const int main_progress = 2131361958;
 			
-			// aapt resource value: 0x7f0a00ab
-			public const int main_progress_overlay = 2131361963;
+			// aapt resource value: 0x7f0a00ac
+			public const int main_progress_overlay = 2131361964;
 			
-			// aapt resource value: 0x7f0a00a7
-			public const int main_viewSwitcher = 2131361959;
+			// aapt resource value: 0x7f0a00a8
+			public const int main_viewSwitcher = 2131361960;
 			
 			// aapt resource value: 0x7f0a00e3
 			public const int masked = 2131362019;
@@ -4328,17 +4328,14 @@ namespace rw_cos_mei
 			// aapt resource value: 0x7f0d003a
 			public const int app_notify_channel_default_desc = 2131558458;
 			
-			// aapt resource value: 0x7f0d003d
-			public const int app_notify_msg_feed = 2131558461;
-			
 			// aapt resource value: 0x7f0d003c
-			public const int app_notify_msg_feed_one = 2131558460;
+			public const int app_notify_msg_feed = 2131558460;
+			
+			// aapt resource value: 0x7f0d003d
+			public const int app_notify_msg_new = 2131558461;
 			
 			// aapt resource value: 0x7f0d003e
-			public const int app_notify_msg_new = 2131558462;
-			
-			// aapt resource value: 0x7f0d003f
-			public const int app_notify_msg_version = 2131558463;
+			public const int app_notify_msg_version = 2131558462;
 			
 			// aapt resource value: 0x7f0d003b
 			public const int app_notify_title = 2131558459;
@@ -4400,20 +4397,23 @@ namespace rw_cos_mei
 			// aapt resource value: 0x7f0d0045
 			public const int main_dialog_login_title = 2131558469;
 			
-			// aapt resource value: 0x7f0d0043
-			public const int main_list_feed_item_update = 2131558467;
-			
-			// aapt resource value: 0x7f0d0044
-			public const int main_list_feed_item_version = 2131558468;
-			
-			// aapt resource value: 0x7f0d0041
-			public const int main_list_feed_nounread_title = 2131558465;
-			
 			// aapt resource value: 0x7f0d0042
-			public const int main_list_feed_read_title = 2131558466;
+			public const int main_list_feed_item_update = 2131558466;
+			
+			// aapt resource value: 0x7f0d0043
+			public const int main_list_feed_item_version = 2131558467;
 			
 			// aapt resource value: 0x7f0d0040
-			public const int main_list_feed_unread_title = 2131558464;
+			public const int main_list_feed_nounread_title = 2131558464;
+			
+			// aapt resource value: 0x7f0d0041
+			public const int main_list_feed_read_title = 2131558465;
+			
+			// aapt resource value: 0x7f0d003f
+			public const int main_list_feed_unread_title = 2131558463;
+			
+			// aapt resource value: 0x7f0d0044
+			public const int main_norefresh = 2131558468;
 			
 			// aapt resource value: 0x7f0d0052
 			public const int menu_feed = 2131558482;

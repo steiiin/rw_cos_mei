@@ -44,7 +44,7 @@ namespace rw_cos_mei
 
         //#########################################################
 
-        public SharepointAPIState State { get; private set; } = SharepointAPIState.WORKING;
+        public SharepointAPIState State { get; private set; } = SharepointAPIState.OFFLINE;
 
         private string _username;
         private string _password;
@@ -239,6 +239,8 @@ namespace rw_cos_mei
             if (await CreateLogin())
             {
 
+                InvokeStateChanged(SharepointAPIState.WORKING);
+
                 string query = "_api/web/lists/getbytitle('Neues%20aus%20der%20Rettungswache')/items?$select=ID,Title,Body,Modified,AttachmentFiles,Author/Name,Author/Title&$orderby=Modified%20desc&$expand=AttachmentFiles,Author/Id";
 
                 try
@@ -308,7 +310,7 @@ namespace rw_cos_mei
 
         }
 
-        public void GetNewsFeedAttachment(EntryAttachment attachment, Action<int> onError, Action<string> onDownloaded, bool relogin = true)
+        public async void GetNewsFeedAttachment(EntryAttachment attachment, Action<int> onError, Action<string> onDownloaded, bool relogin = true)
         {
 
             string tmpRaw = Path.GetTempFileName();
@@ -320,14 +322,13 @@ namespace rw_cos_mei
             
             //Request erstellen
             if (!IsOnline()) { onError(0); return; }
-            if (State == SharepointAPIState.WORKING)
+
+            while (State == SharepointAPIState.WORKING)
             {
-
-                onError(1);
-                return;
-
+                await Task.Delay(200);
             }
-            else if (State == SharepointAPIState.ERROR || State == SharepointAPIState.WRONG_LOGIN)
+
+            if (State == SharepointAPIState.ERROR || State == SharepointAPIState.WRONG_LOGIN)
             {
                 onError(0);
                 return;
@@ -512,7 +513,6 @@ namespace rw_cos_mei
             public DownloadClientFinishedEventArgs(bool finished) { DownloadFinished = finished; }
             public bool DownloadFinished { get; }
         }
-
         private class DownloadClient
         {
 
@@ -619,6 +619,7 @@ namespace rw_cos_mei
 
     public enum SharepointAPIState
     {
+        OFFLINE,
         WORKING,
         LOGGED_IN,
         OK,
