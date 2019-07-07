@@ -5,11 +5,11 @@ using Android.App;
 
 [assembly: AssemblyTitle("rw_cos_mei")]
 [assembly: ComVisible(false)]
+[assembly: AssemblyVersion("1.7")]
 
 /// <summary>
 /// 
 /// Version: 1.7
-/// !: IssueFix - Settings Update SharepointState
 /// 
 /// </summary>
 

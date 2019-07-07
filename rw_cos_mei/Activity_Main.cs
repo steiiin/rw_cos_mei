@@ -613,7 +613,7 @@ namespace rw_cos_mei
             }
 
         }
-        public class ListFeedAdapterItemSelectedEventArgs
+        public class ListFeedAdapterItemSelectedEventArgs : EventArgs
         {
             public ListFeedAdapterItemSelectedEventArgs(string entryKey)
             {
@@ -775,7 +775,7 @@ namespace rw_cos_mei
             }
 
         }
-        public class ListShiftsAdapterItemSelectedEventArgs
+        public class ListShiftsAdapterItemSelectedEventArgs : EventArgs
         {
             public ListShiftsAdapterItemSelectedEventArgs(string entryKey, string attachmentKey)
             {

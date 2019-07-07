@@ -127,10 +127,7 @@ namespace rw_cos_mei
             SaveSettings(cc);
         }
 
-        //###################################################################################
-
-        private static DateTime _tableRefresh;
-        public static DateTime LastTableRefresh { get => _tableRefresh; }
+        public static DateTime LastTableRefresh { get; private set; }
 
         private static Dictionary<string, FeedEntry> _tableFeed;
         private static Dictionary<string, ShiftsEntry> _tableShifts;
@@ -206,7 +203,7 @@ namespace rw_cos_mei
                 Notify_Object.CreateNotification(notify);
             }
 
-            _tableRefresh = DateTime.Now;
+            LastTableRefresh = DateTime.Now;
             SaveSettings(cc);
 
             DB_Object.Close();
@@ -253,7 +250,7 @@ namespace rw_cos_mei
 
             if(feed.Count > 0 || shifts.Count > 0)
             {
-                if(LastTableRefresh == DateTime.MinValue) { _tableRefresh = DateTime.Now; SaveSettings(cc); }
+                if(LastTableRefresh == DateTime.MinValue) { LastTableRefresh = DateTime.Now; SaveSettings(cc); }
             }
 
         }
@@ -344,7 +341,7 @@ namespace rw_cos_mei
             //Datenbank
             DB_Object = new DataSource(context);
 
-            ////Benachrichtungen
+            //Benachrichtungen
             Notify_Object = new Notification(context);
 
             //Einstellungen laden
@@ -376,7 +373,7 @@ namespace rw_cos_mei
             //Listen
             _tableFeed = new Dictionary<string, FeedEntry>();
             _tableShifts = new Dictionary<string, ShiftsEntry>();
-            _tableRefresh = DateTime.Parse(prefs.GetString(SETTINGS_LASTREFRESH, DateTime.MinValue.ToString()));
+            LastTableRefresh = DateTime.Parse(prefs.GetString(SETTINGS_LASTREFRESH, DateTime.MinValue.ToString()));
 
             //Sync-Einstellungen
             SyncInterval = (SyncIntervalSetting)prefs.GetInt(SETTINGS_SYNCINTERVAL, (int)SyncIntervalSetting.ONE_A_DAY);

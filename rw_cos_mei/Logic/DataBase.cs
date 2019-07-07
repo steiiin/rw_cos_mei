@@ -144,7 +144,7 @@ namespace rw_cos_mei
 
     }
 
-    public class DataSource
+    public class DataSource : IDisposable
     {
 
         private SQLiteDatabase database;
@@ -152,7 +152,7 @@ namespace rw_cos_mei
 
         //###############################################################################
 
-        private string[] FEED_COLUMNS =
+        private readonly string[] FEED_COLUMNS =
         {
             DatabaseHelper.FEED_TABLE_COL_ID,
             DatabaseHelper.FEED_TABLE_COL_KEY,
@@ -162,7 +162,7 @@ namespace rw_cos_mei
             DatabaseHelper.FEED_TABLE_COL_BODY,
             DatabaseHelper.FEED_TABLE_COL_READ
         };
-        private string[] SHIFTS_COLUMNS =
+        private readonly string[] SHIFTS_COLUMNS =
         {
             DatabaseHelper.SHIFT_TABLE_COL_ID,
             DatabaseHelper.SHIFT_TABLE_COL_KEY,
@@ -173,7 +173,7 @@ namespace rw_cos_mei
             DatabaseHelper.SHIFT_TABLE_COL_VERSION,
             DatabaseHelper.SHIFT_TABLE_COL_READ
         };
-        private string[] ATTACH_COLUMNS =
+        private readonly string[] ATTACH_COLUMNS =
         {
             DatabaseHelper.ATTACH_TABLE_COL_ID,
             DatabaseHelper.ATTACH_TABLE_COL_KEY,
@@ -184,7 +184,7 @@ namespace rw_cos_mei
             DatabaseHelper.ATTACH_TABLE_COL_LOCAL
         };
 
-        private int OLDOFFSET_DELETE_MONTHS = 12;
+        private const int OLDOFFSET_DELETE_MONTHS = 12;
 
         //###############################################################################
         
@@ -459,8 +459,7 @@ namespace rw_cos_mei
                 string remotePath = c.GetString(ID_remotePath);
                 string localPath = c.GetString(ID_localPath);
 
-                EntryAttachment aE = new EntryAttachment(key, filename, remotePath, localPath);
-                aE.ID = sql_id;
+                EntryAttachment aE = new EntryAttachment(key, filename, remotePath, localPath) { ID = sql_id };
 
                 if (!dictAttachments.ContainsKey(owner)) { dictAttachments.Add(owner, new Dictionary<int, List<EntryAttachment>>()); }
                 if (!dictAttachments[owner].ContainsKey(ownerID)) { dictAttachments[owner].Add(ownerID, new List<EntryAttachment>()); }
@@ -498,10 +497,7 @@ namespace rw_cos_mei
                 listAttachments = dictAttachments[DatabaseHelper.OWNER_FEED][sql_id];
             }
 
-            FeedEntry result = new FeedEntry(key, title, body, date, author, listAttachments);
-            result.MarkedRead = (read == DatabaseHelper.BOOL_TRUE);
-            result.ID = sql_id;
-
+            FeedEntry result = new FeedEntry(key, title, body, date, author, listAttachments) { MarkedRead = (read == DatabaseHelper.BOOL_TRUE), ID = sql_id };
             return result;
 
         }
@@ -528,10 +524,7 @@ namespace rw_cos_mei
 
             var listAttachments = dictAttachments[DatabaseHelper.OWNER_SHIFTS][sql_id];
 
-            ShiftsEntry result = new ShiftsEntry(month, year, update, version, listAttachments.First());
-            result.MarkedRead = (read == DatabaseHelper.BOOL_TRUE);
-            result.ID = sql_id;
-
+            ShiftsEntry result = new ShiftsEntry(month, year, update, version, listAttachments.First()) { MarkedRead = (read == DatabaseHelper.BOOL_TRUE), ID = sql_id };
             return result;
 
         }
@@ -605,6 +598,34 @@ namespace rw_cos_mei
             { }
 
         }
+
+        //###############################################################################
+
+        #region IDisposable Support
+
+        private bool disposedValue = false; // Dient zur Erkennung redundanter Aufrufe.
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    Close();
+                }
+                
+                disposedValue = true;
+            }
+        }
+        
+        public void Dispose()
+        {
+
+            Dispose(true);
+
+        }
+
+        #endregion
 
     }
     

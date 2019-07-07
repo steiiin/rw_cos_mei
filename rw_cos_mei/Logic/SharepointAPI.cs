@@ -627,7 +627,7 @@ namespace rw_cos_mei
         ERROR
     }
 
-    public class SharepointAPIStateChangedEventArgs
+    public class SharepointAPIStateChangedEventArgs : EventArgs
     {
         public SharepointAPIStateChangedEventArgs(SharepointAPIState state) { State = state; }
         public SharepointAPIState State { get; }

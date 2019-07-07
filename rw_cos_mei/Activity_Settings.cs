@@ -65,10 +65,10 @@ namespace rw_cos_mei
 
             base.OnResume();
         }
-        public override void OnPanelClosed(int featureId, IMenu menu)
+        protected override void OnPause()
         {
             TBL.SP_Object.StateChanged -= SP_Object_StateChanged;
-            base.OnPanelClosed(featureId, menu);
+            base.OnPause();
         }
 
         private void SP_Object_StateChanged(object sender, SharepointAPIStateChangedEventArgs e)
@@ -94,6 +94,7 @@ namespace rw_cos_mei
                     break;
                 case SharepointAPIState.OK:
                 case SharepointAPIState.LOGGED_IN:
+                case SharepointAPIState.OFFLINE:
                     c.BTN_CRED.Tag = null;
                     c.BTN_ICON_ERROR.Visibility = ViewStates.Invisible;
                     c.BTN_ICON_WORKING.Visibility = ViewStates.Invisible;

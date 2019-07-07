@@ -315,7 +315,7 @@ namespace rw_cos_mei
             
         }
 
-        public class ListFeedAttachmentAdapterEntrySelected
+        public class ListFeedAttachmentAdapterEntrySelected : EventArgs
         {
             public ListFeedAttachmentAdapterEntrySelected(string entryKey, string attachmentKey)
             {
