@@ -29,6 +29,8 @@ namespace rw_cos_mei
 
         public const string SETTINGS_BOTTOMNAV_ID = "settings_bottomnav_id";
 
+        public const int SETTINGS_OLDFEED_MONTHOFFSET = 12;
+        
         //###################################################################################
 
         public static string Username { get; private set; }
@@ -143,58 +145,64 @@ namespace rw_cos_mei
             //Table erstellen
             if(_tableFeed == null) { _tableFeed = new Dictionary<string, FeedEntry>(); }
             if(_tableShifts == null) { _tableShifts = new Dictionary<string, ShiftsEntry>(); }
-            
+
             //Rohentries verarbeiten
+            DateTime oldOffset = DateTime.Now.AddMonths(-SETTINGS_OLDFEED_MONTHOFFSET);
+
             foreach (var item in list)
             {
 
-                if(IsShiftsEntry(item, out ShiftsEntry shiftsItem))
-                {
+                if(item.Date > oldOffset) { 
 
-                    //ShiftsEntry
-                    if (!_tableShifts.ContainsKey(shiftsItem.Key))
+                    if(IsShiftsEntry(item, out ShiftsEntry shiftsItem))
                     {
 
-                        _tableShifts.Add(shiftsItem.Key, shiftsItem);
+                        //ShiftsEntry
+                        if (!_tableShifts.ContainsKey(shiftsItem.Key))
+                        {
 
-                        notify.AddNewShifts(shiftsItem);
+                            _tableShifts.Add(shiftsItem.Key, shiftsItem);
 
-                        DB_Object.SaveShiftsEntry(shiftsItem, false);
+                            notify.AddNewShifts(shiftsItem);
+
+                            DB_Object.SaveShiftsEntry(shiftsItem, false);
+
+                        }
+                        else
+                        {
+
+                            DateTime oldTime = _tableShifts[shiftsItem.Key].LastUpdate;
+                            if (oldTime < shiftsItem.LastUpdate)
+                            {
+
+                                int oldID = _tableShifts[shiftsItem.Key].ID;
+                                shiftsItem.ID = oldID;
+                                int oldAttachmentID = _tableShifts[shiftsItem.Key].ShiftAttachment.ID;
+                                shiftsItem.ShiftAttachment.ID = oldAttachmentID;
+                                _tableShifts[shiftsItem.Key] = shiftsItem;
+
+                                notify.AddNewShiftsVersion(shiftsItem);
+
+                                DB_Object.SaveShiftsEntry(shiftsItem, true);
+
+                            }
+
+                        }
 
                     }
                     else
                     {
 
-                        DateTime oldTime = _tableShifts[shiftsItem.Key].LastUpdate;
-                        if (oldTime < shiftsItem.LastUpdate)
+                        //FeedEntry
+                        if(!_tableFeed.ContainsKey(item.Key))
                         {
 
-                            int oldID = _tableShifts[shiftsItem.Key].ID;
-                            shiftsItem.ID = oldID;
-                            int oldAttachmentID = _tableShifts[shiftsItem.Key].ShiftAttachment.ID;
-                            shiftsItem.ShiftAttachment.ID = oldAttachmentID;
-                            _tableShifts[shiftsItem.Key] = shiftsItem;
+                            _tableFeed.Add(item.Key, item);
+                            notify.AddFeedEntry(item);
 
-                            notify.AddNewShiftsVersion(shiftsItem);
-
-                            DB_Object.SaveShiftsEntry(shiftsItem, true);
+                            DB_Object.SaveFeedEntry(item);
 
                         }
-
-                    }
-
-                }
-                else
-                {
-
-                    //FeedEntry
-                    if(!_tableFeed.ContainsKey(item.Key))
-                    {
-
-                        _tableFeed.Add(item.Key, item);
-                        notify.AddFeedEntry(item);
-
-                        DB_Object.SaveFeedEntry(item);
 
                     }
 

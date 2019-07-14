@@ -184,8 +184,6 @@ namespace rw_cos_mei
             DatabaseHelper.ATTACH_TABLE_COL_LOCAL
         };
 
-        private const int OLDOFFSET_DELETE_MONTHS = 1;
-
         //###############################################################################
         
         public void SaveFeedEntry(FeedEntry item)
@@ -375,7 +373,7 @@ namespace rw_cos_mei
             List<ShiftsEntry> listShifts = new List<ShiftsEntry>();
 
             List<int> oldFeed = new List<int>(); List<int> oldShift = new List<int>();
-            DateTime oldOffset = DateTime.Now.AddMonths(-OLDOFFSET_DELETE_MONTHS);
+            DateTime oldOffset = DateTime.Now.AddMonths(-TBL.SETTINGS_OLDFEED_MONTHOFFSET);
             var dictAttachments = GetStoredAttachments();
 
             //Feed laden
