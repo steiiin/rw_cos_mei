@@ -184,11 +184,11 @@ namespace rw_cos_mei
             DatabaseHelper.ATTACH_TABLE_COL_LOCAL
         };
 
-        private const int OLDOFFSET_DELETE_MONTHS = 12;
+        private const int OLDOFFSET_DELETE_MONTHS = 1;
 
         //###############################################################################
         
-        public void SaveFeedEntry(FeedEntry item, bool overwrite)
+        public void SaveFeedEntry(FeedEntry item)
         {
 
             //Datensatz erstellen
@@ -204,31 +204,14 @@ namespace rw_cos_mei
             values.Put(DatabaseHelper.FEED_TABLE_COL_READ, read);
 
             //Datenbank aktualisieren
-            if (item.ID < 0)
-            {
-
-                //Neuen Eintrag anlegen
-                int ID = (int)database.Insert(DatabaseHelper.FEED_TABLE, null, values);
-                item.ID = ID;
-
-            }
-            else
-            {
-
-                if(overwrite) { 
-                
-                    //Bestehenden Eintrag überschreiben
-                    string id_filter = DatabaseHelper.FEED_TABLE_COL_ID + "=" + item.ID;
-                    database.Update(DatabaseHelper.FEED_TABLE, values, id_filter, null);
-
-                }
-
-            }
-
+            //Neuen Eintrag anlegen
+            int ID = (int)database.Insert(DatabaseHelper.FEED_TABLE, null, values);
+            item.ID = ID;
+            
             //Feed-Anhänge aktualisieren
             foreach (var attachment in item.Attachments)
             {
-                SaveAttachment(attachment, DatabaseHelper.OWNER_FEED, item.ID, overwrite);
+                SaveAttachment(attachment, DatabaseHelper.OWNER_FEED, item.ID, false);
             }
             
         }
@@ -263,7 +246,7 @@ namespace rw_cos_mei
                 if(overwrite) { 
 
                     //Bestehenden Eintrag überschreiben
-                    string id_filter = DatabaseHelper.SHIFT_TABLE_COL_ID + "=" + item.ID;
+                    string id_filter = DatabaseHelper.SHIFT_TABLE_COL_ID + "='" + item.ID + "'";
                     database.Update(DatabaseHelper.SHIFT_TABLE, values, id_filter, null);
 
                 }
@@ -301,7 +284,7 @@ namespace rw_cos_mei
                 if(overwrite) { 
 
                     //Bestehenden Eintrag überschreiben
-                    string id_filter = DatabaseHelper.ATTACH_TABLE_COL_ID + "=" + item.ID;
+                    string id_filter = DatabaseHelper.ATTACH_TABLE_COL_ID + "='" + item.ID + "'";
                     database.Update(DatabaseHelper.ATTACH_TABLE, values, id_filter, null);
 
                 }
@@ -338,7 +321,7 @@ namespace rw_cos_mei
             if (item.ID < 0)
             {
 
-                SaveFeedEntry(item, false);
+                SaveFeedEntry(item);
 
             }
 
@@ -346,7 +329,7 @@ namespace rw_cos_mei
             else
             {
                 
-                string id_filter = DatabaseHelper.FEED_TABLE_COL_ID + "=" + item.ID;
+                string id_filter = DatabaseHelper.FEED_TABLE_COL_ID + "='" + item.ID + "'";
                 database.Update(DatabaseHelper.FEED_TABLE, values, id_filter, null);
 
             }
@@ -373,7 +356,7 @@ namespace rw_cos_mei
             else
             {
 
-                string id_filter = DatabaseHelper.SHIFT_TABLE_COL_ID + "=" + item.ID;
+                string id_filter = DatabaseHelper.SHIFT_TABLE_COL_ID + "='" + item.ID + "'";
                 database.Update(DatabaseHelper.SHIFT_TABLE, values, id_filter, null);
 
             }
@@ -432,10 +415,10 @@ namespace rw_cos_mei
         
         //###############################################################################
 
-        private Dictionary<string, Dictionary<int, List<EntryAttachment>>> GetStoredAttachments()
+        private Dictionary<string, Dictionary<int, SortedList<int, EntryAttachment>>> GetStoredAttachments()
         {
 
-            Dictionary<string, Dictionary<int, List<EntryAttachment>>> dictAttachments = new Dictionary<string, Dictionary<int, List<EntryAttachment>>>();
+            Dictionary<string, Dictionary<int, SortedList<int, EntryAttachment>>> dictAttachments = new Dictionary<string, Dictionary<int, SortedList<int, EntryAttachment>>>();
 
             ICursor c = database.Query(DatabaseHelper.ATTACH_TABLE, ATTACH_COLUMNS, null, null, null, null, null);
             c.MoveToFirst();
@@ -461,9 +444,9 @@ namespace rw_cos_mei
 
                 EntryAttachment aE = new EntryAttachment(key, filename, remotePath, localPath) { ID = sql_id };
 
-                if (!dictAttachments.ContainsKey(owner)) { dictAttachments.Add(owner, new Dictionary<int, List<EntryAttachment>>()); }
-                if (!dictAttachments[owner].ContainsKey(ownerID)) { dictAttachments[owner].Add(ownerID, new List<EntryAttachment>()); }
-                dictAttachments[owner][ownerID].Add(aE);
+                if (!dictAttachments.ContainsKey(owner)) { dictAttachments.Add(owner, new Dictionary<int, SortedList<int, EntryAttachment>>()); }
+                if (!dictAttachments[owner].ContainsKey(ownerID)) { dictAttachments[owner].Add(ownerID, new SortedList<int, EntryAttachment>()); }
+                dictAttachments[owner][ownerID].Add(aE.ID, aE);
 
                 c.MoveToNext();
             }
@@ -472,7 +455,7 @@ namespace rw_cos_mei
             return dictAttachments;
 
         }
-        private FeedEntry GetStoredFeedEntry(ICursor c, Dictionary<string, Dictionary<int, List<EntryAttachment>>> dictAttachments)
+        private FeedEntry GetStoredFeedEntry(ICursor c, Dictionary<string, Dictionary<int, SortedList<int, EntryAttachment>>> dictAttachments)
         {
 
             int ID_sql_id = c.GetColumnIndex(DatabaseHelper.FEED_TABLE_COL_ID);
@@ -491,17 +474,17 @@ namespace rw_cos_mei
             string body = c.GetString(ID_body);
             string read = c.GetString(ID_read);
 
-            var listAttachments = new List<EntryAttachment>();
+            var listAttachments = new SortedList<int, EntryAttachment>();
             if (dictAttachments.ContainsKey(DatabaseHelper.OWNER_FEED) && dictAttachments[DatabaseHelper.OWNER_FEED].ContainsKey(sql_id))
             {
                 listAttachments = dictAttachments[DatabaseHelper.OWNER_FEED][sql_id];
             }
 
-            FeedEntry result = new FeedEntry(key, title, body, date, author, listAttachments) { MarkedRead = (read == DatabaseHelper.BOOL_TRUE), ID = sql_id };
+            FeedEntry result = new FeedEntry(key, title, body, date, author, listAttachments.Values.ToList()) { MarkedRead = (read == DatabaseHelper.BOOL_TRUE), ID = sql_id };
             return result;
 
         }
-        private ShiftsEntry GetStoredShiftsEntry(ICursor c, Dictionary<string, Dictionary<int, List<EntryAttachment>>> dictAttachments)
+        private ShiftsEntry GetStoredShiftsEntry(ICursor c, Dictionary<string, Dictionary<int, SortedList<int, EntryAttachment>>> dictAttachments)
         {
 
             int ID_sql_id = c.GetColumnIndex(DatabaseHelper.SHIFT_TABLE_COL_ID);
@@ -524,7 +507,7 @@ namespace rw_cos_mei
 
             var listAttachments = dictAttachments[DatabaseHelper.OWNER_SHIFTS][sql_id];
 
-            ShiftsEntry result = new ShiftsEntry(month, year, update, version, listAttachments.First()) { MarkedRead = (read == DatabaseHelper.BOOL_TRUE), ID = sql_id };
+            ShiftsEntry result = new ShiftsEntry(month, year, update, version, listAttachments.Last().Value) { MarkedRead = (read == DatabaseHelper.BOOL_TRUE), ID = sql_id };
             return result;
 
         }
@@ -532,7 +515,7 @@ namespace rw_cos_mei
         private void RemoveOldEntries(List<int> oldFeed, List<int> oldShifts)
         {
 
-            string connector = " AND ";
+            string connector = " OR ";
 
             //Feed löschen
             if (oldFeed.Count > 0)
@@ -541,12 +524,13 @@ namespace rw_cos_mei
                 string feed_attach = "";
                 foreach (int sql_id in oldFeed)
                 {
-                    feed_filter += DatabaseHelper.FEED_TABLE_COL_ID + "=" + sql_id.ToString() + connector;
-                    feed_attach += DatabaseHelper.ATTACH_TABLE_COL_OWNERID + "=" + sql_id.ToString() + connector;
+                    feed_filter += DatabaseHelper.FEED_TABLE_COL_ID + "='" + sql_id.ToString() + "'" + connector;
+                    feed_attach += DatabaseHelper.ATTACH_TABLE_COL_OWNERID + "='" + sql_id.ToString() + "'" + connector;
                 }
                 feed_filter = feed_filter.Substring(0, feed_filter.Length - connector.Length);
+                feed_attach = feed_attach.Substring(0, feed_attach.Length - connector.Length);
                 database.Delete(DatabaseHelper.FEED_TABLE, feed_filter, null);
-                database.Delete(DatabaseHelper.ATTACH_TABLE, feed_attach + DatabaseHelper.ATTACH_TABLE_COL_OWNER + "=" + "\"" + DatabaseHelper.OWNER_FEED + "\"", null);
+                database.Delete(DatabaseHelper.ATTACH_TABLE, feed_attach + " AND " + DatabaseHelper.ATTACH_TABLE_COL_OWNER + "=" + "'" + DatabaseHelper.OWNER_FEED + "'", null);
             }
 
             //Shifts löschen
@@ -556,12 +540,13 @@ namespace rw_cos_mei
                 string shifts_attach = "";
                 foreach (int sql_id in oldShifts)
                 {
-                    shifts_filter += DatabaseHelper.SHIFT_TABLE_COL_ID + "=" + sql_id.ToString() + connector;
-                    shifts_attach += DatabaseHelper.ATTACH_TABLE_COL_OWNERID + "=" + sql_id.ToString() + connector;
+                    shifts_filter += DatabaseHelper.SHIFT_TABLE_COL_ID + "='" + sql_id.ToString() + "'" + connector;
+                    shifts_attach += DatabaseHelper.ATTACH_TABLE_COL_OWNERID + "='" + sql_id.ToString() + "'" + connector;
                 }
                 shifts_filter = shifts_filter.Substring(0, shifts_filter.Length - connector.Length);
+                shifts_attach = shifts_attach.Substring(0, shifts_attach.Length - connector.Length);
                 database.Delete(DatabaseHelper.SHIFT_TABLE, shifts_filter, null);
-                database.Delete(DatabaseHelper.ATTACH_TABLE, shifts_attach + DatabaseHelper.ATTACH_TABLE_COL_OWNER + "=\"" + DatabaseHelper.OWNER_SHIFTS + "\"", null);
+                database.Delete(DatabaseHelper.ATTACH_TABLE, shifts_attach + " AND " + DatabaseHelper.ATTACH_TABLE_COL_OWNER + "='" + DatabaseHelper.OWNER_SHIFTS + "'", null);
             }
 
         }

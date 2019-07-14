@@ -141,7 +141,7 @@
 			<Spinner
 				android:id="@+id/spinner_sync_time"
 				android:layout_width="wrap_content"
-				android:layout_height="32dp"
+				android:layout_height="48dp"
 				android:layout_marginLeft="12dp"
 				android:layout_marginStart="12dp" />
 			<TextView
@@ -155,21 +155,21 @@
 				style="@style/Text.List.Title" />
 			<CheckBox
 				android:id="@+id/check_noti_feed"
-				android:layout_height="wrap_content"
+				android:layout_height="48dp"
 				android:layout_width="wrap_content"
 				android:layout_marginLeft="16dp"
 				android:layout_marginStart="16dp"
 				android:text="@string/settings_sync_noti_newFeed" />
 			<CheckBox
 				android:id="@+id/check_noti_shifts"
-				android:layout_height="wrap_content"
+				android:layout_height="48dp"
 				android:layout_width="wrap_content"
 				android:layout_marginLeft="16dp"
 				android:layout_marginStart="16dp"
 				android:text="@string/settings_sync_noti_newShifts" />
 			<CheckBox
 				android:id="@+id/check_noti_shiftsVersion"
-				android:layout_height="wrap_content"
+				android:layout_height="48dp"
 				android:layout_width="wrap_content"
 				android:layout_marginLeft="16dp"
 				android:layout_marginStart="16dp"

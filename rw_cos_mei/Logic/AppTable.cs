@@ -143,7 +143,7 @@ namespace rw_cos_mei
             //Table erstellen
             if(_tableFeed == null) { _tableFeed = new Dictionary<string, FeedEntry>(); }
             if(_tableShifts == null) { _tableShifts = new Dictionary<string, ShiftsEntry>(); }
-
+            
             //Rohentries verarbeiten
             foreach (var item in list)
             {
@@ -152,7 +152,7 @@ namespace rw_cos_mei
                 {
 
                     //ShiftsEntry
-                    if(!_tableShifts.ContainsKey(shiftsItem.Key))
+                    if (!_tableShifts.ContainsKey(shiftsItem.Key))
                     {
 
                         _tableShifts.Add(shiftsItem.Key, shiftsItem);
@@ -164,19 +164,23 @@ namespace rw_cos_mei
                     }
                     else
                     {
+
                         DateTime oldTime = _tableShifts[shiftsItem.Key].LastUpdate;
-                        if(oldTime < shiftsItem.LastUpdate)
+                        if (oldTime < shiftsItem.LastUpdate)
                         {
 
                             int oldID = _tableShifts[shiftsItem.Key].ID;
-                            _tableShifts[shiftsItem.Key] = shiftsItem;
                             shiftsItem.ID = oldID;
+                            int oldAttachmentID = _tableShifts[shiftsItem.Key].ShiftAttachment.ID;
+                            shiftsItem.ShiftAttachment.ID = oldAttachmentID;
+                            _tableShifts[shiftsItem.Key] = shiftsItem;
 
                             notify.AddNewShiftsVersion(shiftsItem);
 
                             DB_Object.SaveShiftsEntry(shiftsItem, true);
 
                         }
+
                     }
 
                 }
@@ -190,7 +194,7 @@ namespace rw_cos_mei
                         _tableFeed.Add(item.Key, item);
                         notify.AddFeedEntry(item);
 
-                        DB_Object.SaveFeedEntry(item, false);
+                        DB_Object.SaveFeedEntry(item);
 
                     }
 
