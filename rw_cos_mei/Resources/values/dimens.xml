@@ -5,4 +5,6 @@
   <dimen name="tool_toolbar_height">36dp</dimen>
   <dimen name="tool_iconframe_width">36dp</dimen>
   <dimen name="tool_icon_size">24dp</dimen>
+
+  <dimen name="main_list_margin">12dp</dimen>
 </resources>

@@ -223,6 +223,10 @@ namespace rw_cos_mei
             c.CHECK_NOTIFY_NEWSHIFTSVERSION.Enabled = c.CHECK_NOTIFY_NEWSHIFTS.Checked;
             var state = Notification.NotifySettings.NotifySettingsType.FEED_AND_SHIFTS_AND_VERSIONS;
 
+            //Dienstplanversion deaktivieren, wenn aktiv
+            if(!c.CHECK_NOTIFY_NEWSHIFTS.Checked && c.CHECK_NOTIFY_NEWSHIFTSVERSION.Checked) { c.CHECK_NOTIFY_NEWSHIFTSVERSION.Checked = false; }
+
+            //Neuen Benachrichtungsstatus ermitteln
             if (c.CHECK_NOTIFY_NEWFEED.Checked)
             {
                 if (c.CHECK_NOTIFY_NEWSHIFTS.Checked)

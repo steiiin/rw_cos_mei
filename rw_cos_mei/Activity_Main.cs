@@ -13,6 +13,7 @@ using AlertDialog = Android.Support.V7.App.AlertDialog;
 using Toolbar = Android.Support.V7.Widget.Toolbar;
 
 using TBL = rw_cos_mei.AppTable;
+using Android.Util;
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -95,6 +96,9 @@ namespace rw_cos_mei
             TBL.SP_Object.StateChanged += SP_Object_StateChanged;
             ViewStateChanger(TBL.SP_Object.State);
 
+            //NoUnread-Fenster
+            c.VIEWSWITCHER_LISTS.LayoutChange += VIEWSWITCHER_LISTS_LayoutChange;
+
             //Refresh erst beginnen, wenn App startet
             if (onStartup)
             {
@@ -106,9 +110,14 @@ namespace rw_cos_mei
             }
 
         }
+        
         protected override void OnPause()
         {
+
             TBL.SP_Object.StateChanged -= SP_Object_StateChanged;
+
+            c.VIEWSWITCHER_LISTS.LayoutChange -= VIEWSWITCHER_LISTS_LayoutChange;
+
             base.OnPause();
         }
 
@@ -409,7 +418,15 @@ namespace rw_cos_mei
             }  
 
         }
-        
+
+        //###################################################################################
+
+        private void VIEWSWITCHER_LISTS_LayoutChange(object sender, View.LayoutChangeEventArgs e)
+        {
+            var height = e.Bottom - e.Top;
+            c.ADAPTER_FEED.UpdateContainerHeight(height);
+        }
+
     }
 
     namespace Adapters
@@ -432,6 +449,9 @@ namespace rw_cos_mei
             {
                 _context = context;
                 _container = container;
+
+                nounreadSection = null;
+                nounreadHeight = -1;
             }
 
             public void Inflate()
@@ -480,8 +500,21 @@ namespace rw_cos_mei
                 }
 
             }
+            public void UpdateContainerHeight(int height)
+            {
+
+                nounreadHeight = height - (int)_context.Resources.GetDimension(Resource.Dimension.main_list_margin);
+
+                if (nounreadSection == null) { return; }
+
+                SetHeightNoUnread();
+
+            }
 
             //####################################################################################
+
+            private int nounreadHeight = -1;
+            private View nounreadSection;
 
             private View CreateSectionNotMarkedRead(int count)
             {
@@ -507,7 +540,18 @@ namespace rw_cos_mei
             private View CreateSectionNoUnread()
             {
                 View SECTION = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feed_section_nounread, _container, false);
+
+                nounreadSection = SECTION;
+                SetHeightNoUnread();
+
                 return SECTION;
+            }
+
+            private void SetHeightNoUnread()
+            {
+
+                nounreadSection.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, nounreadHeight);
+
             }
 
             private enum SubheadType { YEAR, MONTH };

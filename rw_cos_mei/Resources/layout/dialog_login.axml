@@ -13,9 +13,10 @@
 		android:id="@+id/layout_username"
 		
 		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
+		android:layout_height="48dp"
 		
-		app:errorEnabled="true">
+		app:errorEnabled="true"
+		app:errorTextAppearance="@style/Text.Input.Error">
 
 		<android.support.design.widget.TextInputEditText
 			android:id="@+id/text_username"
@@ -32,9 +33,10 @@
 		android:id="@+id/layout_password"
 		
 		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
+		android:layout_height="48dp"
 		
-		app:errorEnabled="true">
+		app:errorEnabled="true"
+		app:errorTextAppearance="@style/Text.Input.Error">
 
 		<android.support.design.widget.TextInputEditText
 			android:id="@+id/text_password"
