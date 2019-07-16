@@ -181,6 +181,13 @@ namespace rw_cos_mei
             SupportActionBar.SetHomeAsUpIndicator(Resource.Drawable.ic_action_uparrow);
             SupportActionBar.SetDisplayHomeAsUpEnabled(true);
 
+            try
+            {
+                TextView txt_version = FindViewById<TextView>(Resource.Id.txt_appversion);
+                txt_version.Text = Application.Context.ApplicationContext.PackageManager.GetPackageInfo(Application.Context.ApplicationContext.PackageName, 0).VersionName;
+            }
+            catch (Exception) { }
+            
         }
 
         private List<TBL.SyncIntervalSetting> listSpinnerIntervalValues = new List<TBL.SyncIntervalSetting>() { TBL.SyncIntervalSetting.THREE_HOURS, TBL.SyncIntervalSetting.TWO_A_DAY, TBL.SyncIntervalSetting.ONE_A_DAY, TBL.SyncIntervalSetting.ONE_IN_THREE_DAYS };

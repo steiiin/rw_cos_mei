@@ -17,7 +17,7 @@
   <!-- Main -->
   <string name="main_list_feed_unread_title">Ungelesen (%1$d)</string>
   <string name="main_list_feed_nounread_title">Keine ungelesenen Neuigkeiten</string>
-  <string name="main_list_feed_nounread_subtitle">Es gibt derzeit keine Neuigkeiten.&#10;Scroll nach unten, um die älteren Einträge zu sehen.</string>
+  <string name="main_list_feed_nounread_subtitle">Es gibt derzeit keine Neuigkeiten. \n Scroll nach unten, um die älteren Einträge zu sehen.</string>
   <string name="main_list_feed_read_title">Ältere</string>
   
   <string name="main_list_feed_item_update">Aktualisiert: %1$s</string>

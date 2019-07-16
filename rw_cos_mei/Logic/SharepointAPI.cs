@@ -28,7 +28,7 @@ namespace rw_cos_mei
 
         //#########################################################
 
-        public SharepointAPI(Context context) { _context = context; }
+        public SharepointAPI(Context context) { _context = context; onDebugMode = false; }
 
         //#########################################################
 
@@ -65,10 +65,19 @@ namespace rw_cos_mei
 
         //########################################################
 
+        private bool onDebugMode = false;
+        private const string debug_username = "debug@malteser.org";
+        private const string debug_password = "12345";
+
         public void SetCredentials(string username, string password)
         {
             _username = username;
             _password = password;
+
+            if(username == debug_username && password == debug_password)
+            {
+                onDebugMode = true;
+            }
         }
 
         //########################################################
@@ -233,6 +242,12 @@ namespace rw_cos_mei
         {
            
             InvokeStateChanged(SharepointAPIState.WORKING);
+            if(onDebugMode)
+            {
+                SharepointAPIDebugMode.FakeFeed();
+                InvokeStateChanged(SharepointAPIState.OK);
+                return;
+            }
 
             if (!IsOnline()) { InvokeStateChanged(SharepointAPIState.ERROR); return; }
 
@@ -312,6 +327,12 @@ namespace rw_cos_mei
 
         public async void GetNewsFeedAttachment(EntryAttachment attachment, Action<int> onError, Action<string> onDownloaded, bool relogin = true)
         {
+
+            if(onDebugMode)
+            {
+                onError(0);
+                return;
+            }
 
             string tmpRaw = Path.GetTempFileName();
             string nameEsc = Path.GetFileNameWithoutExtension(attachment.FileName).Replace(" ", "_");
@@ -631,6 +652,40 @@ namespace rw_cos_mei
     {
         public SharepointAPIStateChangedEventArgs(SharepointAPIState state) { State = state; }
         public SharepointAPIState State { get; }
+    }
+
+    //######################################################################
+
+    public class SharepointAPIDebugMode
+    {
+
+        public static void FakeFeed()
+        {
+
+            List<FeedEntry> fakeList = new List<FeedEntry>();
+
+            for (int i = 1; i < 12; i++)
+            {
+                List<EntryAttachment> atList = new List<EntryAttachment>();
+                for (int j = 0; j < 1; j++)
+                {
+                    atList.Add(new EntryAttachment("test" + i.ToString("00") + ".pdf", "https://speed.hetzner.de/100MB.bin"));
+                }
+                FeedEntry fE = new FeedEntry("fake#" + i.ToString("000"), "Fake " + i.ToString("000"), "Fakenachricht", new DateTime(2019, i, 1), "steiiin", atList);
+                fakeList.Add(fE);
+            }
+
+            for (int i = 2; i < 7; i++)//DP/MONAT/JAHR/VERSION/NUMMER
+            {
+                EntryAttachment dp = new EntryAttachment("DP " + new DateTime(2010, i, 1).ToString("MMMM") + " 2019 Version. 1.0", "https://speed.hetzner.de/100MB.bin");
+                FeedEntry dE = new FeedEntry("DP" + i.ToString("000"), "DP " + new DateTime(2019, i, 1).ToString("MMMM") + " 2019 Version. 1.0", "Dienstplan", new DateTime(2019, i, 1), "steiiin", new List<EntryAttachment>() { dp });
+                fakeList.Add(dE);
+            }
+
+            TBL.UpdateEntries(fakeList, false);
+            
+        }
+
     }
 
 }

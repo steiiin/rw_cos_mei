@@ -99,8 +99,8 @@
 	
 	</android.support.design.widget.AppBarLayout>
 	
-	<ViewSwitcher
-		android:id="@+id/main_viewSwitcher"
+	<android.support.v4.view.ViewPager
+		android:id="@+id/main_viewPager"
 			
 		android:layout_height="wrap_content"
 		android:layout_width="match_parent"
@@ -109,40 +109,7 @@
 		android:measureAllChildren="true"
 		app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-		<android.support.v4.widget.NestedScrollView
-			android:layout_width="match_parent"
-			android:layout_height="match_parent">
-		
-			<LinearLayout
-				android:id="@+id/main_list_feed"
-				
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:paddingTop="@dimen/main_list_margin"
-				android:paddingBottom="16dp"
-				
-				
-				android:orientation="vertical" />
-
-		</android.support.v4.widget.NestedScrollView>
-
-		<android.support.v4.widget.NestedScrollView
-			android:layout_width="match_parent"
-			android:layout_height="match_parent">
-
-			<LinearLayout
-				android:id="@+id/main_list_shifts"
-				
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:paddingTop="@dimen/main_list_margin"
-				android:paddingBottom="16dp"
-				
-				android:orientation="vertical" />
-
-		</android.support.v4.widget.NestedScrollView>
-	
-	</ViewSwitcher>
+	</android.support.v4.view.ViewPager>
 
 	<android.support.design.widget.BottomNavigationView
 		android:id="@+id/main_bottomNavigation"

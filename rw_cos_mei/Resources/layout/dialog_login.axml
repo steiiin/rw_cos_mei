@@ -13,7 +13,7 @@
 		android:id="@+id/layout_username"
 		
 		android:layout_width="match_parent"
-		android:layout_height="48dp"
+		android:layout_height="56dp"
 		
 		app:errorEnabled="true"
 		app:errorTextAppearance="@style/Text.Input.Error">
@@ -33,7 +33,7 @@
 		android:id="@+id/layout_password"
 		
 		android:layout_width="match_parent"
-		android:layout_height="48dp"
+		android:layout_height="56dp"
 		
 		app:errorEnabled="true"
 		app:errorTextAppearance="@style/Text.Input.Error">

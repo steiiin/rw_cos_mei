@@ -5,11 +5,11 @@ using Android.App;
 
 [assembly: AssemblyTitle("rw_cos_mei")]
 [assembly: ComVisible(false)]
-[assembly: AssemblyVersion("1.8.1")]
+[assembly: AssemblyVersion("1.10")]
 
 /// <summary>
 /// 
-/// Version: 1.9
+/// Version: 2.0
 /// 
 /// </summary>
 

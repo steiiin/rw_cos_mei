@@ -2,11 +2,12 @@
 <RelativeLayout 
 	xmlns:android="http://schemas.android.com/apk/res/android"
 					
-	android:layout_width="match_parent"
+	android:layout_width="wrap_content"
 	android:layout_height="120dp"
 	android:layout_marginTop="8dp"
 	android:layout_marginBottom="8dp"
-	android:paddingRight="24dp">
+	android:paddingRight="24dp"
+	android:layout_gravity="center_horizontal">
 	
 	<LinearLayout
 		android:layout_width="wrap_content"
@@ -15,16 +16,12 @@
 		android:orientation="vertical"
 		android:gravity="center_horizontal">
 
-		<!--<ImageView
-			android:layout_height="48dp"
-			android:layout_width="48dp"
-			android:src="@drawable/ic_notifications_off"
-			android:layout_centerVertical="true" />-->
-
 		<TextView
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
+			
 			android:textColor="#666"
+			android:gravity="center"
 						
 			android:text="@string/main_list_feed_nounread_title"
 			style="@style/Text.Subhead.Main" />
@@ -34,7 +31,7 @@
 			android:layout_marginTop="12dp"
 			
 			android:textColor="#999"
-			android:textAlignment="center"
+			android:gravity="center"
 			
 			android:text="@string/main_list_feed_nounread_subtitle"
 			style="@style/Text.List.Title" />

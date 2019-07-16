@@ -125,8 +125,9 @@ namespace rw_cos_mei
         public static int BottomNavigationSelectedId { get; private set; }
         public static void UpdateBottomNavigationSelectedId(int id)
         {
+            if(id == BottomNavigationSelectedId) { return; }
+
             BottomNavigationSelectedId = id;
-            SaveSettings(cc);
         }
 
         public static DateTime LastTableRefresh { get; private set; }
@@ -268,6 +269,8 @@ namespace rw_cos_mei
         }
 
         //###################################################################################
+
+        public static bool IsFeedEmpty { get { if (FeedEntries == null) { return true; } else { return FeedEntries.Count == 0; } } }
 
         public static FeedEntry GetFeedEntry(string key)
         {
