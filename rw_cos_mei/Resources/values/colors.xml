@@ -11,6 +11,9 @@
   <color name="text_list_title">#de000000</color>
   <color name="text_list_title_inactive">#66000000</color>
   <color name="text_list_subtitle">#a0000000</color>
+
+  <color name="background_list_shifts">#ED1C29</color>
+  <drawable name="trans_divider">#00000000</drawable>
   
   <color name="divider_black">#000000</color>
   <color name="divider_dim">#1f000000</color>

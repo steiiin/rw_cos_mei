@@ -65,7 +65,7 @@ namespace rw_cos_mei
         {
             Key = year.ToString("0000") + "#" + month.ToString("00");
             Month = month; Year = year; LastUpdate = lastUpdate; LastVersion = lastVersion; MarkedRead = false;
-            Title = "Dienstplan " + new DateTime(year, month, 1).ToString("MMMM yyyy");
+            Title = new DateTime(year, month, 1).ToString("MMMM yyyy");
             ShiftAttachment = shiftAttachment;
         }
 

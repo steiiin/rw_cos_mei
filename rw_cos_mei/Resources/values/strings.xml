@@ -19,6 +19,7 @@
   <string name="main_list_feed_nounread_title">Keine ungelesenen Neuigkeiten</string>
   <string name="main_list_feed_nounread_subtitle">Es gibt derzeit keine Neuigkeiten. \n Scroll nach unten, um die älteren Einträge zu sehen.</string>
   <string name="main_list_feed_read_title">Ältere</string>
+  <string name="main_list_shifts_active_title">Aktuelle Pläne</string>
   
   <string name="main_list_feed_item_update">Aktualisiert: %1$s</string>
   <string name="main_list_feed_item_version">Version: %1$s</string>

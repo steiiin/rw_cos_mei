@@ -19,6 +19,7 @@ using Android.Support.V4.View;
 using Android.Support.V4.App;
 using FragmentManager = Android.Support.V4.App.FragmentManager;
 using Java.Util;
+using Android.Support.V4.Content;
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -78,6 +79,13 @@ namespace rw_cos_mei
         protected override void OnResume()
         {
             base.OnResume();
+
+            //Hack, um den Statischen Speicher wiederherzustellen, wenn Android die App im Hintergrund killt. 
+            // -> Kein Bock, statt dem AppTable alle Objekte Parcelable zu programmieren.
+            if(TBL.SP_Object == null)
+            {
+                Activity_Init.InitRoutine(this);
+            }
 
             //Oberfläche an Sharepoint-Status anpassen
             TBL.SP_Object.StateChanged += SP_Object_StateChanged;
@@ -822,19 +830,18 @@ namespace rw_cos_mei
 
             private enum SourceType
             {
-                SECTION,
+                SUB_ACTIVE,
+                SUB_INACTIVE,
                 SHIFTSENTRY
             }
             private class SourceHolder
             {
                 public SourceType Type;
                 public ShiftsEntry ShiftsEntry;
-                public int SectionYear;
 
-                public SourceHolder(int year)
+                public SourceHolder(SourceType type)
                 {
-                    Type = SourceType.SECTION;
-                    SectionYear = year;
+                    Type = type;
                 }
                 public SourceHolder (ShiftsEntry entry)
                 {
@@ -865,17 +872,30 @@ namespace rw_cos_mei
                 _viewholders = new Dictionary<int, ViewHolder>();
                 _source = new List<SourceHolder>();
 
-                int lastYear = -1;
+                int isActiveSection = -1;
+                DateTime activeBorder = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1, 0, 0, 0);
+                
                 foreach (ShiftsEntry item in TBL.ShiftsEntries)
                 {
 
-                    //Jahres-Subhead
-                    if (lastYear > 0 && item.Year != lastYear)
+                    DateTime entryBorder = new DateTime(item.Year, item.Month, 1, 0, 0, 0);
+                    if (entryBorder >= activeBorder)
                     {
-                        _source.Add(new SourceHolder(item.Year));
+                        if(isActiveSection == -1)
+                        {
+                            _source.Add(new SourceHolder(SourceType.SUB_ACTIVE));
+                            isActiveSection = 1;
+                        }
                     }
-                    lastYear = item.Year;
-
+                    else
+                    {
+                        if(isActiveSection == 1)
+                        {
+                            _source.Add(new SourceHolder(SourceType.SUB_INACTIVE));
+                            isActiveSection = 0;
+                        }
+                    }
+                    
                     //Entry erstellen
                     _source.Add(new SourceHolder(item));
 
@@ -904,21 +924,33 @@ namespace rw_cos_mei
 
                 switch (source.Type)
                 {
-                    case SourceType.SECTION:
-                        
-                        if(!_viewholders.ContainsKey(position))
+                    case SourceType.SUB_ACTIVE:
+
+                        if (!_viewholders.ContainsKey(position))
                         {
 
                             v = new ViewHolder();
-                            v.CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feed_subhead_year, parent, false);
-                            v.SECTION_TITLE = v.CONVERTVIEW.FindViewById<TextView>(Resource.Id.txt_title);
+                            v.CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_shifts_section_active, parent, false);
+                            
+                            _viewholders.Add(position, v);
+
+                        }
+                        v = _viewholders[position];
+                        
+                        return v.CONVERTVIEW;
+
+                    case SourceType.SUB_INACTIVE:
+
+                        if (!_viewholders.ContainsKey(position))
+                        {
+
+                            v = new ViewHolder();
+                            v.CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_shifts_section_inactive, parent, false);
 
                             _viewholders.Add(position, v);
 
                         }
-
                         v = _viewholders[position];
-                        v.SECTION_TITLE.Text = source.SectionYear.ToString("0000");
 
                         return v.CONVERTVIEW;
 
@@ -937,15 +969,14 @@ namespace rw_cos_mei
                             _viewholders.Add(position, v);
 
                         }
-
+                        
                         v = _viewholders[position];
                         v.ENTRY_TITLE.Text = source.ShiftsEntry.Title;
                         v.LASTUPDATE.Text = _context.Resources.GetString(Resource.String.main_list_feed_item_update, source.ShiftsEntry.LastUpdate.ToString("dd. MMMM yyyy"));
                         v.LASTVERSION.Text = _context.Resources.GetString(Resource.String.main_list_feed_item_version, source.ShiftsEntry.LastVersion);
                         v.PROGRESS.Visibility = ViewStates.Gone;
 
-                        if (source.ShiftsEntry.MarkedRead) { v.CONVERTVIEW.Alpha = 0.4F; }
-                        else { v.CONVERTVIEW.Alpha = 1.0F; }
+                        VisualizeShiftsEntryState(source.ShiftsEntry, v);
                         
                         return v.CONVERTVIEW;
 
@@ -955,6 +986,41 @@ namespace rw_cos_mei
                
             }
             
+            //############################################################################
+
+            public void VisualizeShiftsEntryState(ShiftsEntry e, ViewHolder v)
+            {
+               
+                DateTime activeBorder = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1, 0, 0, 0);
+                DateTime entrySource = new DateTime(e.Year, e.Month, 1, 0, 0, 0);
+
+                if (entrySource >= activeBorder)
+                {
+
+                    if(!e.MarkedRead)
+                    {
+                        v.CONVERTVIEW.SetBackgroundColor(new Android.Graphics.Color(ContextCompat.GetColor(_context, Resource.Color.background_list_shifts)));
+                        v.CONVERTVIEW.Alpha = 1.0F;
+                        v.PROGRESS.IndeterminateDrawable.SetColorFilter(Android.Graphics.Color.White, Android.Graphics.PorterDuff.Mode.SrcAtop);
+
+                        return;
+                    }
+                    else
+                    {
+                        v.CONVERTVIEW.Alpha = 1.0F;
+                    }
+                        
+                }
+                else
+                {
+                    v.CONVERTVIEW.Alpha = 0.4F;
+                }
+
+                v.CONVERTVIEW.SetBackgroundColor(Android.Graphics.Color.Transparent);
+                v.PROGRESS.IndeterminateDrawable.SetColorFilter(new Android.Graphics.Color(ContextCompat.GetColor(_context, Resource.Color.background_list_shifts)), Android.Graphics.PorterDuff.Mode.SrcAtop);
+
+            }
+
         }
         public class ListShiftsAdapterItemSelectedEventArgs : EventArgs
         {
@@ -1153,15 +1219,12 @@ namespace rw_cos_mei
 
                 if (x.ShiftAttachment.IsAttachmentDownloaded)
                 {
-                    TBL.MarkReadShiftsEntry(x.Key);
-
                     v.CONVERTVIEW.Tag = null;
                     ItemSelected?.Invoke(this, new Adapters.ListShiftsAdapterItemSelectedEventArgs(x.Key, x.ShiftAttachment.Key));
                 }
                 else
                 {
-
-                    v.LASTVERSION.Visibility = ViewStates.Gone;
+                    
                     v.PROGRESS.Visibility = ViewStates.Visible;
 
                     TBL.SP_Object.GetNewsFeedAttachment(x.ShiftAttachment,
@@ -1169,7 +1232,6 @@ namespace rw_cos_mei
                     {
 
                         v.PROGRESS.Visibility = ViewStates.Gone;
-                        v.LASTVERSION.Visibility = ViewStates.Visible;
                         v.CONVERTVIEW.Tag = null;
 
                         AttachmentRetrieveError?.Invoke(this, new EventArgs());
@@ -1179,13 +1241,12 @@ namespace rw_cos_mei
                     {
 
                         v.PROGRESS.Visibility = ViewStates.Gone;
-                        v.LASTVERSION.Visibility = ViewStates.Visible;
 
                         x.ShiftAttachment.UpdateAttachment(localPath);
                         TBL.MarkReadShiftsEntry(x.Key);
 
                         v.CONVERTVIEW.Tag = null;
-                        v.CONVERTVIEW.Alpha = 0.4F;
+                        ADAPTER_SHIFTS.VisualizeShiftsEntryState(x, v);
 
                         ItemSelected?.Invoke(this, new Adapters.ListShiftsAdapterItemSelectedEventArgs(x.Key, x.ShiftAttachment.Key));
 
@@ -1202,7 +1263,9 @@ namespace rw_cos_mei
             {
                 View v = inflater.Inflate(Resource.Layout.fragment_main_list_shifts, null);
                 LIST_SHIFTS = v.FindViewById<ListView>(Resource.Id.main_list_shifts);
-                LIST_SHIFTS.Divider = null;
+
+                LIST_SHIFTS.Divider = ContextCompat.GetDrawable(Context, Resource.Drawable.trans_divider);
+                LIST_SHIFTS.DividerHeight = (int)TypedValue.ApplyDimension(ComplexUnitType.Dip, 1, Resources.DisplayMetrics);
 
                 if (inflate_pending)
                 {

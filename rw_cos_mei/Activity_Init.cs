@@ -28,13 +28,8 @@ namespace rw_cos_mei
         {
             base.OnResume();
 
-            //Statischen App-Speicher vorbereiten
-            TBL.BlockSyncService();         //BackgroundSync sperren
-
-            TBL.Init(this);                 //AppTable initialisieren (AppTable = TaBLe)
-            TBL.DB_Object.LoadDatabase();   //Feed aus der lokalen Datenbank laden
-
-            TBL.UnBlockSyncService();       //BackgroundSync entsperren
+            //Statischen Speicher erstellen
+            InitRoutine(this);
 
             //Job erstellen
             JobSchedulerHelper.CreateSyncJob(this, TBL.GetSyncIntervalSettingTiming(TBL.SyncInterval));
@@ -42,6 +37,19 @@ namespace rw_cos_mei
             //App starten
             StartActivity(new Intent(Application.Context, typeof(Activity_Main)));
             
+        }
+
+        public static void InitRoutine(Context context)
+        {
+
+            //Statischen App-Speicher vorbereiten
+            TBL.BlockSyncService();         //BackgroundSync sperren
+
+            TBL.Init(context);                 //AppTable initialisieren (AppTable = TaBLe)
+            TBL.DB_Object.LoadDatabase();   //Feed aus der lokalen Datenbank laden
+
+            TBL.UnBlockSyncService();       //BackgroundSync entsperren
+
         }
         
         //#############################################################################
