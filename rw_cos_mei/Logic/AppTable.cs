@@ -416,10 +416,7 @@ namespace rw_cos_mei
                 Username = cs.Username;
                 Password = cs.Password;
             }
-
-            Username = "rw.mei@malteser.org";
-            Password = "malta1958#";
-
+            
             BearerToken  = prefs.GetString(PREF_SHAREPOINT_BEARER, string.Empty);
             OAuthToken = prefs.GetString(PREF_SHAREPOINT_OAUTHT, string.Empty);
 
