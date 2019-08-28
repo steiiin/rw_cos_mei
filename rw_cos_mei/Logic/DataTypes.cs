@@ -158,6 +158,12 @@ namespace rw_cos_mei
 
     }
 
+    public enum HandlerMethod
+    {
+        ADD_HANDLERS,
+        REMOVE_HANDLERS
+    }
+
     //##############################################
     
     public class FileOpen

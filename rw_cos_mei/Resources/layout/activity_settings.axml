@@ -65,6 +65,7 @@
 		android:layout_height="match_parent"
 		
 		app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
 		<LinearLayout
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
@@ -134,6 +135,90 @@
 					android:gravity="bottom"
 					style="@style/Text.List.Subtitle" />
 			</FrameLayout>
+
+			<android.support.design.card.MaterialCardView
+				android:id="@+id/card_wronglogin_hint"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:orientation="vertical"
+				android:layout_marginLeft="16dp"
+				android:layout_marginStart="16dp"
+				android:layout_marginEnd="16dp"
+				android:layout_marginRight="16dp"
+				android:layout_marginBottom="16dp">
+		
+				<LinearLayout
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:orientation="vertical"
+					android:paddingLeft="16dp"
+					android:paddingStart="16dp"
+					android:paddingTop="16dp"
+					android:paddingRight="16dp"
+					android:paddingEnd="16dp">
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						style="@style/Text.List.Title"
+						android:text="@string/settings_cred_error_title" />
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						style="@style/Text.List.Subtitle"
+						android:text="@string/settings_cred_error_desc" />
+					<Button
+						android:id="@+id/card_wronglogin_retrybutton"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text="@string/dialog_reconnect"
+						android:padding="0dp"
+						style="@style/Widget.AppCompat.Button.Borderless.Colored" />
+
+				</LinearLayout>
+	
+			</android.support.design.card.MaterialCardView>
+			<android.support.design.card.MaterialCardView
+				android:id="@+id/card_connectionlost_hint"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:orientation="vertical"
+				android:layout_marginLeft="16dp"
+				android:layout_marginStart="16dp"
+				android:layout_marginEnd="16dp"
+				android:layout_marginRight="16dp"
+				android:layout_marginBottom="16dp">
+		
+				<LinearLayout
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:orientation="vertical"
+					android:paddingLeft="16dp"
+					android:paddingStart="16dp"
+					android:paddingTop="16dp"
+					android:paddingRight="16dp"
+					android:paddingEnd="16dp">
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						style="@style/Text.List.Title"
+						android:text="@string/settings_cred_connection_title" />
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						style="@style/Text.List.Subtitle"
+						android:text="@string/settings_cred_connection_desc" />
+					<Button
+						android:id="@+id/card_connectionlost_retrybutton"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text="@string/dialog_reconnect"
+						android:padding="0dp"
+						style="@style/Widget.AppCompat.Button.Borderless.Colored" />
+
+				</LinearLayout>
+	
+			</android.support.design.card.MaterialCardView>
+
 			<FrameLayout
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
@@ -193,6 +278,19 @@
 				android:layout_marginLeft="16dp"
 				android:layout_marginStart="16dp"
 				android:text="@string/settings_sync_noti_versShifts" />
+			
+			<Button
+				android:id="@+id/btn_notification_link"
+			
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+			
+				android:layout_marginLeft="16dp"
+				android:layout_marginStart="16dp"
+			
+				android:text="@string/settings_notification_link"
+				style="@style/Widget.AppCompat.Button.Colored" />
+
 		</LinearLayout>
 	
 	</android.support.v4.widget.NestedScrollView>

@@ -2,25 +2,23 @@
 using Android.Content;
 using Android.OS;
 using Android.Support.Design.Widget;
+using Android.Support.V4.App;
+using Android.Support.V4.Content;
+using Android.Support.V4.View;
 using Android.Support.V7.App;
+using Android.Util;
 using Android.Views;
 using Android.Widget;
-
 using System;
 using System.Collections.Generic;
 
 using AlertDialog = Android.Support.V7.App.AlertDialog;
-using Toolbar = Android.Support.V7.Widget.Toolbar;
 using Fragment = Android.Support.V4.App.Fragment;
+using FragmentManager = Android.Support.V4.App.FragmentManager;
+using Toolbar = Android.Support.V7.Widget.Toolbar;
 
 using TBL = rw_cos_mei.AppTable;
-using Android.Util;
-using Android.Support.V4.View;
-using Android.Support.V4.App;
-using FragmentManager = Android.Support.V4.App.FragmentManager;
-using Java.Util;
-using Android.Support.V4.Content;
-
+using Java.Lang;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///Activity_Main
@@ -59,14 +57,9 @@ namespace rw_cos_mei
 
         //###################################################################################
 
-        private bool onStartup;
-
         protected override void OnCreate(Bundle savedInstanceState)
         {
-
-            onStartup = false;
-            if (savedInstanceState == null) { onStartup = true; }
-            savedInstanceState = null;
+            
             base.OnCreate(savedInstanceState);
             
             //Layout füllen
@@ -75,50 +68,38 @@ namespace rw_cos_mei
             CreateToolbar();
             
         }
-     
+        protected override void OnSaveInstanceState(Bundle outState)
+        {
+            base.OnSaveInstanceState(outState);
+        }
+        
         protected override void OnResume()
         {
             base.OnResume();
 
-            //Hack, um den Statischen Speicher wiederherzustellen, wenn Android die App im Hintergrund killt. 
-            // -> Kein Bock, statt dem AppTable alle Objekte Parcelable zu programmieren.
+            //Statischen Speicher wiederherstellen, wenn im Hintergrund vom System gelöscht
             if(TBL.SP_Object == null)
             {
                 Activity_Init.InitRoutine(this);
             }
 
-            //Oberfläche an Sharepoint-Status anpassen
-            TBL.SP_Object.StateChanged += SP_Object_StateChanged;
+            //Eventhandler erstellen
+            CreateViewHandler(HandlerMethod.ADD_HANDLERS);
+
+            //SharepointStatus
             ViewStateChanger(TBL.SP_Object.State);
 
-            //ViewPager
-            c.VIEWPAGER.PageSelected += VIEWPAGER_PageSelected;
-
-            c.VIEWPAGER_ADAPTER.FRAGMENT_FEED.ItemSelected += LIST_FEED_ItemSelected;
-            c.VIEWPAGER_ADAPTER.FRAGMENT_SHIFTS.ItemSelected += LIST_SHIFTS_ItemSelected;
-            c.VIEWPAGER_ADAPTER.FRAGMENT_SHIFTS.AttachmentRetrieveError += LIST_SHIFTS_AttachmentRetrieveError;
-
             //Refresh erst beginnen, wenn App startet
-            if (onStartup)
+            if ((DateTime.Now - TBL.LastTableRefresh).TotalMinutes > 30 || TBL.IsFeedEmpty)
             {
-                onStartup = false;
-                if((DateTime.Now - TBL.LastTableRefresh).TotalMinutes > 30 || TBL.IsFeedEmpty)
-                {
-                    RefreshCloud();
-                }
+                RefreshCloud();
             }
-
+            
         }
         protected override void OnPause()
         {
 
-            TBL.SP_Object.StateChanged -= SP_Object_StateChanged;
-
-            c.VIEWPAGER.PageSelected -= VIEWPAGER_PageSelected;
-
-            c.VIEWPAGER_ADAPTER.FRAGMENT_FEED.ItemSelected -= LIST_FEED_ItemSelected;
-            c.VIEWPAGER_ADAPTER.FRAGMENT_SHIFTS.ItemSelected -= LIST_SHIFTS_ItemSelected;
-            c.VIEWPAGER_ADAPTER.FRAGMENT_SHIFTS.AttachmentRetrieveError -= LIST_SHIFTS_AttachmentRetrieveError;
+            CreateViewHandler(HandlerMethod.REMOVE_HANDLERS);
 
             base.OnPause();
         }
@@ -202,11 +183,43 @@ namespace rw_cos_mei
             Adapters.ViewPagerAdapter adapter = new Adapters.ViewPagerAdapter(SupportFragmentManager);
             c.VIEWPAGER_ADAPTER = adapter;
             c.VIEWPAGER.Adapter = adapter;
-
-            c.VIEWPAGER.OffscreenPageLimit = 2;
-
+            
             c.VIEWPAGER_ADAPTER.Inflate();
 
+        }
+
+        private void CreateViewHandler(HandlerMethod method)
+        {
+
+            if (method == HandlerMethod.ADD_HANDLERS)
+            {
+
+                //Oberfläche an Sharepoint-Status anpassen
+                TBL.SP_Object.StateChanged += SP_Object_StateChanged;
+                
+                //ViewPager
+                c.VIEWPAGER.PageSelected += VIEWPAGER_PageSelected;
+
+                c.VIEWPAGER_ADAPTER.FeedItemSelected += LIST_FEED_ItemSelected;
+                c.VIEWPAGER_ADAPTER.ShiftsItemSelected += LIST_SHIFTS_ItemSelected;
+                c.VIEWPAGER_ADAPTER.ShiftsItemAttachmentRetrieveError += LIST_SHIFTS_AttachmentRetrieveError;
+                
+            }
+            else
+            {
+
+                //Oberfläche an Sharepoint-Status anpassen
+                TBL.SP_Object.StateChanged -= SP_Object_StateChanged;
+
+                //ViewPager
+                c.VIEWPAGER.PageSelected -= VIEWPAGER_PageSelected;
+
+                c.VIEWPAGER_ADAPTER.FeedItemSelected -= LIST_FEED_ItemSelected;
+                c.VIEWPAGER_ADAPTER.ShiftsItemSelected -= LIST_SHIFTS_ItemSelected;
+                c.VIEWPAGER_ADAPTER.ShiftsItemAttachmentRetrieveError -= LIST_SHIFTS_AttachmentRetrieveError;
+
+            }
+            
         }
 
         private void CreateToolbar()
@@ -337,7 +350,7 @@ namespace rw_cos_mei
 
                     break;
 
-                case SharepointAPIState.ERROR:
+                case SharepointAPIState.SERVER_ERROR:
 
                     TBL.UnBlockSyncService();
 
@@ -376,8 +389,46 @@ namespace rw_cos_mei
 
                     break;
 
+                case SharepointAPIState.CONNECTION_LOST:
+
+                    TBL.UnBlockSyncService();
+
+                    c.REFRESH_PROGRESS.Visibility = ViewStates.Gone;
+                    c.REFRESH_PROGRESS_OVERLAY.Visibility = ViewStates.Gone;
+
+                    if (TBL.IsFeedEmpty)
+                    {
+
+                        //Dialog anzeigen, der WIEDERHOLEN anbietet.
+                        dialogError = new AlertDialog.Builder(this)
+                            .SetTitle(Resource.String.main_dialog_connect_title)
+                            .SetMessage(Resource.String.main_dialog_connect_msg)
+                            .SetPositiveButton(Resource.String.dialog_retry, (ss, ee) => { })
+                            .SetCancelable(true)
+                            .Show();
+                        dialogError.GetButton((int)DialogButtonType.Positive).Click += delegate
+                        {
+
+                            dialogError.Dismiss();
+                            RefreshCloud();
+
+                        };
+
+                    }
+                    else
+                    {
+
+                        //Snackbar anzeigen, mit WIEDERHOLEN
+                        View rootView = this.Window.DecorView.FindViewById(Android.Resource.Id.Content);
+                        Snackbar snack = Snackbar.Make(rootView, Resource.String.main_dialog_connect_msg, Snackbar.LengthLong);
+                        snack.SetAction(Resource.String.dialog_retry, (ss) => { RefreshCloud(); });
+                        snack.Show();
+
+                    }
+
+                    break;
+
                 case SharepointAPIState.OK:
-                case SharepointAPIState.LOGGED_IN:
                 case SharepointAPIState.OFFLINE:
 
                     TBL.UnBlockSyncService();
@@ -393,14 +444,32 @@ namespace rw_cos_mei
                     //Zeige Datenbank-Zeug
                     c.VIEWPAGER_ADAPTER.Inflate();
 
+                    if(HasFeedChanged)
+                    {
+                        c.VIEWPAGER_ADAPTER.JumpToTop();
+                    }
+
                     break;
 
             }  
 
         }
-        
+
+        private bool HasFeedChanged
+        {
+            get
+            {
+                int count = 0;
+                foreach (var item in TBL.FeedEntries)
+                {
+                    if (!item.MarkedRead) { count += 1; }
+                }
+                return count > 0;
+            }
+        }
+
         //###################################################################################
-        
+
         private void LIST_FEED_ItemSelected(object sender, Adapters.ListFeedAdapterItemSelectedEventArgs e)
         {
 
@@ -413,12 +482,36 @@ namespace rw_cos_mei
 
         }
         
-        private void LIST_SHIFTS_AttachmentRetrieveError(object sender, EventArgs e)
+        private void LIST_SHIFTS_AttachmentRetrieveError(object sender, Adapters.AttachmentRetrieveErrorEventArgs e)
         {
+
+            string ErrorText = "";
+
+            switch (e.Reason)
+            {
+                case Adapters.AttachmentRetrieveErrorReason.CONNECTION_LOST:
+
+                    ErrorText = GetString(Resource.String.main_connectionlost_attachment_snack);
+                    break;
+
+                case Adapters.AttachmentRetrieveErrorReason.RELOGIN_REQUIRED:
+
+                    ErrorText = GetString(Resource.String.main_relogin_attachment_snack);
+                    break;
+
+                case Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR:
+                default:
+
+                    ErrorText = GetString(Resource.String.main_error_attachment_snack);
+                    break;
+
+            }
+
+            if (string.IsNullOrWhiteSpace(ErrorText)) { return; }
 
             //Snackbar aufrufen
             View rootView = this.Window.DecorView.FindViewById(Android.Resource.Id.Content);
-            Snackbar snack = Snackbar.Make(rootView, "Anhang konnte nicht geladen werden. Internet?", Snackbar.LengthLong);
+            Snackbar snack = Snackbar.Make(rootView, ErrorText, Snackbar.LengthLong);
             snack.Show();
 
         }
@@ -443,12 +536,12 @@ namespace rw_cos_mei
 
             //###################################################################################
 
-            public ViewPagerAdapter(FragmentManager manager) : base(manager)
-            {
-                GetItem(0);
-                GetItem(1);
-            }
+            public ViewPagerAdapter(FragmentManager manager) : base(manager) { }
 
+            public event EventHandler<Adapters.ListFeedAdapterItemSelectedEventArgs> FeedItemSelected;
+            public event EventHandler<Adapters.ListShiftsAdapterItemSelectedEventArgs> ShiftsItemSelected;
+            public event EventHandler<Adapters.AttachmentRetrieveErrorEventArgs> ShiftsItemAttachmentRetrieveError;
+            
             //###################################################################################
 
             public override int Count => 2;
@@ -470,12 +563,66 @@ namespace rw_cos_mei
                 }
             }
 
+            public override Java.Lang.Object InstantiateItem(ViewGroup container, int position)
+            {
+
+                var frag = base.InstantiateItem(container, position);
+                if(frag is Fragments.Fragment_ListFeed)
+                {
+                    FRAGMENT_FEED = (Fragments.Fragment_ListFeed)frag;
+
+                    FRAGMENT_FEED.ItemSelected += FeedItemSelected;
+
+                    if (inflate_pending_feed)
+                    {
+                        inflate_pending_feed = false;
+                        FRAGMENT_FEED.Inflate();
+                    }
+                    
+                    return FRAGMENT_FEED;
+                }
+                else
+                {
+                    FRAGMENT_SHIFTS = (Fragments.Fragment_ListShifts)frag;
+
+                    FRAGMENT_SHIFTS.ItemSelected += ShiftsItemSelected;
+                    FRAGMENT_SHIFTS.AttachmentRetrieveError += ShiftsItemAttachmentRetrieveError;
+
+                    if (inflate_pending_shifts)
+                    {
+                        inflate_pending_shifts = false;
+                        FRAGMENT_SHIFTS.Inflate();
+                    }
+
+                    return FRAGMENT_SHIFTS;
+                }
+                
+            }
+
             //###################################################################################
+
+            bool inflate_pending_feed = false;
+            bool inflate_pending_shifts = false;
 
             public void Inflate()
             {
+
+                if(FRAGMENT_FEED == null) { inflate_pending_feed = true; }
+                if(FRAGMENT_SHIFTS == null) { inflate_pending_shifts = true; }
+                if(inflate_pending_feed || inflate_pending_shifts) { return; }
+
                 FRAGMENT_FEED.Inflate();
                 FRAGMENT_SHIFTS.Inflate();
+            }
+            public void JumpToTop()
+            {
+
+                if (FRAGMENT_FEED == null) { return; }
+                if (FRAGMENT_SHIFTS == null) { return; }
+
+                FRAGMENT_FEED.JumpToTop();
+                FRAGMENT_SHIFTS.JumpToTop();
+
             }
 
         }
@@ -561,7 +708,7 @@ namespace rw_cos_mei
                 _context = context;
                 CreateSource();
             }
-
+           
             private void CreateSource()
             {
 
@@ -658,8 +805,10 @@ namespace rw_cos_mei
                         if (!_viewholders.ContainsKey(position))
                         {
 
-                            v = new ViewHolder();
-                            v.CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feed_section_nounread, parent, false);
+                            v = new ViewHolder
+                            {
+                                CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feed_section_nounread, parent, false)
+                            };
 
                             _viewholders.Add(position, v);
 
@@ -676,8 +825,10 @@ namespace rw_cos_mei
                         if (!_viewholders.ContainsKey(position))
                         {
 
-                            v = new ViewHolder();
-                            v.CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feed_section_unread, parent, false);
+                            v = new ViewHolder
+                            {
+                                CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feed_section_unread, parent, false)
+                            };
 
                             v.UNREAD_COUNT = v.CONVERTVIEW.FindViewById<TextView>(Resource.Id.txt_unreadCount);
                             v.UNREAD_MARKALL = v.CONVERTVIEW.FindViewById(Resource.Id.btn_markAllRead);
@@ -697,8 +848,10 @@ namespace rw_cos_mei
                         if (!_viewholders.ContainsKey(position))
                         {
 
-                            v = new ViewHolder();
-                            v.CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feed_section_read, parent, false);
+                            v = new ViewHolder
+                            {
+                                CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feed_section_read, parent, false)
+                            };
 
                             _viewholders.Add(position, v);
 
@@ -712,8 +865,10 @@ namespace rw_cos_mei
                         if (!_viewholders.ContainsKey(position))
                         {
 
-                            v = new ViewHolder();
-                            v.CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feed_subhead_year, parent, false);
+                            v = new ViewHolder
+                            {
+                                CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feed_subhead_year, parent, false)
+                            };
 
                             v.SECTION_YEAR = v.CONVERTVIEW.FindViewById<TextView>(Resource.Id.txt_title);
 
@@ -731,8 +886,10 @@ namespace rw_cos_mei
                         if (!_viewholders.ContainsKey(position))
                         {
 
-                            v = new ViewHolder();
-                            v.CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feed_subhead_month, parent, false);
+                            v = new ViewHolder
+                            {
+                                CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feed_subhead_month, parent, false)
+                            };
 
                             v.SECTION_MONTH = v.CONVERTVIEW.FindViewById<TextView>(Resource.Id.txt_title);
 
@@ -750,8 +907,10 @@ namespace rw_cos_mei
                         if (!_viewholders.ContainsKey(position))
                         {
 
-                            v = new ViewHolder();
-                            v.CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feed_item, parent, false);
+                            v = new ViewHolder
+                            {
+                                CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feed_item, parent, false)
+                            };
 
                             v.ENTRY_TITLE = v.CONVERTVIEW.FindViewById<TextView>(Resource.Id.txt_title);
                             v.ENTRY_DATE = v.CONVERTVIEW.FindViewById<TextView>(Resource.Id.txt_date);
@@ -929,9 +1088,11 @@ namespace rw_cos_mei
                         if (!_viewholders.ContainsKey(position))
                         {
 
-                            v = new ViewHolder();
-                            v.CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_shifts_section_active, parent, false);
-                            
+                            v = new ViewHolder
+                            {
+                                CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_shifts_section_active, parent, false)
+                            };
+
                             _viewholders.Add(position, v);
 
                         }
@@ -944,8 +1105,10 @@ namespace rw_cos_mei
                         if (!_viewholders.ContainsKey(position))
                         {
 
-                            v = new ViewHolder();
-                            v.CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_shifts_section_inactive, parent, false);
+                            v = new ViewHolder
+                            {
+                                CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_shifts_section_inactive, parent, false)
+                            };
 
                             _viewholders.Add(position, v);
 
@@ -959,8 +1122,11 @@ namespace rw_cos_mei
                         if (!_viewholders.ContainsKey(position))
                         {
 
-                            v = new ViewHolder();
-                            v.CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_shifts_item, parent, false);
+                            v = new ViewHolder
+                            {
+                                CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_shifts_item, parent, false)
+                            };
+
                             v.ENTRY_TITLE = v.CONVERTVIEW.FindViewById<TextView>(Resource.Id.txt_title);
                             v.LASTUPDATE = v.CONVERTVIEW.FindViewById<TextView>(Resource.Id.txt_lastupdate);
                             v.LASTVERSION = v.CONVERTVIEW.FindViewById<TextView>(Resource.Id.txt_lastversion);
@@ -1032,10 +1198,22 @@ namespace rw_cos_mei
             public string AttachmentKey { get; }
         }
 
+        public class AttachmentRetrieveErrorEventArgs
+        {
+            public AttachmentRetrieveErrorEventArgs(AttachmentRetrieveErrorReason reason) { Reason = reason; }
+            public AttachmentRetrieveErrorReason Reason { get; }
+        }
+        public enum AttachmentRetrieveErrorReason
+        {
+            CONNECTION_LOST,
+            RETRIEVE_ERROR,
+            RELOGIN_REQUIRED
+        }
+
     }
     namespace Fragments
     {
-        
+
         public class Fragment_ListFeed : Fragment
         {
             
@@ -1062,9 +1240,15 @@ namespace rw_cos_mei
                 
                 ADAPTER_FEED = new Adapters.ListFeedAdapter(Activity);
                 LIST_FEED.Adapter = ADAPTER_FEED;
-
-                if(lastHeight > 0) { ADAPTER_FEED.UpdateNothingNewSubheadHeight(lastHeight); }
-
+                
+                if (lastHeight > 0) { ADAPTER_FEED.UpdateNothingNewSubheadHeight(lastHeight); }
+                LIST_FEED.SetSelectionFromTop(last_pos, last_offset);
+                
+            }
+            public void JumpToTop()
+            {
+                if(LIST_FEED == null) { return; }
+                LIST_FEED.SmoothScrollToPositionFromTop(0, 0);
             }
 
             public override void OnResume()
@@ -1074,39 +1258,54 @@ namespace rw_cos_mei
                 
                 LIST_FEED.LayoutChange += LIST_FEED_LayoutChange;
                 LIST_FEED.ItemClick += LIST_FEED_ItemClick;
-
-                if (Activity?.Intent != null)
-                {
-                    int position = Activity.Intent.GetIntExtra(BUNDLE_LIST_SCROLLINDEX, 0);
-                    int offset = Activity.Intent.GetIntExtra(BUNDLE_LIST_SCROLLOFFSET, 0);
-                    LIST_FEED.SetSelectionFromTop(position, offset);
-                }
-
-            }
+                LIST_FEED.ScrollStateChanged += LIST_FEED_ScrollStateChanged;
+                
+            }       
             public override void OnPause()
             {
                 base.OnPause();
 
                 LIST_FEED.LayoutChange -= LIST_FEED_LayoutChange;
                 LIST_FEED.ItemClick -= LIST_FEED_ItemClick;
-
-                int position = LIST_FEED.FirstVisiblePosition; View v = LIST_FEED.GetChildAt(0);
-                int top = (v == null) ? 0 : (v.Top - LIST_FEED.PaddingTop);
-
-                Activity.Intent.PutExtra(BUNDLE_LIST_SCROLLINDEX, position);
-                Activity.Intent.PutExtra(BUNDLE_LIST_SCROLLOFFSET, top);
+                LIST_FEED.ScrollStateChanged -= LIST_FEED_ScrollStateChanged;
                 
             }
             
+            public override void OnSaveInstanceState(Bundle outState)
+            {
+                base.OnSaveInstanceState(outState);
+
+                GetScrollPosition(out int position, out int offset);
+
+                outState.PutInt(BUNDLE_LIST_SCROLLINDEX, position);
+                outState.PutInt(BUNDLE_LIST_SCROLLOFFSET, offset);
+            }
+            public override void OnActivityCreated(Bundle savedInstanceState)
+            {
+                base.OnActivityCreated(savedInstanceState);
+                if (savedInstanceState == null) { return; }
+
+                int position = savedInstanceState.GetInt(BUNDLE_LIST_SCROLLINDEX, 0);
+                int offset = savedInstanceState.GetInt(BUNDLE_LIST_SCROLLOFFSET, 0);
+
+                last_pos = position;
+                last_offset = offset;
+
+            }
+
             //##########################################################################
-            
+
             private bool inflate_pending = false;
+
+            private int last_pos = 0;
+            private int last_offset = 0;
+
             public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
             {
                 View v = inflater.Inflate(Resource.Layout.fragment_main_list_feed, null);
                 LIST_FEED = v.FindViewById<ListView>(Resource.Id.main_list_feed);
                 LIST_FEED.Divider = null;
-
+                
                 if (inflate_pending)
                 {
                     inflate_pending = false;
@@ -1116,15 +1315,22 @@ namespace rw_cos_mei
                 return v;
             }
 
+            private void GetScrollPosition(out int position, out int offset)
+            {
+                position = LIST_FEED.FirstVisiblePosition; View v = LIST_FEED.GetChildAt(0);
+                offset = (v == null) ? 0 : (v.Top - LIST_FEED.PaddingTop);
+            }
+
             //##########################################################################
             
             private int lastHeight = -1;
+
             private void LIST_FEED_LayoutChange(object sender, View.LayoutChangeEventArgs e)
             {
                 var height = e.Bottom - e.Top;
                 lastHeight = height;
 
-                ADAPTER_FEED.UpdateNothingNewSubheadHeight(height);
+                if (ADAPTER_FEED != null) { ADAPTER_FEED.UpdateNothingNewSubheadHeight(height); }
             }
             
             private void LIST_FEED_ItemClick(object sender, AdapterView.ItemClickEventArgs e)
@@ -1136,6 +1342,16 @@ namespace rw_cos_mei
                 TBL.MarkReadFeedEntry(x.Key);
                 ItemSelected?.Invoke(this, new Adapters.ListFeedAdapterItemSelectedEventArgs(x.Key));
 
+            }
+
+            private void LIST_FEED_ScrollStateChanged(object sender, AbsListView.ScrollStateChangedEventArgs e)
+            {
+                if (e.ScrollState == ScrollState.Idle)
+                {
+                    GetScrollPosition(out int position, out int offset);
+                    last_pos = position;
+                    last_offset = offset;
+                }
             }
 
         }
@@ -1151,7 +1367,7 @@ namespace rw_cos_mei
             //##########################################################################
 
             public event EventHandler<Adapters.ListShiftsAdapterItemSelectedEventArgs> ItemSelected;
-            public event EventHandler AttachmentRetrieveError;
+            public event EventHandler<Adapters.AttachmentRetrieveErrorEventArgs> AttachmentRetrieveError;
 
             //##########################################################################
 
@@ -1167,6 +1383,13 @@ namespace rw_cos_mei
                 ADAPTER_SHIFTS = new Adapters.ListShiftsAdapter(Activity);
                 LIST_SHIFTS.Adapter = ADAPTER_SHIFTS;
 
+                LIST_SHIFTS.SetSelectionFromTop(last_pos, last_offset);
+
+            }
+            public void JumpToTop()
+            {
+                if (LIST_SHIFTS == null) { return; }
+                LIST_SHIFTS.SmoothScrollToPositionFromTop(0, 0);
             }
 
             public override void OnResume()
@@ -1175,14 +1398,8 @@ namespace rw_cos_mei
                 base.OnResume();
 
                 LIST_SHIFTS.ItemClick += LIST_SHIFTS_ItemClick;
-
-                if (Activity?.Intent != null)
-                {
-                    int position = Activity.Intent.GetIntExtra(BUNDLE_LIST_SCROLLINDEX, 0);
-                    int offset = Activity.Intent.GetIntExtra(BUNDLE_LIST_SCROLLOFFSET, 0);
-                    LIST_SHIFTS.SetSelectionFromTop(position, offset);
-                }
-
+                LIST_SHIFTS.ScrollStateChanged += LIST_SHIFTS_ScrollStateChanged;
+                
             }
             public override void OnPause()
             {
@@ -1190,13 +1407,61 @@ namespace rw_cos_mei
                 base.OnPause();
 
                 LIST_SHIFTS.ItemClick -= LIST_SHIFTS_ItemClick;
+                LIST_SHIFTS.ScrollStateChanged -= LIST_SHIFTS_ScrollStateChanged;
 
-                int position = LIST_SHIFTS.FirstVisiblePosition; View v = LIST_SHIFTS.GetChildAt(0);
-                int top = (v == null) ? 0 : (v.Top - LIST_SHIFTS.PaddingTop);
+            }
 
-                Activity.Intent.PutExtra(BUNDLE_LIST_SCROLLINDEX, position);
-                Activity.Intent.PutExtra(BUNDLE_LIST_SCROLLOFFSET, top);
+            public override void OnSaveInstanceState(Bundle outState)
+            {
+                base.OnSaveInstanceState(outState);
 
+                GetScrollPosition(out int position, out int offset);
+
+                outState.PutInt(BUNDLE_LIST_SCROLLINDEX, position);
+                outState.PutInt(BUNDLE_LIST_SCROLLOFFSET, offset);
+
+            }
+            public override void OnActivityCreated(Bundle savedInstanceState)
+            {
+                base.OnActivityCreated(savedInstanceState);
+                if (savedInstanceState == null) { return; }
+
+                int position = savedInstanceState.GetInt(BUNDLE_LIST_SCROLLINDEX, 0);
+                int offset = savedInstanceState.GetInt(BUNDLE_LIST_SCROLLOFFSET, 0);
+
+                last_pos = position;
+                last_offset = offset;
+
+            }
+
+            //##########################################################################
+
+            private bool inflate_pending = false;
+
+            private int last_pos = 0;
+            private int last_offset = 0;
+
+            public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+            {
+                View v = inflater.Inflate(Resource.Layout.fragment_main_list_shifts, null);
+                LIST_SHIFTS = v.FindViewById<ListView>(Resource.Id.main_list_shifts);
+
+                LIST_SHIFTS.Divider = ContextCompat.GetDrawable(Context, Resource.Drawable.trans_divider);
+                LIST_SHIFTS.DividerHeight = (int)TypedValue.ApplyDimension(ComplexUnitType.Dip, 1, Resources.DisplayMetrics);
+
+                if (inflate_pending)
+                {
+                    inflate_pending = false;
+                    Inflate();
+                }
+
+                return v;
+            }
+
+            private void GetScrollPosition(out int position, out int offset)
+            {
+                position = LIST_SHIFTS.FirstVisiblePosition; View v = LIST_SHIFTS.GetChildAt(0);
+                offset = (v == null) ? 0 : (v.Top - LIST_SHIFTS.PaddingTop);
             }
 
             //##########################################################################
@@ -1212,6 +1477,16 @@ namespace rw_cos_mei
 
             }
 
+            private void LIST_SHIFTS_ScrollStateChanged(object sender, AbsListView.ScrollStateChangedEventArgs e)
+            {
+                if (e.ScrollState == ScrollState.Idle)
+                {
+                    GetScrollPosition(out int position, out int offset);
+                    last_pos = position;
+                    last_offset = offset;
+                }
+            }
+
             private void ViewAttachment(ShiftsEntry x, Adapters.ListShiftsAdapter.ViewHolder v)
             {
 
@@ -1224,17 +1499,20 @@ namespace rw_cos_mei
                 }
                 else
                 {
-                    
+
                     v.PROGRESS.Visibility = ViewStates.Visible;
 
                     TBL.SP_Object.GetNewsFeedAttachment(x.ShiftAttachment,
-                    delegate
+                    delegate (Adapters.AttachmentRetrieveErrorReason reason)
                     {
 
-                        v.PROGRESS.Visibility = ViewStates.Gone;
-                        v.CONVERTVIEW.Tag = null;
+                        if (reason != Adapters.AttachmentRetrieveErrorReason.RELOGIN_REQUIRED)
+                        {
+                            v.PROGRESS.Visibility = ViewStates.Gone;
+                            v.CONVERTVIEW.Tag = null;
+                        }
 
-                        AttachmentRetrieveError?.Invoke(this, new EventArgs());
+                        AttachmentRetrieveError?.Invoke(this, new Adapters.AttachmentRetrieveErrorEventArgs(reason));
 
                     },
                     delegate (string localPath)
@@ -1255,27 +1533,7 @@ namespace rw_cos_mei
                 }
 
             }
-
-            //##########################################################################
-
-            private bool inflate_pending = false;
-            public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
-            {
-                View v = inflater.Inflate(Resource.Layout.fragment_main_list_shifts, null);
-                LIST_SHIFTS = v.FindViewById<ListView>(Resource.Id.main_list_shifts);
-
-                LIST_SHIFTS.Divider = ContextCompat.GetDrawable(Context, Resource.Drawable.trans_divider);
-                LIST_SHIFTS.DividerHeight = (int)TypedValue.ApplyDimension(ComplexUnitType.Dip, 1, Resources.DisplayMetrics);
-
-                if (inflate_pending)
-                {
-                    inflate_pending = false;
-                    Inflate();
-                }
-
-                return v;
-            }
-
+            
         }
 
     }

@@ -1,6 +1,11 @@
 ﻿using Android.Content;
+using Android.OS;
 using Android.Preferences;
-
+using Android.Security;
+using Android.Security.Keystore;
+using Java.Security;
+using Java.Util;
+using Javax.Crypto;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,14 +25,19 @@ namespace rw_cos_mei
     public class AppTable
     {
         
-        public const string SETTINGS_USERNAME = "settings_username";
-        public const string SETTINGS_PASSWORD = "settings_password";
+        public const string PREF_USERNAME = "settings_username";
+        public const string PREF_PASSWORD = "settings_password";
+        public const string PREF_SEC_USERNAME = "settings_username_keystore";
+        public const string PREF_SEC_PASSWORD = "settings_password_keystore";
 
-        public const string SETTINGS_SYNCINTERVAL = "settings_sync_interval";
-        public const string SETTINGS_SYNCNOTIFY = "settings_sync_notification";
-        public const string SETTINGS_LASTREFRESH = "settings_sync_lastrefresh";
+        public const string PREF_SHAREPOINT_BEARER = "settings_bearer_Token";
+        public const string PREF_SHAREPOINT_OAUTHT = "settings_oauth_Token";
 
-        public const string SETTINGS_BOTTOMNAV_ID = "settings_bottomnav_id";
+        public const string PREF_SYNCINTERVAL = "settings_sync_interval";
+        public const string PREF_SYNCNOTIFY = "settings_sync_notification";
+        public const string PREF_LASTREFRESH = "settings_sync_lastrefresh";
+
+        public const string PREF_BOTTOMNAV_ID = "settings_bottomnav_id";
 
         public const int SETTINGS_OLDFEED_MONTHOFFSET = 12;
         
@@ -36,12 +46,22 @@ namespace rw_cos_mei
         public static string Username { get; private set; }
         public static string Password { get; private set; }
 
+        public static string BearerToken { get; private set; }
+        public static string OAuthToken { get; private set; }
+
         public static void UpdateCredentials(string username, string password)
         {
             Username = username;
             Password = password;
 
             SP_Object.SetCredentials(username, password);
+            SaveSettings(cc);
+        }
+        public static void UpdateTokens(string token, string oauth)
+        {
+            BearerToken = token;
+            OAuthToken = oauth;
+
             SaveSettings(cc);
         }
 
@@ -365,6 +385,7 @@ namespace rw_cos_mei
             //Sharepoint-API
             SP_Object = new SharepointAPI(context);
             SP_Object.SetCredentials(Username, Password);
+            SP_Object.SetTokens(BearerToken, OAuthToken);
 
         }
 
@@ -376,28 +397,46 @@ namespace rw_cos_mei
             cc = context;
 
             //Anmeldung
-            string get_username = prefs.GetString(SETTINGS_USERNAME, string.Empty);
-            string get_password = prefs.GetString(SETTINGS_PASSWORD, string.Empty);
+            string get_username = prefs.GetString(PREF_USERNAME, string.Empty);
+            string get_password = prefs.GetString(PREF_PASSWORD, string.Empty);
+            string get_sec_username = prefs.GetString(PREF_SEC_USERNAME, string.Empty);
+            string get_sec_password = prefs.GetString(PREF_SEC_PASSWORD, string.Empty);
 
-            var cs = new CredentialStore();
-            cs.DecryptCredentials(get_username, get_password);
+            if (!string.IsNullOrWhiteSpace(get_sec_username) && !string.IsNullOrWhiteSpace(get_sec_password))
+            {
+                var scs = new SecureCredentialStore(context);
+                scs.Decrypt(get_sec_username, get_sec_password);
+                Username = scs.User;
+                Password = scs.Pass;
+            }
+            else
+            {
+                var cs = new CredentialStore();
+                cs.DecryptCredentials(get_username, get_password);
+                Username = cs.Username;
+                Password = cs.Password;
+            }
 
-            Username = cs.Username;
-            Password = cs.Password;
-            
+            Username = "rw.mei@malteser.org";
+            Password = "malta1958#";
+
+            BearerToken  = prefs.GetString(PREF_SHAREPOINT_BEARER, string.Empty);
+            OAuthToken = prefs.GetString(PREF_SHAREPOINT_OAUTHT, string.Empty);
+
             //Listen
             _tableFeed = new Dictionary<string, FeedEntry>();
             _tableShifts = new Dictionary<string, ShiftsEntry>();
-            LastTableRefresh = DateTime.Parse(prefs.GetString(SETTINGS_LASTREFRESH, DateTime.MinValue.ToString()));
+            
+            LastTableRefresh = DateTime.ParseExact(prefs.GetString(PREF_LASTREFRESH, DateTime.MinValue.ToString("dd.MM.yyyy HH:mm:ss")), "dd.MM.yyyy HH:mm:ss", null);
 
             //Sync-Einstellungen
-            SyncInterval = (SyncIntervalSetting)prefs.GetInt(SETTINGS_SYNCINTERVAL, (int)SyncIntervalSetting.ONE_A_DAY);
+            SyncInterval = (SyncIntervalSetting)prefs.GetInt(PREF_SYNCINTERVAL, (int)SyncIntervalSetting.ONE_A_DAY);
 
             //Benachrichtigung-Einstellungen
-            NotificationType = (Notification.NotifySettings.NotifySettingsType)prefs.GetInt(SETTINGS_SYNCNOTIFY, (int)Notification.NotifySettings.NotifySettingsType.FEED_AND_SHIFTS);
+            NotificationType = (Notification.NotifySettings.NotifySettingsType)prefs.GetInt(PREF_SYNCNOTIFY, (int)Notification.NotifySettings.NotifySettingsType.FEED_AND_SHIFTS);
 
             //MainActivity
-            BottomNavigationSelectedId = prefs.GetInt(SETTINGS_BOTTOMNAV_ID, Resource.Id.menu_feed);
+            BottomNavigationSelectedId = prefs.GetInt(PREF_BOTTOMNAV_ID, Resource.Id.menu_feed);
 
         }
         public static void SaveSettings(Context context)
@@ -405,17 +444,22 @@ namespace rw_cos_mei
             ISharedPreferences prefs = PreferenceManager.GetDefaultSharedPreferences(context);
             ISharedPreferencesEditor editor = prefs.Edit();
 
-            var cs = new CredentialStore();
-            cs.EncryptCredentials(Username, Password);
+            var ss = new SecureCredentialStore(context);
+            ss.Encrypt(Username, Password);
             
-            editor.PutString(SETTINGS_USERNAME, cs.EncryptedUsername); 
-            editor.PutString(SETTINGS_PASSWORD, cs.EncryptedPassword);
+            editor.PutString(PREF_USERNAME, string.Empty); 
+            editor.PutString(PREF_PASSWORD, string.Empty);
+            editor.PutString(PREF_SEC_USERNAME, ss.Enc_User);
+            editor.PutString(PREF_SEC_PASSWORD, ss.Enc_Pass);
 
-            editor.PutInt(SETTINGS_SYNCINTERVAL, (int)SyncInterval);
-            editor.PutInt(SETTINGS_SYNCNOTIFY, (int)NotificationType);
-            editor.PutString(SETTINGS_LASTREFRESH, LastTableRefresh.ToString());
+            editor.PutString(PREF_SHAREPOINT_BEARER, BearerToken);
+            editor.PutString(PREF_SHAREPOINT_OAUTHT, OAuthToken);
 
-            editor.PutInt(SETTINGS_BOTTOMNAV_ID, BottomNavigationSelectedId);
+            editor.PutInt(PREF_SYNCINTERVAL, (int)SyncInterval);
+            editor.PutInt(PREF_SYNCNOTIFY, (int)NotificationType);
+            editor.PutString(PREF_LASTREFRESH, LastTableRefresh.ToString("dd.MM.yyyy HH:mm:ss"));
+
+            editor.PutInt(PREF_BOTTOMNAV_ID, BottomNavigationSelectedId);
 
             editor.Apply();
         }
@@ -751,6 +795,138 @@ namespace rw_cos_mei
 
             public string EncryptedUsername { get; private set; }
             public string EncryptedPassword { get; private set; }
+
+        }
+        private class SecureCredentialStore
+        {
+
+            public SecureCredentialStore(Context context)
+            {
+
+                _context = context;
+
+                storeObject = KeyStore.GetInstance(AndroidKeyStore);
+                storeObject.Load(null);
+
+
+                if(!storeObject.ContainsAlias(KEYALIAS_CREDENTIALS))
+                {
+                    CreateKey_Credentials();
+                }
+
+                Key_private = storeObject.GetKey(KEYALIAS_CREDENTIALS, null);
+                Key_public = storeObject.GetCertificate(KEYALIAS_CREDENTIALS)?.PublicKey;
+
+            }
+
+            private readonly Context _context;
+            private KeyStore storeObject;
+
+            private readonly IKey Key_private;
+            private readonly IPublicKey Key_public;
+
+            private void CreateKey_Credentials()
+            {
+
+                var generator = KeyPairGenerator.GetInstance("RSA", AndroidKeyStore);
+
+                if (Build.VERSION.SdkInt < BuildVersionCodes.M)
+                {
+
+                    Calendar calendar = Calendar.Instance;
+                    calendar.Add(CalendarField.Year, 20);
+
+                    Date startDate = Calendar.Instance.Time;
+                    Date endDate = calendar.Time;
+
+#pragma warning disable 0618
+
+                    var builder = new KeyPairGeneratorSpec.Builder(_context);
+
+#pragma warning restore 0618
+
+                    builder.SetAlias(KEYALIAS_CREDENTIALS);
+                    builder.SetSerialNumber(Java.Math.BigInteger.One);
+                    builder.SetSubject(new Javax.Security.Auth.X500.X500Principal("CN=${alias} CA Certificate"));
+                    builder.SetStartDate(startDate);
+                    builder.SetEndDate(endDate);
+
+                    generator.Initialize(builder.Build());
+                        
+                }
+                else
+                {
+
+                    var builder = new KeyGenParameterSpec.Builder(KEYALIAS_CREDENTIALS, KeyStorePurpose.Encrypt | KeyStorePurpose.Decrypt);
+                    builder.SetBlockModes(KeyProperties.BlockModeEcb);
+                    builder.SetEncryptionPaddings(KeyProperties.EncryptionPaddingRsaPkcs1);
+                    generator.Initialize(builder.Build());
+
+                }
+                
+                generator.GenerateKeyPair();
+
+            }
+
+            //###############################################################################
+
+            private readonly static string AndroidKeyStore = "AndroidKeyStore";
+            private readonly static string KeyTransformation = "RSA/ECB/PKCS1Padding";
+
+            private readonly static string KEYALIAS_CREDENTIALS = "CRED_KEY";
+            
+            //###############################################################################
+
+            public string Pass { get; private set; }
+            public string User { get; private set; }
+
+            public string Enc_Pass { get; private set; }
+            public string Enc_User { get; private set; }
+
+            //###############################################################################
+
+            private class CipherWrapper
+            {
+
+                private Cipher cipher;
+
+                public CipherWrapper(string transformation)
+                {
+                    cipher = Cipher.GetInstance(transformation);
+                }
+
+                public string EncryptString(string data, IKey key)
+                {
+                    cipher.Init(Javax.Crypto.CipherMode.EncryptMode, key);
+                    var bytes = cipher.DoFinal(new ASCIIEncoding().GetBytes(data));
+                    return Convert.ToBase64String(bytes);
+
+                }
+                
+                public string DecryptString(string data, IKey key)
+                {
+                    cipher.Init(Javax.Crypto.CipherMode.DecryptMode, key);
+                    var encryptedData = Convert.FromBase64String(data);
+                    var decodedData = cipher.DoFinal(encryptedData);
+                    return new ASCIIEncoding().GetString(decodedData);
+                }
+
+            }
+
+            public void Decrypt(string enc_username, string enc_password)
+            {
+                Enc_User = enc_username;
+                Enc_Pass = enc_password;
+                User = new CipherWrapper(KeyTransformation)?.DecryptString(Enc_User, Key_private);
+                Pass = new CipherWrapper(KeyTransformation)?.DecryptString(Enc_Pass, Key_private);
+            }
+            public void Encrypt(string username, string password)
+            {
+                User = username;
+                Pass = password;
+                Enc_User = new CipherWrapper(KeyTransformation)?.EncryptString(User, Key_public);
+                Enc_Pass = new CipherWrapper(KeyTransformation)?.EncryptString(Pass, Key_public);
+            }
 
         }
 

@@ -35,11 +35,19 @@ namespace rw_cos_mei
             public View BTN_ICON_ERROR;
             public View BTN_ICON_WORKING;
 
+            public View CARD_WRONGLOGIN_HINT;
+            public Button CARD_WRONGLOGIN_HINT_RETRY;
+
+            public View CARD_CONNECTIONLOST_HINT;
+            public Button CARD_CONNECTIONLOST_HINT_RETRY;
+
             public Spinner SPINNER_TIME;
 
             public CheckBox CHECK_NOTIFY_NEWFEED;
             public CheckBox CHECK_NOTIFY_NEWSHIFTS;
             public CheckBox CHECK_NOTIFY_NEWSHIFTSVERSION;
+
+            public Button NOTIFICATION_LINK;
             
         }
         private ViewHolder c;
@@ -52,23 +60,40 @@ namespace rw_cos_mei
 
             //Layout füllen
             SetContentView(Resource.Layout.activity_settings);
+
             CreateViewholder();
-            CreateToolbar();
             CreateSpinner();
-                        
+
+            CreateToolbar();
+                                    
         }
 
         protected override void OnResume()
         {
-            TBL.SP_Object.StateChanged += SP_Object_StateChanged;
+
+            //Statischen Speicher wiederherstellen, wenn im Hintergrund vom System gelöscht
+            if (TBL.SP_Object == null)
+            {
+                Activity_Init.InitRoutine(this);
+            }
+
+            //Eventhandler hinzufügen
+            CreateViewHandler(HandlerMethod.ADD_HANDLERS);
+
+            //Oberfläche an SharepointState anpassen
             SP_Object_StateChanged(null, new SharepointAPIStateChangedEventArgs(TBL.SP_Object.State));
 
             base.OnResume();
+
         }
         protected override void OnPause()
         {
-            TBL.SP_Object.StateChanged -= SP_Object_StateChanged;
+
+            //Eventhandler entfernen
+            CreateViewHandler(HandlerMethod.REMOVE_HANDLERS);
+
             base.OnPause();
+
         }
 
         private void SP_Object_StateChanged(object sender, SharepointAPIStateChangedEventArgs e)
@@ -84,8 +109,10 @@ namespace rw_cos_mei
                     c.BTN_ICON_WORKING.Visibility = ViewStates.Visible;
 
                     break;
+
+                case SharepointAPIState.CONNECTION_LOST:
                 case SharepointAPIState.WRONG_LOGIN:
-                case SharepointAPIState.ERROR:
+                case SharepointAPIState.SERVER_ERROR:
                     c.BTN_CRED.Tag = null;
                     c.BTN_ICON_OK.Visibility = ViewStates.Invisible;
                     c.BTN_ICON_WORKING.Visibility = ViewStates.Invisible;
@@ -136,20 +163,22 @@ namespace rw_cos_mei
                 BTN_ICON_ERROR = FindViewById(Resource.Id.icon_credentialsInput_error),
                 BTN_ICON_WORKING = FindViewById(Resource.Id.icon_credentialsInput_working),
 
+                CARD_WRONGLOGIN_HINT = FindViewById(Resource.Id.card_wronglogin_hint),
+                CARD_WRONGLOGIN_HINT_RETRY = FindViewById<Button>(Resource.Id.card_wronglogin_retrybutton),
+                CARD_CONNECTIONLOST_HINT = FindViewById(Resource.Id.card_connectionlost_hint),
+                CARD_CONNECTIONLOST_HINT_RETRY = FindViewById<Button>(Resource.Id.card_connectionlost_retrybutton),
+
                 SPINNER_TIME = FindViewById<Spinner>(Resource.Id.spinner_sync_time),
 
                 CHECK_NOTIFY_NEWFEED = FindViewById<CheckBox>(Resource.Id.check_noti_feed),
                 CHECK_NOTIFY_NEWSHIFTS = FindViewById<CheckBox>(Resource.Id.check_noti_shifts),
-                CHECK_NOTIFY_NEWSHIFTSVERSION = FindViewById<CheckBox>(Resource.Id.check_noti_shiftsVersion)
+                CHECK_NOTIFY_NEWSHIFTSVERSION = FindViewById<CheckBox>(Resource.Id.check_noti_shiftsVersion),
+
+                NOTIFICATION_LINK = FindViewById<Button>(Resource.Id.btn_notification_link)
             };
-
-            //Credentials-Button
-            c.BTN_CRED.Click += LOGIN_BTN_Click;
-
-            //Häufigkeit-Spinner
-            c.SPINNER_TIME.ItemSelected += SPINNER_TIME_ItemSelected;
-
+            
             //Benachrichtigungs-Checkboxen
+            notification_checkbox_initiate = true;
             if (TBL.NotificationType == Notification.NotifySettings.NotifySettingsType.ONLY_FEED ||
                 TBL.NotificationType == Notification.NotifySettings.NotifySettingsType.FEED_AND_SHIFTS ||
                 TBL.NotificationType == Notification.NotifySettings.NotifySettingsType.FEED_AND_SHIFTS_AND_VERSIONS) { c.CHECK_NOTIFY_NEWFEED.Checked = true; }
@@ -161,11 +190,62 @@ namespace rw_cos_mei
 
             if (TBL.NotificationType == Notification.NotifySettings.NotifySettingsType.SHIFTS_AND_VERSIONS ||
                TBL.NotificationType == Notification.NotifySettings.NotifySettingsType.FEED_AND_SHIFTS_AND_VERSIONS) { c.CHECK_NOTIFY_NEWSHIFTSVERSION.Checked = true; }
+            notification_checkbox_initiate = false;
 
-            c.CHECK_NOTIFY_NEWFEED.CheckedChange += CHECK_NOTIFY_CHANGED;
-            c.CHECK_NOTIFY_NEWSHIFTS.CheckedChange += CHECK_NOTIFY_CHANGED;
-            c.CHECK_NOTIFY_NEWSHIFTSVERSION.CheckedChange += CHECK_NOTIFY_CHANGED;
+            //Channellink
+            if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
+            {
+                c.NOTIFICATION_LINK.Visibility = ViewStates.Visible;
+            }
+            else
+            {
+                c.NOTIFICATION_LINK.Visibility = ViewStates.Gone;
+            }
+
+        }
+        private void CreateViewHandler(HandlerMethod method)
+        {
+
+            if(method == HandlerMethod.ADD_HANDLERS)
+            {
+
+                TBL.SP_Object.StateChanged += SP_Object_StateChanged;
+                
+                c.BTN_CRED.Click += CREDENTIAL_BTN_Click;
+                c.CARD_WRONGLOGIN_HINT_RETRY.Click += CARD_WRONGLOGIN_HINT_RETRY_ClickAsync;
+
+                c.SPINNER_TIME.ItemSelected += SPINNER_TIME_ItemSelected;
+                
+                c.CHECK_NOTIFY_NEWFEED.CheckedChange += CHECK_NOTIFY_CHANGED;
+                c.CHECK_NOTIFY_NEWSHIFTS.CheckedChange += CHECK_NOTIFY_CHANGED;
+                c.CHECK_NOTIFY_NEWSHIFTSVERSION.CheckedChange += CHECK_NOTIFY_CHANGED;
+
+                c.NOTIFICATION_LINK.Click += NOTIFICATION_LINK_Click;
+
+            }
+            else
+            {
+
+                TBL.SP_Object.StateChanged -= SP_Object_StateChanged;
+
+                c.BTN_CRED.Click -= CREDENTIAL_BTN_Click;
+                c.CARD_WRONGLOGIN_HINT_RETRY.Click -= CARD_WRONGLOGIN_HINT_RETRY_ClickAsync;
+
+                c.SPINNER_TIME.ItemSelected -= SPINNER_TIME_ItemSelected;
+
+                c.CHECK_NOTIFY_NEWFEED.CheckedChange -= CHECK_NOTIFY_CHANGED;
+                c.CHECK_NOTIFY_NEWSHIFTS.CheckedChange -= CHECK_NOTIFY_CHANGED;
+                c.CHECK_NOTIFY_NEWSHIFTSVERSION.CheckedChange -= CHECK_NOTIFY_CHANGED;
+
+                c.NOTIFICATION_LINK.Click -= NOTIFICATION_LINK_Click;
+
+            }
+
             
+            
+
+            
+
         }
         
         private void CreateToolbar()
@@ -184,7 +264,7 @@ namespace rw_cos_mei
             try
             {
                 TextView txt_version = FindViewById<TextView>(Resource.Id.txt_appversion);
-                txt_version.Text = Application.Context.ApplicationContext.PackageManager.GetPackageInfo(Application.Context.ApplicationContext.PackageName, 0).VersionName;
+                txt_version.Text = "Ver. " + Application.Context.ApplicationContext.PackageManager.GetPackageInfo(Application.Context.ApplicationContext.PackageName, 0).VersionName;
             }
             catch (Exception) { }
             
@@ -224,8 +304,11 @@ namespace rw_cos_mei
 
         }
 
+        private bool notification_checkbox_initiate = false;
         private void CHECK_NOTIFY_CHANGED(object sender, CompoundButton.CheckedChangeEventArgs e)
         {
+
+            if(notification_checkbox_initiate) { return; }
 
             c.CHECK_NOTIFY_NEWSHIFTSVERSION.Enabled = c.CHECK_NOTIFY_NEWSHIFTS.Checked;
             var state = Notification.NotifySettings.NotifySettingsType.FEED_AND_SHIFTS_AND_VERSIONS;
@@ -274,12 +357,28 @@ namespace rw_cos_mei
             TBL.UpdateSyncNotification(state);
 
         }
-                
+        
+        private void NOTIFICATION_LINK_Click(object sender, EventArgs e)
+        {
+
+            if(Build.VERSION.SdkInt >= BuildVersionCodes.O)
+            {
+
+                Intent link = new Intent(Android.Provider.Settings.ActionChannelNotificationSettings);
+                link.PutExtra(Android.Provider.Settings.ExtraAppPackage, PackageName);
+                link.PutExtra(Android.Provider.Settings.ExtraChannelId, rw_cos_mei.Notification.CHANNEL_ID);
+                StartActivity(link);
+
+            }
+            
+        }
+
         //###################################################################################
 
         private void UpdateLoginButton()
         {
 
+            //Nutzername anpassen
             if(string.IsNullOrWhiteSpace(TBL.Username))
             {
                 c.BTN_CRED_USERNAME.Text = Resources.GetString(Resource.String.settings_cred_btn_noone);
@@ -289,9 +388,50 @@ namespace rw_cos_mei
                 c.BTN_CRED_USERNAME.Text = TBL.Username;
             }
 
-        }
+            //Wronglogin-Card
+            switch (TBL.SP_Object.State)
+            {
+                case SharepointAPIState.OFFLINE:
+                case SharepointAPIState.WORKING:
+                case SharepointAPIState.LOGGED_IN:
+                case SharepointAPIState.OK:
 
-        private void LOGIN_BTN_Click(object sender, EventArgs e)
+                    c.CARD_WRONGLOGIN_HINT.Visibility = ViewStates.Gone;
+                    c.CARD_CONNECTIONLOST_HINT.Visibility = ViewStates.Gone;
+
+                    break;
+
+                case SharepointAPIState.SERVER_ERROR:
+                case SharepointAPIState.WRONG_LOGIN:
+
+                    c.CARD_CONNECTIONLOST_HINT.Visibility = ViewStates.Gone;
+
+                    if (TBL.IsFeedEmpty)
+                    {
+
+                        c.CARD_WRONGLOGIN_HINT.Visibility = ViewStates.Gone;
+
+                    }
+                    else
+                    { 
+
+                        c.CARD_WRONGLOGIN_HINT.Visibility = ViewStates.Visible;
+
+                    }
+
+                    break;
+
+                case SharepointAPIState.CONNECTION_LOST:
+
+                    c.CARD_WRONGLOGIN_HINT.Visibility = ViewStates.Gone;
+                    c.CARD_CONNECTIONLOST_HINT.Visibility = ViewStates.Visible;
+
+                    break;
+
+            }
+
+        }
+        private void CREDENTIAL_BTN_Click(object sender, EventArgs e)
         {
             if(c.BTN_CRED.Tag != null) { return; } //Wenn State == Working
 
@@ -299,9 +439,26 @@ namespace rw_cos_mei
                 async (object ss, Dialogs.DialogCredentialsInputEventArgs ee) => 
                 {
                     TBL.UpdateCredentials(ee.Username, ee.Password);
-                    
+
+                    int timeout = 30 * (1000 / 200);
+                    while (TBL.SP_Object.State == SharepointAPIState.WORKING)
+                    {
+                        timeout -= 1;
+                        if(timeout <= 0) { return; }
+
+                        await System.Threading.Tasks.Task.Delay(200);
+                    }
+
                     await TBL.SP_Object.UpdateNewsFeed();
                 });
+        }
+
+        private async void CARD_WRONGLOGIN_HINT_RETRY_ClickAsync(object sender, EventArgs e)
+        {
+            if(TBL.SP_Object.State != SharepointAPIState.WORKING)
+            {
+                await TBL.SP_Object.UpdateNewsFeed();
+            }
         }
 
     }

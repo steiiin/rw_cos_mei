@@ -53,6 +53,12 @@ namespace rw_cos_mei
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
+            //Statischen Speicher wiederherstellen, wenn im Hintergrund vom System gelöscht
+            if (TBL.SP_Object == null)
+            {
+                Activity_Init.InitRoutine(this);
+            }
+
             base.OnCreate(savedInstanceState);
 
             //entryFeed
@@ -64,9 +70,9 @@ namespace rw_cos_mei
 
             CreateViewholder();
             CreateToolbar();
-                        
+                                    
         }
-
+        
         //###################################################################################
 
         public override bool OnOptionsItemSelected(IMenuItem item)
@@ -125,15 +131,38 @@ namespace rw_cos_mei
             };
             adapter.AttachmentRetrieveError += (sender, e) => {
 
+                string ErrorText = "";
+
+                switch (e.Reason)
+                {
+                    case Adapters.AttachmentRetrieveErrorReason.CONNECTION_LOST:
+
+                        ErrorText = GetString(Resource.String.main_connectionlost_attachment_snack);
+                        break;
+                        
+                    case Adapters.AttachmentRetrieveErrorReason.RELOGIN_REQUIRED:
+
+                        ErrorText = GetString(Resource.String.main_relogin_attachment_snack);
+                        break;
+
+                    case Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR:
+                    default:
+
+                        ErrorText = GetString(Resource.String.main_error_attachment_snack);
+                        break;
+
+                }
+
+                if (string.IsNullOrWhiteSpace(ErrorText)) { return; }
+
                 //Snackbar aufrufen
                 View rootView = this.Window.DecorView.FindViewById(Android.Resource.Id.Content);
-                Snackbar snack = Snackbar.Make(rootView, Resource.String.main_dialog_error_attachment_snack, Snackbar.LengthLong);
+                Snackbar snack = Snackbar.Make(rootView, ErrorText, Snackbar.LengthLong);
                 snack.Show();
 
             };
 
         }
-
         private void CreateToolbar()
         {
 
@@ -213,7 +242,7 @@ namespace rw_cos_mei
 
             public event EventHandler<ListFeedAttachmentAdapterEntrySelected> EntrySelected;
 
-            public event EventHandler AttachmentRetrieveError;
+            public event EventHandler<Adapters.AttachmentRetrieveErrorEventArgs> AttachmentRetrieveError;
 
             //####################################################################################
 
@@ -288,12 +317,15 @@ namespace rw_cos_mei
                     hold.PROGRESS_INDICATOR.Visibility = ViewStates.Visible;
 
                     TBL.SP_Object.GetNewsFeedAttachment(item,
-                    delegate (int error) {
+                    delegate (Adapters.AttachmentRetrieveErrorReason reason) {
 
-                        hold.PROGRESS_INDICATOR.Visibility = ViewStates.Gone;
-                        hold.BTN_ATTACHMENT.Tag = null;
-
-                        AttachmentRetrieveError?.Invoke(this, new EventArgs());
+                        if(reason != AttachmentRetrieveErrorReason.RELOGIN_REQUIRED)
+                        {
+                            hold.PROGRESS_INDICATOR.Visibility = ViewStates.Gone;
+                            hold.BTN_ATTACHMENT.Tag = null;
+                        }
+                        
+                        AttachmentRetrieveError?.Invoke(this, new AttachmentRetrieveErrorEventArgs(reason));
 
                     },
                     delegate (string path) {
@@ -314,7 +346,6 @@ namespace rw_cos_mei
             }
             
         }
-
         public class ListFeedAttachmentAdapterEntrySelected : EventArgs
         {
             public ListFeedAttachmentAdapterEntrySelected(string entryKey, string attachmentKey)

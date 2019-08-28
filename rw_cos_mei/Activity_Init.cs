@@ -45,7 +45,7 @@ namespace rw_cos_mei
             //Statischen App-Speicher vorbereiten
             TBL.BlockSyncService();         //BackgroundSync sperren
 
-            TBL.Init(context);                 //AppTable initialisieren (AppTable = TaBLe)
+            TBL.Init(context);              //AppTable initialisieren (AppTable = TaBLe)
             TBL.DB_Object.LoadDatabase();   //Feed aus der lokalen Datenbank laden
 
             TBL.UnBlockSyncService();       //BackgroundSync entsperren

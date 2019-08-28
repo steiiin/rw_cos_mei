@@ -32,7 +32,7 @@ namespace rw_cos_mei
                 TBL.DB_Object.LoadDatabase();
 
                 //Feed aktualiseren
-                await TBL.SP_Object.UpdateNewsFeed(true);
+                await TBL.SP_Object.UpdateNewsFeed(true, true);
                 
                 //Job schließen
                 JobFinished(@params, false);
