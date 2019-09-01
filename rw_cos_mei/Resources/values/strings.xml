@@ -29,7 +29,7 @@
   <string name="main_dialog_login_msg">Um Neuigkeiten anzuzeigen, musst du dich mit dem wachenbezogenen Konto anmelden.</string>
 
   <string name="main_dialog_error_title">Synchronisation</string>
-  <string name="main_dialog_error_msg">Die Neuigkeiten konnten nicht abgerufen werden. Die Cloud reagiert nicht.</string>
+  <string name="main_dialog_error_msg">Die Neuigkeiten konnten nicht abgerufen werden. Die Cloud reagiert nicht. \n\nStimmt Datum &amp; Uhrzeit im Telefon?</string>
 
   <string name="main_dialog_connect_title">Synchronisation</string>
   <string name="main_dialog_connect_msg">Die Neuigkeiten konnten nicht abgerufen werden, weil keine Internetverbindung besteht.</string>

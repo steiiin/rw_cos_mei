@@ -424,7 +424,7 @@ namespace rw_cos_mei
             _tableFeed = new Dictionary<string, FeedEntry>();
             _tableShifts = new Dictionary<string, ShiftsEntry>();
             
-            LastTableRefresh = DateTime.ParseExact(prefs.GetString(PREF_LASTREFRESH, DateTime.MinValue.ToString("dd.MM.yyyy HH:mm:ss")), "dd.MM.yyyy HH:mm:ss", null);
+            LastTableRefresh = DecodeStringToDate(prefs.GetString(PREF_LASTREFRESH, string.Empty), DateTime.MinValue);
 
             //Sync-Einstellungen
             SyncInterval = (SyncIntervalSetting)prefs.GetInt(PREF_SYNCINTERVAL, (int)SyncIntervalSetting.ONE_A_DAY);
@@ -454,7 +454,7 @@ namespace rw_cos_mei
 
             editor.PutInt(PREF_SYNCINTERVAL, (int)SyncInterval);
             editor.PutInt(PREF_SYNCNOTIFY, (int)NotificationType);
-            editor.PutString(PREF_LASTREFRESH, LastTableRefresh.ToString("dd.MM.yyyy HH:mm:ss"));
+            editor.PutString(PREF_LASTREFRESH, EncodeDateToString(LastTableRefresh)); 
 
             editor.PutInt(PREF_BOTTOMNAV_ID, BottomNavigationSelectedId);
 
@@ -611,6 +611,28 @@ namespace rw_cos_mei
             }
 
             return false;
+        }
+
+        //###################################################################################
+
+        private static string currentDateFormat = "yyyy/MM/dd HH:mm:ss";
+
+        public static string EncodeDateToString(DateTime date)
+        {
+            return date.ToString(currentDateFormat);
+        }
+        public static DateTime DecodeStringToDate(string date, DateTime defaultDate)
+        {
+
+            if(!DateTime.TryParseExact(date, currentDateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime decodedDate))
+            {
+                if(!DateTime.TryParse(date, out decodedDate))
+                {
+                    decodedDate = defaultDate;
+                }
+            }
+            return decodedDate;
+            
         }
 
         //###################################################################################

@@ -306,10 +306,7 @@ namespace rw_cos_mei
         }
         private void ViewStateChanger(SharepointAPIState state)
         {
-
-            AlertDialog dialogWrongLogin = null;
-            AlertDialog dialogError = null;
-
+            
             switch (state)
             {
                 case SharepointAPIState.WORKING:
@@ -334,19 +331,16 @@ namespace rw_cos_mei
 
                     TBL.UnBlockSyncService();
 
+                    if (dialogError != null) { dialogError.Dismiss(); }
+                    if (dialogWrongLogin != null) { dialogWrongLogin.Dismiss(); }
+
                     //Dialog anzeigen, der in die Einstellungen führt.
                     dialogWrongLogin = new AlertDialog.Builder(this)
                         .SetTitle(Resource.String.main_dialog_login_title)
                         .SetMessage(Resource.String.main_dialog_login_msg)
-                        .SetPositiveButton(Resource.String.dialog_toSettings, (ss, ee) => { })
+                        .SetPositiveButton(Resource.String.dialog_toSettings, (ss, ee) => { StartSettings(); })
                         .SetCancelable(false)
                         .Show();
-                    dialogWrongLogin.GetButton((int)DialogButtonType.Positive).Click += delegate {
-                        
-                        dialogWrongLogin.Dismiss();
-                        StartSettings();
-                        
-                    };
 
                     break;
 
@@ -354,39 +348,20 @@ namespace rw_cos_mei
 
                     TBL.UnBlockSyncService();
 
+                    if (dialogError != null) { dialogError.Dismiss(); }
+                    if (dialogWrongLogin != null) { dialogWrongLogin.Dismiss(); }
+
                     c.REFRESH_PROGRESS.Visibility = ViewStates.Gone;
                     c.REFRESH_PROGRESS_OVERLAY.Visibility = ViewStates.Gone;
-
-                    if (TBL.IsFeedEmpty)
-                    {
-
-                        //Dialog anzeigen, der WIEDERHOLEN anbietet.
-                        dialogError = new AlertDialog.Builder(this)
-                            .SetTitle(Resource.String.main_dialog_error_title)
-                            .SetMessage(Resource.String.main_dialog_error_msg)
-                            .SetPositiveButton(Resource.String.dialog_retry, (ss, ee) => { })
-                            .SetCancelable(true)
-                            .Show();
-                        dialogError.GetButton((int)DialogButtonType.Positive).Click += delegate
-                        {
-
-                            dialogError.Dismiss();
-                            RefreshCloud();
-
-                        };
-
-                    }
-                    else
-                    {
-
-                        //Snackbar anzeigen, mit WIEDERHOLEN
-                        View rootView = this.Window.DecorView.FindViewById(Android.Resource.Id.Content);
-                        Snackbar snack = Snackbar.Make(rootView, Resource.String.main_dialog_error_msg, Snackbar.LengthLong);
-                        snack.SetAction(Resource.String.dialog_retry, (ss) => { RefreshCloud(); });
-                        snack.Show();
-
-                    }
-
+                    
+                    //Dialog anzeigen, der WIEDERHOLEN anbietet.
+                    dialogError = new AlertDialog.Builder(this)
+                        .SetTitle(Resource.String.main_dialog_error_title)
+                        .SetMessage(Resource.String.main_dialog_error_msg)
+                        .SetPositiveButton(Resource.String.dialog_retry, (ss, ee) => { RefreshCloud(); })
+                        .SetCancelable(true)
+                        .Show();
+                    
                     break;
 
                 case SharepointAPIState.CONNECTION_LOST:
@@ -403,16 +378,9 @@ namespace rw_cos_mei
                         dialogError = new AlertDialog.Builder(this)
                             .SetTitle(Resource.String.main_dialog_connect_title)
                             .SetMessage(Resource.String.main_dialog_connect_msg)
-                            .SetPositiveButton(Resource.String.dialog_retry, (ss, ee) => { })
+                            .SetPositiveButton(Resource.String.dialog_retry, (ss, ee) => { RefreshCloud(); })
                             .SetCancelable(true)
                             .Show();
-                        dialogError.GetButton((int)DialogButtonType.Positive).Click += delegate
-                        {
-
-                            dialogError.Dismiss();
-                            RefreshCloud();
-
-                        };
 
                     }
                     else
@@ -467,6 +435,9 @@ namespace rw_cos_mei
                 return count > 0;
             }
         }
+
+        AlertDialog dialogWrongLogin = null;
+        AlertDialog dialogError = null;
 
         //###################################################################################
 
@@ -700,7 +671,7 @@ namespace rw_cos_mei
                 public TextView ENTRY_DATE;
 
             }
-
+            
             //############################################################################
 
             public ListFeedAdapter(Context context)
@@ -877,7 +848,7 @@ namespace rw_cos_mei
                         }
                         v = _viewholders[position];
 
-                        v.SECTION_YEAR.Text = source.SectionYear.ToString("yyyy");
+                        v.SECTION_YEAR.Text = source.SectionYear.ToString();
 
                         return v.CONVERTVIEW;
 
@@ -967,6 +938,7 @@ namespace rw_cos_mei
 
                 CreateSource();
                 NotifyDataSetChanged();
+                
             }
 
         }

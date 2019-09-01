@@ -139,11 +139,10 @@ namespace rw_cos_mei
             db.ExecSQL("DROP TABLE IF EXISTS " + ATTACH_TABLE);
 
             OnCreate(db);
-
+            
         }
 
     }
-
     public class DataSource : IDisposable
     {
 
@@ -196,7 +195,7 @@ namespace rw_cos_mei
             ContentValues values = new ContentValues();
             values.Put(DatabaseHelper.FEED_TABLE_COL_KEY, item.Key);
             values.Put(DatabaseHelper.FEED_TABLE_COL_TITLE, item.Title);
-            values.Put(DatabaseHelper.FEED_TABLE_COL_DATE, item.Date.ToString("dd.MM.yyyy HH:mm:ss"));
+            values.Put(DatabaseHelper.FEED_TABLE_COL_DATE, TBL.EncodeDateToString(item.Date));
             values.Put(DatabaseHelper.FEED_TABLE_COL_AUTHOR, item.Author);
             values.Put(DatabaseHelper.FEED_TABLE_COL_BODY, item.Body);
             values.Put(DatabaseHelper.FEED_TABLE_COL_READ, read);
@@ -225,7 +224,7 @@ namespace rw_cos_mei
             values.Put(DatabaseHelper.SHIFT_TABLE_COL_TITLE, item.Title);
             values.Put(DatabaseHelper.SHIFT_TABLE_COL_MONTH, item.Month);
             values.Put(DatabaseHelper.SHIFT_TABLE_COL_YEAR, item.Year);
-            values.Put(DatabaseHelper.SHIFT_TABLE_COL_UPDATE, item.LastUpdate.ToString("dd.MM.yyyy HH:mm:ss"));
+            values.Put(DatabaseHelper.SHIFT_TABLE_COL_UPDATE, TBL.EncodeDateToString(item.LastUpdate));
             values.Put(DatabaseHelper.SHIFT_TABLE_COL_VERSION, item.LastVersion);
             values.Put(DatabaseHelper.SHIFT_TABLE_COL_READ, read);
 
@@ -362,7 +361,7 @@ namespace rw_cos_mei
         }
 
         //###############################################################################
-
+        
         public void LoadDatabase()
         {
 
@@ -467,7 +466,9 @@ namespace rw_cos_mei
             int sql_id = c.GetInt(ID_sql_id);
             string key = c.GetString(ID_key);
             string title = c.GetString(ID_title);
-            DateTime date = DateTime.ParseExact(c.GetString(ID_date), "dd.MM.yyyy HH:mm:ss", null); 
+
+            DateTime date = TBL.DecodeStringToDate(c.GetString(ID_date), DateTime.Now.AddMonths(-TBL.SETTINGS_OLDFEED_MONTHOFFSET));
+
             string author = c.GetString(ID_author);
             string body = c.GetString(ID_body);
             string read = c.GetString(ID_read);
@@ -499,7 +500,9 @@ namespace rw_cos_mei
             int month = c.GetInt(ID_month);
             int year = c.GetInt(ID_year);
             string title = c.GetString(ID_title);
-            DateTime update = DateTime.ParseExact(c.GetString(ID_update), "dd.MM.yyyy HH:mm:ss", null); 
+
+            DateTime update = TBL.DecodeStringToDate(c.GetString(ID_update), DateTime.Now.AddMonths(-TBL.SETTINGS_OLDFEED_MONTHOFFSET));
+            
             string version = c.GetString(ID_version);
             string read = c.GetString(ID_read);
 
@@ -548,7 +551,7 @@ namespace rw_cos_mei
             }
 
         }
-
+        
         //###############################################################################
 
         public DataSource(Context context)

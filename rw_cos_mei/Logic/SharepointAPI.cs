@@ -119,7 +119,7 @@ namespace rw_cos_mei
                     case ResponseObject.ResponseObjectStatusCode.ERROR:
                     case ResponseObject.ResponseObjectStatusCode.UNSET:
                     default:
-
+                        
                         InvokeStateChanged(SharepointAPIState.SERVER_ERROR);
                         return false;
 
