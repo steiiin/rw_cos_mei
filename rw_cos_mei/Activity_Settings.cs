@@ -35,12 +35,11 @@ namespace rw_cos_mei
             public View BTN_ICON_ERROR;
             public View BTN_ICON_WORKING;
 
-            public View CARD_WRONGLOGIN_HINT;
-            public Button CARD_WRONGLOGIN_HINT_RETRY;
-
-            public View CARD_CONNECTIONLOST_HINT;
-            public Button CARD_CONNECTIONLOST_HINT_RETRY;
-
+            public View CARD_HINT;
+            public TextView CARD_HINT_TITLE;
+            public TextView CARD_HINT_MSG;
+            public Button CARD_HINT_RETRY_BTN;
+            
             public Spinner SPINNER_TIME;
 
             public CheckBox CHECK_NOTIFY_NEWFEED;
@@ -81,7 +80,11 @@ namespace rw_cos_mei
             CreateViewHandler(HandlerMethod.ADD_HANDLERS);
 
             //Oberfläche an SharepointState anpassen
-            SP_Object_StateChanged(null, new SharepointAPIStateChangedEventArgs(TBL.SP_Object.State));
+            ViewStateChanger(TBL.SP_Object.State);
+            if(TBL.SP_Object.State == SharepointAPIState.OFFLINE)
+            {
+                CheckCloud();
+            }
 
             base.OnResume();
 
@@ -96,11 +99,17 @@ namespace rw_cos_mei
 
         }
 
+        //###################################################################################
+        
         private void SP_Object_StateChanged(object sender, SharepointAPIStateChangedEventArgs e)
+        {
+            ViewStateChanger(e.State);
+        }
+        private void ViewStateChanger(SharepointAPIState e)
         {
 
             //Theme-Icon
-            switch (e.State)
+            switch (e)
             {
                 case SharepointAPIState.WORKING:
                     c.BTN_CRED.Tag = "#WORKING#";
@@ -163,10 +172,10 @@ namespace rw_cos_mei
                 BTN_ICON_ERROR = FindViewById(Resource.Id.icon_credentialsInput_error),
                 BTN_ICON_WORKING = FindViewById(Resource.Id.icon_credentialsInput_working),
 
-                CARD_WRONGLOGIN_HINT = FindViewById(Resource.Id.card_wronglogin_hint),
-                CARD_WRONGLOGIN_HINT_RETRY = FindViewById<Button>(Resource.Id.card_wronglogin_retrybutton),
-                CARD_CONNECTIONLOST_HINT = FindViewById(Resource.Id.card_connectionlost_hint),
-                CARD_CONNECTIONLOST_HINT_RETRY = FindViewById<Button>(Resource.Id.card_connectionlost_retrybutton),
+                CARD_HINT = FindViewById(Resource.Id.cred_card_hint),
+                CARD_HINT_TITLE = FindViewById<TextView>(Resource.Id.cred_card_title),
+                CARD_HINT_MSG = FindViewById<TextView>(Resource.Id.cred_card_msg),
+                CARD_HINT_RETRY_BTN = FindViewById<Button>(Resource.Id.cred_card_retry),
 
                 SPINNER_TIME = FindViewById<Spinner>(Resource.Id.spinner_sync_time),
 
@@ -212,7 +221,7 @@ namespace rw_cos_mei
                 TBL.SP_Object.StateChanged += SP_Object_StateChanged;
                 
                 c.BTN_CRED.Click += CREDENTIAL_BTN_Click;
-                c.CARD_WRONGLOGIN_HINT_RETRY.Click += CARD_WRONGLOGIN_HINT_RETRY_ClickAsync;
+                c.CARD_HINT_RETRY_BTN.Click += CARD_HINT_RETRY_Click;
 
                 c.SPINNER_TIME.ItemSelected += SPINNER_TIME_ItemSelected;
                 
@@ -229,7 +238,7 @@ namespace rw_cos_mei
                 TBL.SP_Object.StateChanged -= SP_Object_StateChanged;
 
                 c.BTN_CRED.Click -= CREDENTIAL_BTN_Click;
-                c.CARD_WRONGLOGIN_HINT_RETRY.Click -= CARD_WRONGLOGIN_HINT_RETRY_ClickAsync;
+                c.CARD_HINT_RETRY_BTN.Click -= CARD_HINT_RETRY_Click;
 
                 c.SPINNER_TIME.ItemSelected -= SPINNER_TIME_ItemSelected;
 
@@ -240,12 +249,7 @@ namespace rw_cos_mei
                 c.NOTIFICATION_LINK.Click -= NOTIFICATION_LINK_Click;
 
             }
-
             
-            
-
-            
-
         }
         
         private void CreateToolbar()
@@ -389,6 +393,11 @@ namespace rw_cos_mei
             }
 
             //Wronglogin-Card
+            bool show_card = false;
+            bool show_card_retry = false;
+            string card_title = "";
+            string card_msg = "";
+
             switch (TBL.SP_Object.State)
             {
                 case SharepointAPIState.OFFLINE:
@@ -396,39 +405,47 @@ namespace rw_cos_mei
                 case SharepointAPIState.LOGGED_IN:
                 case SharepointAPIState.OK:
 
-                    c.CARD_WRONGLOGIN_HINT.Visibility = ViewStates.Gone;
-                    c.CARD_CONNECTIONLOST_HINT.Visibility = ViewStates.Gone;
-
+                    show_card = false;
                     break;
 
                 case SharepointAPIState.SERVER_ERROR:
+
+                    show_card = true; show_card_retry = true;
+                    card_title = GetString(Resource.String.settings_cred_error_title);
+                    card_msg = GetString(Resource.String.settings_cred_error_msg);
+                    break;
+
                 case SharepointAPIState.WRONG_LOGIN:
 
-                    c.CARD_CONNECTIONLOST_HINT.Visibility = ViewStates.Gone;
-
-                    if (TBL.IsFeedEmpty)
+                    show_card = true;
+                    if(TBL.IsFeedEmpty)
                     {
-
-                        c.CARD_WRONGLOGIN_HINT.Visibility = ViewStates.Gone;
-
+                        card_title = GetString(Resource.String.settings_cred_nologin_title);
+                        card_msg = GetString(Resource.String.settings_cred_nologin_msg);
                     }
                     else
-                    { 
-
-                        c.CARD_WRONGLOGIN_HINT.Visibility = ViewStates.Visible;
-
+                    {
+                        show_card_retry = true;
+                        card_title = GetString(Resource.String.settings_cred_wronglogin_title);
+                        card_msg = GetString(Resource.String.settings_cred_wronglogin_msg);
                     }
-
                     break;
 
                 case SharepointAPIState.CONNECTION_LOST:
 
-                    c.CARD_WRONGLOGIN_HINT.Visibility = ViewStates.Gone;
-                    c.CARD_CONNECTIONLOST_HINT.Visibility = ViewStates.Visible;
-
+                    show_card = true; show_card_retry = true;
+                    card_title = GetString(Resource.String.settings_cred_connect_title);
+                    card_msg = GetString(Resource.String.settings_cred_connect_msg);
                     break;
 
             }
+
+            c.CARD_HINT_TITLE.Text = card_title;
+            c.CARD_HINT_MSG.Text = card_msg;
+            if(show_card) { c.CARD_HINT.Visibility = ViewStates.Visible; }
+            else { c.CARD_HINT.Visibility = ViewStates.Gone; }
+            if(show_card_retry) { c.CARD_HINT_RETRY_BTN.Visibility = ViewStates.Visible; }
+            else { c.CARD_HINT_RETRY_BTN.Visibility = ViewStates.Gone; }
 
         }
         private void CREDENTIAL_BTN_Click(object sender, EventArgs e)
@@ -449,16 +466,26 @@ namespace rw_cos_mei
                         await System.Threading.Tasks.Task.Delay(200);
                     }
 
-                    await TBL.SP_Object.UpdateNewsFeed();
+                    RefreshCloud();
                 });
         }
 
-        private async void CARD_WRONGLOGIN_HINT_RETRY_ClickAsync(object sender, EventArgs e)
+        private void CARD_HINT_RETRY_Click(object sender, EventArgs e)
         {
             if(TBL.SP_Object.State != SharepointAPIState.WORKING)
             {
-                await TBL.SP_Object.UpdateNewsFeed();
+                RefreshCloud();
             }
+        }
+
+        private async void RefreshCloud()
+        {
+            await TBL.SP_Object.CreateLogin();    //Zwingend neue Anmeldung bei neuen Anmeldedaten
+            await TBL.SP_Object.UpdateNewsFeed(); //Gleich neue Entries abrufen
+        }
+        private async void CheckCloud()
+        {
+            await TBL.SP_Object.UpdateNewsFeed();
         }
 
     }
@@ -466,7 +493,7 @@ namespace rw_cos_mei
     namespace Dialogs
     {
 
-        class DialogCredentialsInput
+        public class DialogCredentialsInput
         {
 
             private Context _context;
@@ -485,7 +512,7 @@ namespace rw_cos_mei
 
             }
             private ViewHolder con;
-
+            
             //##################################################################################
 
             public DialogCredentialsInput(Context context, EventHandler<DialogCredentialsInputEventArgs> OnLoginEntered)
@@ -551,15 +578,13 @@ namespace rw_cos_mei
             }
             
         }
-
         public class DialogCredentialsInputEventArgs
         {
             public DialogCredentialsInputEventArgs(string username, string password) { Username = username; Password = password; }
             public string Username { get; }
             public string Password { get; }
         }
-
-
+        
     }
 
 }

@@ -48,17 +48,12 @@ namespace rw_cos_mei
         private ViewHolder c;
 
         private FeedEntry _currentEntry;
+        private Adapters.ListFeedAttachmentAdapter _currentAttachmentAdapter;
 
         //###################################################################################
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
-            //Statischen Speicher wiederherstellen, wenn im Hintergrund vom System gelöscht
-            if (TBL.SP_Object == null)
-            {
-                Activity_Init.InitRoutine(this);
-            }
-
             base.OnCreate(savedInstanceState);
 
             //entryFeed
@@ -72,7 +67,31 @@ namespace rw_cos_mei
             CreateToolbar();
                                     
         }
-        
+
+        protected override void OnResume()
+        {
+
+            //Statischen Speicher wiederherstellen, wenn im Hintergrund vom System gelöscht
+            if (TBL.SP_Object == null)
+            {
+                Activity_Init.InitRoutine(this);
+            }
+
+            //Eventhandler hinzufügen
+            CreateViewHandler(HandlerMethod.ADD_HANDLERS);
+
+            base.OnResume();
+            
+        }
+        protected override void OnPause()
+        {
+            base.OnPause();
+
+            //Eventhandler entfernen
+            CreateViewHandler(HandlerMethod.REMOVE_HANDLERS);
+
+        }
+
         //###################################################################################
 
         public override bool OnOptionsItemSelected(IMenuItem item)
@@ -121,47 +140,8 @@ namespace rw_cos_mei
                 c.DIVIDER_BODY.Visibility = ViewStates.Visible;
             }
             
-            var adapter = new Adapters.ListFeedAttachmentAdapter(this, c.LIST_ATTACHMENTS, _currentEntry);
-            adapter.EntrySelected += (sender, entry) =>
-            {
-
-                EntryAttachment attachment = TBL.GetFeedEntry(entry.EntryKey)?.GetAttachment(entry.AttachmentKey);
-                FileOpen.Open(this, attachment.FileLocalUrl);
-
-            };
-            adapter.AttachmentRetrieveError += (sender, e) => {
-
-                string ErrorText = "";
-
-                switch (e.Reason)
-                {
-                    case Adapters.AttachmentRetrieveErrorReason.CONNECTION_LOST:
-
-                        ErrorText = GetString(Resource.String.main_connectionlost_attachment_snack);
-                        break;
-                        
-                    case Adapters.AttachmentRetrieveErrorReason.RELOGIN_REQUIRED:
-
-                        ErrorText = GetString(Resource.String.main_relogin_attachment_snack);
-                        break;
-
-                    case Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR:
-                    default:
-
-                        ErrorText = GetString(Resource.String.main_error_attachment_snack);
-                        break;
-
-                }
-
-                if (string.IsNullOrWhiteSpace(ErrorText)) { return; }
-
-                //Snackbar aufrufen
-                View rootView = this.Window.DecorView.FindViewById(Android.Resource.Id.Content);
-                Snackbar snack = Snackbar.Make(rootView, ErrorText, Snackbar.LengthLong);
-                snack.Show();
-
-            };
-
+            _currentAttachmentAdapter = new Adapters.ListFeedAttachmentAdapter(this, c.LIST_ATTACHMENTS, _currentEntry);
+            
         }
         private void CreateToolbar()
         {
@@ -177,6 +157,66 @@ namespace rw_cos_mei
             SupportActionBar.SetDisplayHomeAsUpEnabled(true);
 
             c.APPBAR_TITLE.Text = _currentEntry.Date.ToString("dd. MMMM yyyy");
+
+        }
+
+        private void CreateViewHandler(HandlerMethod method)
+        {
+            
+            if (method == HandlerMethod.ADD_HANDLERS)
+            {
+
+                _currentAttachmentAdapter.EntrySelected += AttachmentAdapter_EntrySelected;
+                _currentAttachmentAdapter.AttachmentRetrieveError += AttachmentAdapter_AttachmentRetrieveError;
+
+            }
+            else
+            {
+
+                _currentAttachmentAdapter.EntrySelected -= AttachmentAdapter_EntrySelected;
+                _currentAttachmentAdapter.AttachmentRetrieveError -= AttachmentAdapter_AttachmentRetrieveError;
+
+            }
+
+        }
+
+        private void AttachmentAdapter_AttachmentRetrieveError(object sender, Adapters.AttachmentRetrieveErrorEventArgs e)
+        {
+
+            string ErrorText = "";
+            switch (e.Reason)
+            {
+                case Adapters.AttachmentRetrieveErrorReason.CONNECTION_LOST:
+
+                    ErrorText = GetString(Resource.String.main_snack_connect);
+                    break;
+
+                case Adapters.AttachmentRetrieveErrorReason.RELOGIN_REQUIRED:
+
+                    ErrorText = GetString(Resource.String.main_snack_relogin);
+                    break;
+
+                case Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR:
+                default:
+
+                    ErrorText = GetString(Resource.String.main_snack_error);
+                    break;
+
+            }
+
+            if (string.IsNullOrWhiteSpace(ErrorText)) { return; }
+
+            //Snackbar aufrufen
+            View rootView = this.Window.DecorView.FindViewById(Android.Resource.Id.Content);
+            Snackbar snack = Snackbar.Make(rootView, ErrorText, Snackbar.LengthLong);
+            snack.Show();
+
+        }
+        private void AttachmentAdapter_EntrySelected(object sender, Adapters.ListFeedAttachmentAdapterEntrySelected e)
+        {
+
+            EntryAttachment attachment = TBL.GetFeedEntry(e.EntryKey)?.GetAttachment(e.AttachmentKey);
+            FileOpen.Open(this, attachment.FileLocalUrl);
 
         }
 
@@ -241,9 +281,8 @@ namespace rw_cos_mei
             //####################################################################################
 
             public event EventHandler<ListFeedAttachmentAdapterEntrySelected> EntrySelected;
-
             public event EventHandler<Adapters.AttachmentRetrieveErrorEventArgs> AttachmentRetrieveError;
-
+            
             //####################################################################################
 
             private class Viewholder
@@ -263,6 +302,8 @@ namespace rw_cos_mei
 
                 Inflate(parent);
             }
+
+            //####################################################################################
 
             private void Inflate(LinearLayout parent)
             {
@@ -300,6 +341,8 @@ namespace rw_cos_mei
                 
 
             }
+
+            //####################################################################################
 
             private void ViewAttachment(Viewholder hold, EntryAttachment item)
             {

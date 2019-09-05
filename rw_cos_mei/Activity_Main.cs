@@ -335,9 +335,17 @@ namespace rw_cos_mei
                     if (dialogWrongLogin != null) { dialogWrongLogin.Dismiss(); }
 
                     //Dialog anzeigen, der in die Einstellungen führt.
+                    int title = Resource.String.main_dialog_wronglogin_title;
+                    int msg = Resource.String.main_dialog_wronglogin_msg;
+                    if(TBL.IsFeedEmpty)
+                    {
+                        title = Resource.String.main_dialog_nologin_title;
+                        msg = Resource.String.main_dialog_nologin_msg;
+                    }
+
                     dialogWrongLogin = new AlertDialog.Builder(this)
-                        .SetTitle(Resource.String.main_dialog_login_title)
-                        .SetMessage(Resource.String.main_dialog_login_msg)
+                        .SetTitle(title)
+                        .SetMessage(msg)
                         .SetPositiveButton(Resource.String.dialog_toSettings, (ss, ee) => { StartSettings(); })
                         .SetCancelable(false)
                         .Show();
@@ -359,7 +367,7 @@ namespace rw_cos_mei
                         .SetTitle(Resource.String.main_dialog_error_title)
                         .SetMessage(Resource.String.main_dialog_error_msg)
                         .SetPositiveButton(Resource.String.dialog_retry, (ss, ee) => { RefreshCloud(); })
-                        .SetCancelable(true)
+                        .SetCancelable(false)
                         .Show();
                     
                     break;
@@ -371,6 +379,9 @@ namespace rw_cos_mei
                     c.REFRESH_PROGRESS.Visibility = ViewStates.Gone;
                     c.REFRESH_PROGRESS_OVERLAY.Visibility = ViewStates.Gone;
 
+                    if (dialogWrongLogin != null) { dialogWrongLogin.Dismiss(); }
+                    if (dialogError != null) { dialogError.Dismiss(); }
+
                     if (TBL.IsFeedEmpty)
                     {
 
@@ -379,7 +390,7 @@ namespace rw_cos_mei
                             .SetTitle(Resource.String.main_dialog_connect_title)
                             .SetMessage(Resource.String.main_dialog_connect_msg)
                             .SetPositiveButton(Resource.String.dialog_retry, (ss, ee) => { RefreshCloud(); })
-                            .SetCancelable(true)
+                            .SetCancelable(false)
                             .Show();
 
                     }
@@ -388,7 +399,7 @@ namespace rw_cos_mei
 
                         //Snackbar anzeigen, mit WIEDERHOLEN
                         View rootView = this.Window.DecorView.FindViewById(Android.Resource.Id.Content);
-                        Snackbar snack = Snackbar.Make(rootView, Resource.String.main_dialog_connect_msg, Snackbar.LengthLong);
+                        Snackbar snack = Snackbar.Make(rootView, Resource.String.main_snack_connect, Snackbar.LengthLong);
                         snack.SetAction(Resource.String.dialog_retry, (ss) => { RefreshCloud(); });
                         snack.Show();
 
@@ -457,23 +468,22 @@ namespace rw_cos_mei
         {
 
             string ErrorText = "";
-
             switch (e.Reason)
             {
                 case Adapters.AttachmentRetrieveErrorReason.CONNECTION_LOST:
 
-                    ErrorText = GetString(Resource.String.main_connectionlost_attachment_snack);
+                    ErrorText = GetString(Resource.String.main_snack_connect);
                     break;
 
                 case Adapters.AttachmentRetrieveErrorReason.RELOGIN_REQUIRED:
 
-                    ErrorText = GetString(Resource.String.main_relogin_attachment_snack);
+                    ErrorText = GetString(Resource.String.main_snack_relogin);
                     break;
 
                 case Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR:
                 default:
 
-                    ErrorText = GetString(Resource.String.main_error_attachment_snack);
+                    ErrorText = GetString(Resource.String.main_snack_error);
                     break;
 
             }
@@ -1418,8 +1428,10 @@ namespace rw_cos_mei
                 View v = inflater.Inflate(Resource.Layout.fragment_main_list_shifts, null);
                 LIST_SHIFTS = v.FindViewById<ListView>(Resource.Id.main_list_shifts);
 
-                LIST_SHIFTS.Divider = ContextCompat.GetDrawable(Context, Resource.Drawable.trans_divider);
-                LIST_SHIFTS.DividerHeight = (int)TypedValue.ApplyDimension(ComplexUnitType.Dip, 1, Resources.DisplayMetrics);
+                LIST_SHIFTS.Divider = null;
+
+                //LIST_SHIFTS.Divider = ContextCompat.GetDrawable(Context, Resource.Drawable.trans_divider);
+                //LIST_SHIFTS.DividerHeight = (int)TypedValue.ApplyDimension(ComplexUnitType.Dip, 1, Resources.DisplayMetrics);
 
                 if (inflate_pending)
                 {

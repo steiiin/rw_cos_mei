@@ -25,18 +25,21 @@
   <string name="main_list_feed_item_version">Version: %1$s</string>
   <string name="main_norefresh">Noch nie</string>
 
-  <string name="main_dialog_login_title">Anmeldung</string>
-  <string name="main_dialog_login_msg">Um Neuigkeiten anzuzeigen, musst du dich mit dem wachenbezogenen Konto anmelden.</string>
+  <string name="main_dialog_nologin_title">Anmeldung</string>
+  <string name="main_dialog_nologin_msg">Um Neuigkeiten angezeigt zu bekommen, musst du dich mit dem wachenbezogenen Konto anmelden.</string>
 
-  <string name="main_dialog_error_title">Synchronisation</string>
-  <string name="main_dialog_error_msg">Die Neuigkeiten konnten nicht abgerufen werden. Die Cloud reagiert nicht. \n\nStimmt Datum &amp; Uhrzeit im Telefon?</string>
+  <string name="main_dialog_wronglogin_title">Anmeldung fehlgeschlagen</string>
+  <string name="main_dialog_wronglogin_msg">Es konnten keine Neuigkeiten geladen werden, weil die Cloud die Verbindung abgelehnt hat. Kontrolliere in den Einstellungen Benutzername und Passwort und probiere es erneut.</string>
 
-  <string name="main_dialog_connect_title">Synchronisation</string>
+  <string name="main_dialog_error_title">Synchronisation fehlgeschlagen</string>
+  <string name="main_dialog_error_msg">Die Cloud hat einen Fehler gemeldet, bzw. reagiert nicht richtig. \n\nEventuell wird die Verbindung abgelehnt, weil Datum &amp; Uhrzeit im Telefon nicht stimmen. \n\nAnsonsten probier es später erneut.</string>
+  
+  <string name="main_dialog_connect_title">Keine Verbindung</string>
   <string name="main_dialog_connect_msg">Die Neuigkeiten konnten nicht abgerufen werden, weil keine Internetverbindung besteht.</string>
 
-  <string name="main_connectionlost_attachment_snack">Der Anhang konnte nicht geladen werden. Keine Verbindung.</string>
-  <string name="main_error_attachment_snack">Der Anhang konnte nicht geladen werden, weil die Cloud einen Fehler meldet.</string>
-  <string name="main_relogin_attachment_snack">Kurz warten. Erneute Anmeldung in der Cloud ...</string>
+  <string name="main_snack_connect">Keine Internetverbindung.</string>
+  <string name="main_snack_error">Cloud reagiert nicht. Kein Anhang.</string>
+  <string name="main_snack_relogin">Warte, wird neu eingeloggt ...</string>
   
   <!-- FeedEntry -->
   <string name="feedentry_from">Von: %1$s</string>
@@ -60,12 +63,18 @@
   <string name="settings_cred_btn_title">Aktueller Benutzer</string>
   <string name="settings_cred_btn_noone">Niemand</string>
 
-  <string name="settings_cred_connection_title">Keine Verbindung</string>
-  <string name="settings_cred_connection_desc">Die Anmeldung ist fehlgeschlagen, weil die Internetverbindung unterbrochen wurde.</string>
-  
-  <string name="settings_cred_error_title">Anmeldung fehlgeschlagen</string>
-  <string name="settings_cred_error_desc">Die Anmeldung kann aus zwei Gründen fehlschlagen. \n \nSind der Benutzername und das Passwort korrekt? \nEventuell ist im Telefon die falsche Uhrzeit bzw. Datum eingestellt. \n \nKannst du diese beiden Punkte ausschließen, liegt es am Betreiber der Cloud. \nVersuche es in dem Fall später erneut.</string>
+  <string name="settings_cred_nologin_title">Melde dich an</string>
+  <string name="settings_cred_nologin_msg">Um Neuigkeiten angezeigt zu bekommen, musst du dich mit dem wachenbezogenen Konto anmelden.</string>
 
+  <string name="settings_cred_wronglogin_title">Anmeldung fehlgeschlagen</string>
+  <string name="settings_cred_wronglogin_msg">Die Anmeldung ist fehlgeschlagen, weil die Cloud die Verbindung abgelehnt hat. \n\nKontrolliere Benutzername und Passwort und probiere es erneut.</string>
+
+  <string name="settings_cred_error_title">Synchronisation fehlgeschlagen</string>
+  <string name="settings_cred_error_msg">Die Cloud hat einen Fehler gemeldet, bzw. reagiert nicht richtig. \n\nEventuell wird die Verbindung abgelehnt, weil Datum &amp; Uhrzeit im Telefon nicht stimmen. \n\nAnsonsten probier es später erneut.</string>
+
+  <string name="settings_cred_connect_title">Keine Verbindung</string>
+  <string name="settings_cred_connect_msg">Die Anmeldung ist fehlgeschlagen, weil die Internetverbindung unterbrochen wurde.</string>
+  
   <string name="settings_sync_subhead">Synchronisation</string>
   <string name="settings_sync_time_title">Häufigkeit</string> 
   <string name="settings_sync_time_desc">Wie oft soll nach Neuigkeiten gesucht werden?</string>

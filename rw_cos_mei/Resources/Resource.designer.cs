@@ -3278,18 +3278,6 @@ namespace rw_cos_mei
 			// aapt resource value: 0x7f0a00d8
 			public const int cancel_action = 2131362008;
 			
-			// aapt resource value: 0x7f0a00b3
-			public const int card_connectionlost_hint = 2131361971;
-			
-			// aapt resource value: 0x7f0a00b4
-			public const int card_connectionlost_retrybutton = 2131361972;
-			
-			// aapt resource value: 0x7f0a00b1
-			public const int card_wronglogin_hint = 2131361969;
-			
-			// aapt resource value: 0x7f0a00b2
-			public const int card_wronglogin_retrybutton = 2131361970;
-			
 			// aapt resource value: 0x7f0a004c
 			public const int center = 2131361868;
 			
@@ -3334,6 +3322,18 @@ namespace rw_cos_mei
 			
 			// aapt resource value: 0x7f0a00bd
 			public const int coordinator = 2131361981;
+			
+			// aapt resource value: 0x7f0a00b1
+			public const int cred_card_hint = 2131361969;
+			
+			// aapt resource value: 0x7f0a00b3
+			public const int cred_card_msg = 2131361971;
+			
+			// aapt resource value: 0x7f0a00b4
+			public const int cred_card_retry = 2131361972;
+			
+			// aapt resource value: 0x7f0a00b2
+			public const int cred_card_title = 2131361970;
 			
 			// aapt resource value: 0x7f0a007c
 			public const int custom = 2131361916;
@@ -4397,20 +4397,20 @@ namespace rw_cos_mei
 			// aapt resource value: 0x7f0d002b
 			public const int character_counter_pattern = 2131558443;
 			
-			// aapt resource value: 0x7f0d0053
-			public const int dialog_cancel = 2131558483;
+			// aapt resource value: 0x7f0d0055
+			public const int dialog_cancel = 2131558485;
+			
+			// aapt resource value: 0x7f0d0056
+			public const int dialog_login = 2131558486;
+			
+			// aapt resource value: 0x7f0d0057
+			public const int dialog_reconnect = 2131558487;
 			
 			// aapt resource value: 0x7f0d0054
-			public const int dialog_login = 2131558484;
+			public const int dialog_retry = 2131558484;
 			
-			// aapt resource value: 0x7f0d0055
-			public const int dialog_reconnect = 2131558485;
-			
-			// aapt resource value: 0x7f0d0052
-			public const int dialog_retry = 2131558482;
-			
-			// aapt resource value: 0x7f0d0051
-			public const int dialog_toSettings = 2131558481;
+			// aapt resource value: 0x7f0d0053
+			public const int dialog_toSettings = 2131558483;
 			
 			// aapt resource value: 0x7f0d002c
 			public const int fab_transformation_scrim_behavior = 2131558444;
@@ -4418,35 +4418,35 @@ namespace rw_cos_mei
 			// aapt resource value: 0x7f0d002d
 			public const int fab_transformation_sheet_behavior = 2131558445;
 			
-			// aapt resource value: 0x7f0d0050
-			public const int feedentry_from = 2131558480;
+			// aapt resource value: 0x7f0d0052
+			public const int feedentry_from = 2131558482;
 			
 			// aapt resource value: 0x7f0d002e
 			public const int hide_bottom_view_on_scroll_behavior = 2131558446;
 			
+			// aapt resource value: 0x7f0d004e
+			public const int main_dialog_connect_msg = 2131558478;
+			
 			// aapt resource value: 0x7f0d004d
-			public const int main_connectionlost_attachment_snack = 2131558477;
+			public const int main_dialog_connect_title = 2131558477;
 			
 			// aapt resource value: 0x7f0d004c
-			public const int main_dialog_connect_msg = 2131558476;
+			public const int main_dialog_error_msg = 2131558476;
 			
 			// aapt resource value: 0x7f0d004b
-			public const int main_dialog_connect_title = 2131558475;
-			
-			// aapt resource value: 0x7f0d004a
-			public const int main_dialog_error_msg = 2131558474;
-			
-			// aapt resource value: 0x7f0d0049
-			public const int main_dialog_error_title = 2131558473;
+			public const int main_dialog_error_title = 2131558475;
 			
 			// aapt resource value: 0x7f0d0048
-			public const int main_dialog_login_msg = 2131558472;
+			public const int main_dialog_nologin_msg = 2131558472;
 			
 			// aapt resource value: 0x7f0d0047
-			public const int main_dialog_login_title = 2131558471;
+			public const int main_dialog_nologin_title = 2131558471;
 			
-			// aapt resource value: 0x7f0d004e
-			public const int main_error_attachment_snack = 2131558478;
+			// aapt resource value: 0x7f0d004a
+			public const int main_dialog_wronglogin_msg = 2131558474;
+			
+			// aapt resource value: 0x7f0d0049
+			public const int main_dialog_wronglogin_title = 2131558473;
 			
 			// aapt resource value: 0x7f0d0044
 			public const int main_list_feed_item_update = 2131558468;
@@ -4473,19 +4473,25 @@ namespace rw_cos_mei
 			public const int main_norefresh = 2131558470;
 			
 			// aapt resource value: 0x7f0d004f
-			public const int main_relogin_attachment_snack = 2131558479;
+			public const int main_snack_connect = 2131558479;
 			
-			// aapt resource value: 0x7f0d0059
-			public const int menu_feed = 2131558489;
+			// aapt resource value: 0x7f0d0050
+			public const int main_snack_error = 2131558480;
 			
-			// aapt resource value: 0x7f0d0056
-			public const int menu_settings = 2131558486;
+			// aapt resource value: 0x7f0d0051
+			public const int main_snack_relogin = 2131558481;
+			
+			// aapt resource value: 0x7f0d005b
+			public const int menu_feed = 2131558491;
 			
 			// aapt resource value: 0x7f0d0058
-			public const int menu_shifts = 2131558488;
+			public const int menu_settings = 2131558488;
 			
-			// aapt resource value: 0x7f0d0057
-			public const int menu_sync = 2131558487;
+			// aapt resource value: 0x7f0d005a
+			public const int menu_shifts = 2131558490;
+			
+			// aapt resource value: 0x7f0d0059
+			public const int menu_sync = 2131558489;
 			
 			// aapt resource value: 0x7f0d002f
 			public const int mtrl_chip_close_icon_content_description = 2131558447;
@@ -4508,74 +4514,86 @@ namespace rw_cos_mei
 			// aapt resource value: 0x7f0d001b
 			public const int search_menu_title = 2131558427;
 			
-			// aapt resource value: 0x7f0d005c
-			public const int settings_cred_btn_noone = 2131558492;
-			
-			// aapt resource value: 0x7f0d005b
-			public const int settings_cred_btn_title = 2131558491;
-			
 			// aapt resource value: 0x7f0d005e
-			public const int settings_cred_connection_desc = 2131558494;
+			public const int settings_cred_btn_noone = 2131558494;
 			
 			// aapt resource value: 0x7f0d005d
-			public const int settings_cred_connection_title = 2131558493;
-			
-			// aapt resource value: 0x7f0d0060
-			public const int settings_cred_error_desc = 2131558496;
-			
-			// aapt resource value: 0x7f0d005f
-			public const int settings_cred_error_title = 2131558495;
-			
-			// aapt resource value: 0x7f0d005a
-			public const int settings_cred_subhead = 2131558490;
-			
-			// aapt resource value: 0x7f0d006e
-			public const int settings_dialog_cred_error_email = 2131558510;
-			
-			// aapt resource value: 0x7f0d006f
-			public const int settings_dialog_cred_error_pass = 2131558511;
-			
-			// aapt resource value: 0x7f0d006d
-			public const int settings_dialog_cred_msg = 2131558509;
-			
-			// aapt resource value: 0x7f0d006c
-			public const int settings_dialog_cred_title = 2131558508;
-			
-			// aapt resource value: 0x7f0d0070
-			public const int settings_notification_link = 2131558512;
-			
-			// aapt resource value: 0x7f0d0069
-			public const int settings_sync_noti_newFeed = 2131558505;
-			
-			// aapt resource value: 0x7f0d006a
-			public const int settings_sync_noti_newShifts = 2131558506;
-			
-			// aapt resource value: 0x7f0d0068
-			public const int settings_sync_noti_title = 2131558504;
-			
-			// aapt resource value: 0x7f0d006b
-			public const int settings_sync_noti_versShifts = 2131558507;
-			
-			// aapt resource value: 0x7f0d0061
-			public const int settings_sync_subhead = 2131558497;
-			
-			// aapt resource value: 0x7f0d0063
-			public const int settings_sync_time_desc = 2131558499;
-			
-			// aapt resource value: 0x7f0d0064
-			public const int settings_sync_time_op0 = 2131558500;
-			
-			// aapt resource value: 0x7f0d0065
-			public const int settings_sync_time_op1 = 2131558501;
+			public const int settings_cred_btn_title = 2131558493;
 			
 			// aapt resource value: 0x7f0d0066
-			public const int settings_sync_time_op2 = 2131558502;
+			public const int settings_cred_connect_msg = 2131558502;
 			
-			// aapt resource value: 0x7f0d0067
-			public const int settings_sync_time_op3 = 2131558503;
+			// aapt resource value: 0x7f0d0065
+			public const int settings_cred_connect_title = 2131558501;
+			
+			// aapt resource value: 0x7f0d0064
+			public const int settings_cred_error_msg = 2131558500;
+			
+			// aapt resource value: 0x7f0d0063
+			public const int settings_cred_error_title = 2131558499;
+			
+			// aapt resource value: 0x7f0d0060
+			public const int settings_cred_nologin_msg = 2131558496;
+			
+			// aapt resource value: 0x7f0d005f
+			public const int settings_cred_nologin_title = 2131558495;
+			
+			// aapt resource value: 0x7f0d005c
+			public const int settings_cred_subhead = 2131558492;
 			
 			// aapt resource value: 0x7f0d0062
-			public const int settings_sync_time_title = 2131558498;
+			public const int settings_cred_wronglogin_msg = 2131558498;
+			
+			// aapt resource value: 0x7f0d0061
+			public const int settings_cred_wronglogin_title = 2131558497;
+			
+			// aapt resource value: 0x7f0d0074
+			public const int settings_dialog_cred_error_email = 2131558516;
+			
+			// aapt resource value: 0x7f0d0075
+			public const int settings_dialog_cred_error_pass = 2131558517;
+			
+			// aapt resource value: 0x7f0d0073
+			public const int settings_dialog_cred_msg = 2131558515;
+			
+			// aapt resource value: 0x7f0d0072
+			public const int settings_dialog_cred_title = 2131558514;
+			
+			// aapt resource value: 0x7f0d0076
+			public const int settings_notification_link = 2131558518;
+			
+			// aapt resource value: 0x7f0d006f
+			public const int settings_sync_noti_newFeed = 2131558511;
+			
+			// aapt resource value: 0x7f0d0070
+			public const int settings_sync_noti_newShifts = 2131558512;
+			
+			// aapt resource value: 0x7f0d006e
+			public const int settings_sync_noti_title = 2131558510;
+			
+			// aapt resource value: 0x7f0d0071
+			public const int settings_sync_noti_versShifts = 2131558513;
+			
+			// aapt resource value: 0x7f0d0067
+			public const int settings_sync_subhead = 2131558503;
+			
+			// aapt resource value: 0x7f0d0069
+			public const int settings_sync_time_desc = 2131558505;
+			
+			// aapt resource value: 0x7f0d006a
+			public const int settings_sync_time_op0 = 2131558506;
+			
+			// aapt resource value: 0x7f0d006b
+			public const int settings_sync_time_op1 = 2131558507;
+			
+			// aapt resource value: 0x7f0d006c
+			public const int settings_sync_time_op2 = 2131558508;
+			
+			// aapt resource value: 0x7f0d006d
+			public const int settings_sync_time_op3 = 2131558509;
+			
+			// aapt resource value: 0x7f0d0068
+			public const int settings_sync_time_title = 2131558504;
 			
 			// aapt resource value: 0x7f0d0035
 			public const int status_bar_notification_info_overflow = 2131558453;

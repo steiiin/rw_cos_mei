@@ -8,6 +8,7 @@ using Java.Util;
 using Javax.Crypto;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -38,6 +39,8 @@ namespace rw_cos_mei
         public const string PREF_LASTREFRESH = "settings_sync_lastrefresh";
 
         public const string PREF_BOTTOMNAV_ID = "settings_bottomnav_id";
+
+        public const string PREF_REGION_ID = "settings_region_id";
 
         public const int SETTINGS_OLDFEED_MONTHOFFSET = 12;
         
@@ -420,6 +423,9 @@ namespace rw_cos_mei
             BearerToken  = prefs.GetString(PREF_SHAREPOINT_BEARER, string.Empty);
             OAuthToken = prefs.GetString(PREF_SHAREPOINT_OAUTHT, string.Empty);
 
+            //Region
+            currentDateRegion = prefs.GetString(PREF_REGION_ID, CultureInfo.CurrentCulture.Name);
+
             //Listen
             _tableFeed = new Dictionary<string, FeedEntry>();
             _tableShifts = new Dictionary<string, ShiftsEntry>();
@@ -434,7 +440,7 @@ namespace rw_cos_mei
 
             //MainActivity
             BottomNavigationSelectedId = prefs.GetInt(PREF_BOTTOMNAV_ID, Resource.Id.menu_feed);
-
+            
         }
         public static void SaveSettings(Context context)
         {
@@ -457,6 +463,8 @@ namespace rw_cos_mei
             editor.PutString(PREF_LASTREFRESH, EncodeDateToString(LastTableRefresh)); 
 
             editor.PutInt(PREF_BOTTOMNAV_ID, BottomNavigationSelectedId);
+
+            editor.PutString(PREF_REGION_ID, currentDateRegion);
 
             editor.Apply();
         }
@@ -615,7 +623,8 @@ namespace rw_cos_mei
 
         //###################################################################################
 
-        private static string currentDateFormat = "yyyy/MM/dd HH:mm:ss";
+        private const string currentDateFormat = "yyyy/MM/dd HH:mm:ss";
+        private static string currentDateRegion;
 
         public static string EncodeDateToString(DateTime date)
         {
@@ -626,7 +635,7 @@ namespace rw_cos_mei
 
             if(!DateTime.TryParseExact(date, currentDateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime decodedDate))
             {
-                if(!DateTime.TryParse(date, out decodedDate))
+                if(!DateTime.TryParse(date, new CultureInfo(currentDateRegion), DateTimeStyles.None, out decodedDate))
                 {
                     decodedDate = defaultDate;
                 }
@@ -852,10 +861,10 @@ namespace rw_cos_mei
                 if (Build.VERSION.SdkInt < BuildVersionCodes.M)
                 {
 
-                    Calendar calendar = Calendar.Instance;
-                    calendar.Add(CalendarField.Year, 20);
+                    Android.Icu.Util.Calendar calendar = Android.Icu.Util.Calendar.Instance;
+                    calendar.Add(Android.Icu.Util.CalendarField.Year, 20);
 
-                    Date startDate = Calendar.Instance.Time;
+                    Date startDate = Android.Icu.Util.Calendar.Instance.Time;
                     Date endDate = calendar.Time;
 
 #pragma warning disable 0618

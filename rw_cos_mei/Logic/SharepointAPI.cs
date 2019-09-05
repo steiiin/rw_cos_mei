@@ -40,7 +40,7 @@ namespace rw_cos_mei
 
         //#########################################################
 
-        private const int REQUEST_TIMEOUT = 12000;
+        private const int REQUEST_TIMEOUT = 6000;
 
         //#########################################################
 
@@ -78,14 +78,14 @@ namespace rw_cos_mei
 
         private CookieContainer _cookieJar;
 
-        public async Task<bool> CreateLogin()
+        public async Task<SharepointAPIState> CreateLogin()
         {
 
             InvokeStateChanged(SharepointAPIState.WORKING);
 
-            if (!IsOnline()) { InvokeStateChanged(SharepointAPIState.CONNECTION_LOST); return false; }
-            if (string.IsNullOrWhiteSpace(_username)) { InvokeStateChanged(SharepointAPIState.WRONG_LOGIN); return false; }
-            if (string.IsNullOrWhiteSpace(_password)) { InvokeStateChanged(SharepointAPIState.WRONG_LOGIN); return false; }
+            if (!IsOnline()) { return SharepointAPIState.CONNECTION_LOST; }
+            if (string.IsNullOrWhiteSpace(_username)) { return SharepointAPIState.WRONG_LOGIN; }
+            if (string.IsNullOrWhiteSpace(_password)) { return SharepointAPIState.WRONG_LOGIN; }
 
             //Init
             _bearer = string.Empty;
@@ -101,27 +101,24 @@ namespace rw_cos_mei
                 string realmRequest = string.Format("login={0}&xml=1", _username.Replace("@", "%40"));
 
                 HttpWebRequest request = await GetRequest_POSTAsync(GetRequest(new Uri(_url_getAdfs)), RequestContentType.WWW_FORM, RequestContentType.XML, realmRequest);
-                if (request == null) { InvokeStateChanged(SharepointAPIState.CONNECTION_LOST); return false; }
+                if (request == null) { return SharepointAPIState.CONNECTION_LOST; }
 
                 ResponseObject response = await GetResponse(request);
                 switch (response.StatusCode)
                 {
                     case ResponseObject.ResponseObjectStatusCode.CONNECTION_LOST:
 
-                        InvokeStateChanged(SharepointAPIState.CONNECTION_LOST);
-                        return false;
+                        return SharepointAPIState.CONNECTION_LOST;
 
                     case ResponseObject.ResponseObjectStatusCode.FORBIDDEN:
 
-                        InvokeStateChanged(SharepointAPIState.WRONG_LOGIN);
-                        return false;
+                        return SharepointAPIState.WRONG_LOGIN;
 
                     case ResponseObject.ResponseObjectStatusCode.ERROR:
                     case ResponseObject.ResponseObjectStatusCode.UNSET:
                     default:
-                        
-                        InvokeStateChanged(SharepointAPIState.SERVER_ERROR);
-                        return false;
+
+                        return SharepointAPIState.SERVER_ERROR;
 
                     case ResponseObject.ResponseObjectStatusCode.OK:
 
@@ -132,7 +129,7 @@ namespace rw_cos_mei
 
                             XElement x = XElement.Parse(responseData);
                             string NameSpaceType = x.Descendants().Where(xg => xg.Name.LocalName == "NameSpaceType").First().Value;
-                            if (NameSpaceType != "Federated") { InvokeStateChanged(SharepointAPIState.WRONG_LOGIN); return false; }
+                            if (NameSpaceType != "Federated") { return SharepointAPIState.WRONG_LOGIN; }
 
                             string sts = x.Descendants().Where(xg => xg.Name.LocalName == "STSAuthURL").First().Value;
                             string auth_certificate = x.Descendants().Where(xg => xg.Name.LocalName == "Certificate").First().Value;
@@ -146,27 +143,24 @@ namespace rw_cos_mei
                             string adfsRequest = @"<?xml version='1.0' encoding='UTF-8'?><s:Envelope xmlns:s='http://www.w3.org/2003/05/soap-envelope' xmlns:wsse='http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd' xmlns:saml='urn:oasis:names:tc:SAML:1.0:assertion' xmlns:wsp='http://schemas.xmlsoap.org/ws/2004/09/policy' xmlns:wsu='http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd' xmlns:wsa='http://www.w3.org/2005/08/addressing' xmlns:wssc='http://schemas.xmlsoap.org/ws/2005/02/sc' xmlns:wst='http://schemas.xmlsoap.org/ws/2005/02/trust'><s:Header><wsa:Action s:mustUnderstand='1'>http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue</wsa:Action><wsa:To s:mustUnderstand='1'>{0}</wsa:To><wsa:MessageID>{1}</wsa:MessageID><ps:AuthInfo xmlns:ps='http://schemas.microsoft.com/Passport/SoapServices/PPCRL' Id='PPAuthInfo'><ps:HostingApp>Managed IDCRL</ps:HostingApp><ps:BinaryVersion>6</ps:BinaryVersion><ps:UIVersion>1</ps:UIVersion><ps:Cookies></ps:Cookies><ps:RequestParams>AQAAAAIAAABsYwQAAAAxMDMz</ps:RequestParams></ps:AuthInfo><wsse:Security><wsse:UsernameToken wsu:Id='user'><wsse:Username>{2}</wsse:Username><wsse:Password>{3}</wsse:Password></wsse:UsernameToken><wsu:Timestamp Id='Timestamp'><wsu:Created>{4}</wsu:Created><wsu:Expires>{5}</wsu:Expires></wsu:Timestamp></wsse:Security></s:Header><s:Body><wst:RequestSecurityToken Id='RST0'><wst:RequestType>http://schemas.xmlsoap.org/ws/2005/02/trust/Issue</wst:RequestType><wsp:AppliesTo><wsa:EndpointReference><wsa:Address>urn:federation:MicrosoftOnline</wsa:Address></wsa:EndpointReference></wsp:AppliesTo><wst:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</wst:KeyType></wst:RequestSecurityToken></s:Body></s:Envelope>";
 
                             request = await GetRequest_POSTAsync(GetRequest(new Uri(sts)), RequestContentType.SOAP, RequestContentType.ALL, string.Format(adfsRequest, sts, msgID, _username, _password, r_created, r_expired));
-                            if (request == null) { InvokeStateChanged(SharepointAPIState.CONNECTION_LOST); return false; }
+                            if (request == null) { return SharepointAPIState.CONNECTION_LOST; }
 
                             response = await GetResponse(request);
                             switch (response.StatusCode)
                             {
                                 case ResponseObject.ResponseObjectStatusCode.CONNECTION_LOST:
 
-                                    InvokeStateChanged(SharepointAPIState.CONNECTION_LOST);
-                                    return false;
+                                    return SharepointAPIState.CONNECTION_LOST;
 
                                 case ResponseObject.ResponseObjectStatusCode.FORBIDDEN:
-                                
-                                    InvokeStateChanged(SharepointAPIState.WRONG_LOGIN);
-                                    return false;
+
+                                    return SharepointAPIState.WRONG_LOGIN;
 
                                 case ResponseObject.ResponseObjectStatusCode.ERROR:
                                 case ResponseObject.ResponseObjectStatusCode.UNSET:
                                 default:
 
-                                    InvokeStateChanged(SharepointAPIState.SERVER_ERROR);
-                                    return false;
+                                    return SharepointAPIState.SERVER_ERROR;
 
                                 case ResponseObject.ResponseObjectStatusCode.OK:
 
@@ -191,27 +185,24 @@ namespace rw_cos_mei
                                         string spTokenRequest = @"<S:Envelope xmlns:S='http://www.w3.org/2003/05/soap-envelope' xmlns:wsse='http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd' xmlns:wsp='http://schemas.xmlsoap.org/ws/2004/09/policy' xmlns:wsu='http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd' xmlns:wsa='http://www.w3.org/2005/08/addressing' xmlns:wst='http://schemas.xmlsoap.org/ws/2005/02/trust'><S:Header><wsa:Action S:mustUnderstand='1'>http://schemas.xmlsoap.org/ws/2005/02/trust/RST/Issue</wsa:Action><wsa:To S:mustUnderstand='1'>https://login.microsoftonline.com/rst2.srf</wsa:To><ps:AuthInfo xmlns:ps='http://schemas.microsoft.com/LiveID/SoapServices/v1' Id='PPAuthInfo'><ps:BinaryVersion>5</ps:BinaryVersion><ps:HostingApp>Managed IDCRL</ps:HostingApp></ps:AuthInfo><wsse:Security>{0}</wsse:Security></S:Header><S:Body><wst:RequestSecurityToken xmlns:wst='http://schemas.xmlsoap.org/ws/2005/02/trust' Id='RST0'><wst:RequestType>http://schemas.xmlsoap.org/ws/2005/02/trust/Issue</wst:RequestType><wsp:AppliesTo><wsa:EndpointReference><wsa:Address>sharepoint.com</wsa:Address></wsa:EndpointReference></wsp:AppliesTo><wsp:PolicyReference URI='MBI'/></wst:RequestSecurityToken></S:Body></S:Envelope>";
 
                                         request = await GetRequest_POSTAsync(GetRequest(new Uri(_url_getSpToken)), RequestContentType.SOAP, RequestContentType.ALL, string.Format(spTokenRequest, auth_AssertionFullXml));
-                                        if (request == null) { InvokeStateChanged(SharepointAPIState.CONNECTION_LOST); return false; }
+                                        if (request == null) { return SharepointAPIState.CONNECTION_LOST; }
 
                                         response = await GetResponse(request);
                                         switch (response.StatusCode)
                                         {
                                             case ResponseObject.ResponseObjectStatusCode.CONNECTION_LOST:
 
-                                                InvokeStateChanged(SharepointAPIState.CONNECTION_LOST);
-                                                return false;
+                                                return SharepointAPIState.CONNECTION_LOST;
 
                                             case ResponseObject.ResponseObjectStatusCode.FORBIDDEN:
 
-                                                InvokeStateChanged(SharepointAPIState.WRONG_LOGIN);
-                                                return false;
+                                                return SharepointAPIState.WRONG_LOGIN;
 
                                             case ResponseObject.ResponseObjectStatusCode.ERROR:
                                             case ResponseObject.ResponseObjectStatusCode.UNSET:
                                             default:
 
-                                                InvokeStateChanged(SharepointAPIState.SERVER_ERROR);
-                                                return false;
+                                                return SharepointAPIState.SERVER_ERROR;
 
                                             case ResponseObject.ResponseObjectStatusCode.OK:
 
@@ -237,20 +228,17 @@ namespace rw_cos_mei
                                                     {
                                                         case ResponseObject.ResponseObjectStatusCode.CONNECTION_LOST:
 
-                                                            InvokeStateChanged(SharepointAPIState.CONNECTION_LOST);
-                                                            return false;
+                                                            return SharepointAPIState.CONNECTION_LOST;
 
                                                         case ResponseObject.ResponseObjectStatusCode.FORBIDDEN:
 
-                                                            InvokeStateChanged(SharepointAPIState.WRONG_LOGIN);
-                                                            return false;
+                                                            return SharepointAPIState.WRONG_LOGIN;
 
                                                         case ResponseObject.ResponseObjectStatusCode.ERROR:
                                                         case ResponseObject.ResponseObjectStatusCode.UNSET:
                                                         default:
 
-                                                            InvokeStateChanged(SharepointAPIState.SERVER_ERROR);
-                                                            return false;
+                                                            return SharepointAPIState.SERVER_ERROR;
 
                                                         case ResponseObject.ResponseObjectStatusCode.OK:
 
@@ -264,7 +252,7 @@ namespace rw_cos_mei
                                                                 string digestRequest = @"<?xml version='1.0' encoding='utf-8'?><soap:Envelope xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xsd='http://www.w3.org/2001/XMLSchema' xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'><soap:Body><GetUpdatedFormDigestInformation xmlns='http://schemas.microsoft.com/sharepoint/soap/' /></soap:Body></soap:Envelope>";
 
                                                                 request = await GetRequest_POSTAsync(GetRequest(digestUri), RequestContentType.XML, RequestContentType.ALL, digestRequest);
-                                                                if (request == null) { InvokeStateChanged(SharepointAPIState.CONNECTION_LOST); return false; }
+                                                                if (request == null) { return SharepointAPIState.CONNECTION_LOST; }
 
                                                                 request.Headers.Add("X-RequestForceAuthentication", "true");
                                                                 request.Headers.Add("X-FORMS_BASED_AUTH_ACCEPTED", "f");
@@ -276,20 +264,17 @@ namespace rw_cos_mei
                                                                 {
                                                                     case ResponseObject.ResponseObjectStatusCode.CONNECTION_LOST:
 
-                                                                        InvokeStateChanged(SharepointAPIState.CONNECTION_LOST);
-                                                                        return false;
+                                                                        return SharepointAPIState.CONNECTION_LOST;
 
                                                                     case ResponseObject.ResponseObjectStatusCode.FORBIDDEN:
 
-                                                                        InvokeStateChanged(SharepointAPIState.WRONG_LOGIN);
-                                                                        return false;
+                                                                        return SharepointAPIState.WRONG_LOGIN;
 
                                                                     case ResponseObject.ResponseObjectStatusCode.ERROR:
                                                                     case ResponseObject.ResponseObjectStatusCode.UNSET:
                                                                     default:
 
-                                                                        InvokeStateChanged(SharepointAPIState.SERVER_ERROR);
-                                                                        return false;
+                                                                        return SharepointAPIState.SERVER_ERROR;
 
                                                                     case ResponseObject.ResponseObjectStatusCode.OK:
 
@@ -304,38 +289,37 @@ namespace rw_cos_mei
 
                                                                             TBL.UpdateTokens(_bearer, _spOauth);
 
-                                                                            InvokeStateChanged(SharepointAPIState.LOGGED_IN);
-                                                                            return true;
+                                                                            return SharepointAPIState.LOGGED_IN;
 
                                                                         }
-                                                                        InvokeStateChanged(SharepointAPIState.SERVER_ERROR); return false;
+                                                                        return SharepointAPIState.SERVER_ERROR;
 
                                                                 }
                                                                 
                                                             }
-                                                            InvokeStateChanged(SharepointAPIState.SERVER_ERROR); return false;
+                                                            return SharepointAPIState.SERVER_ERROR;
 
                                                     }
                                                     
                                                 }
-                                                InvokeStateChanged(SharepointAPIState.SERVER_ERROR); return false;
+                                                return SharepointAPIState.SERVER_ERROR;
 
                                         }
 
                                     }
-                                    InvokeStateChanged(SharepointAPIState.SERVER_ERROR); return false;
+                                    return SharepointAPIState.SERVER_ERROR;
 
                             }
                             
                         }
-                        InvokeStateChanged(SharepointAPIState.SERVER_ERROR); return false;
+                        return SharepointAPIState.SERVER_ERROR;
 
                 }
                 
             }
             catch (Exception)
             {
-                InvokeStateChanged(SharepointAPIState.SERVER_ERROR); return false;
+                return SharepointAPIState.SERVER_ERROR;
             }
 
         }
@@ -350,8 +334,11 @@ namespace rw_cos_mei
         {
            
             InvokeStateChanged(SharepointAPIState.WORKING);
-            
+
             if (!IsOnline()) { InvokeStateChanged(SharepointAPIState.CONNECTION_LOST); return; }
+            if (string.IsNullOrWhiteSpace(_username)) { InvokeStateChanged(SharepointAPIState.WRONG_LOGIN); return; }
+            if (string.IsNullOrWhiteSpace(_password)) { InvokeStateChanged(SharepointAPIState.WRONG_LOGIN); return; }
+
             if (!string.IsNullOrWhiteSpace(_spOauth)) { _cookieJar = CreateOAuthCookie(); } else { _cookieJar = new CookieContainer(); }
 
             string query = "_api/web/lists/getbytitle('Neues%20aus%20der%20Rettungswache')/items?$select=ID,Title,Body,Modified,AttachmentFiles,Author/Name,Author/Title&$orderby=Modified%20desc&$expand=AttachmentFiles,Author/Id";
@@ -374,13 +361,19 @@ namespace rw_cos_mei
 
                         if(relogin)
                         {
-                            if (await CreateLogin())
+
+                            var loginState = await CreateLogin();
+                            if (loginState == SharepointAPIState.LOGGED_IN)
                             { 
                                 await UpdateNewsFeed(doNotify, false);
+                                return;
                             }
+                            InvokeStateChanged(loginState);
                             return;
                         }
+
                         InvokeStateChanged(SharepointAPIState.WRONG_LOGIN);
+                        
                         return;
 
                     case ResponseObject.ResponseObjectStatusCode.ERROR:
@@ -683,6 +676,7 @@ namespace rw_cos_mei
             }
             catch (WebException e)
             {
+                
                 if(((HttpWebResponse)e.Response)?.StatusCode == HttpStatusCode.Forbidden)
                 {
                     return new ResponseObject(ResponseObject.ResponseObjectStatusCode.FORBIDDEN);
@@ -691,15 +685,13 @@ namespace rw_cos_mei
                 {
                     if(GetResponseData((HttpWebResponse)e.Response).Contains("FailedAuthentication")) { return new ResponseObject(ResponseObject.ResponseObjectStatusCode.FORBIDDEN); }
                 }
+                if(e.Status == WebExceptionStatus.NameResolutionFailure || e.Status == WebExceptionStatus.ProxyNameResolutionFailure || e.Status == WebExceptionStatus.Timeout || e.Status == WebExceptionStatus.SendFailure || e.Status == WebExceptionStatus.ReceiveFailure)
+                {
+                    return new ResponseObject(ResponseObject.ResponseObjectStatusCode.CONNECTION_LOST);
+                }
                 
                 return new ResponseObject(ResponseObject.ResponseObjectStatusCode.ERROR);
             }
-            catch (Exception)
-            {
-                return new ResponseObject(ResponseObject.ResponseObjectStatusCode.CONNECTION_LOST);
-            }
-
-
         }
         private string GetResponseData(HttpWebResponse response)
         {

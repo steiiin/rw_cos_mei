@@ -70,6 +70,7 @@
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:orientation="vertical">
+
 			<FrameLayout
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
@@ -137,7 +138,7 @@
 			</FrameLayout>
 
 			<android.support.design.card.MaterialCardView
-				android:id="@+id/card_wronglogin_hint"
+				android:id="@+id/cred_card_hint"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
 				android:orientation="vertical"
@@ -157,58 +158,18 @@
 					android:paddingRight="16dp"
 					android:paddingEnd="16dp">
 					<TextView
+						android:id="@+id/cred_card_title"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
-						style="@style/Text.List.Title"
-						android:text="@string/settings_cred_error_title" />
+						style="@style/Text.List.Title"/>
 					<TextView
+						android:id="@+id/cred_card_msg"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						style="@style/Text.List.Subtitle"
-						android:text="@string/settings_cred_error_desc" />
+					    android:paddingBottom="16dp" />
 					<Button
-						android:id="@+id/card_wronglogin_retrybutton"
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:text="@string/dialog_reconnect"
-						android:padding="0dp"
-						style="@style/Widget.AppCompat.Button.Borderless.Colored" />
-
-				</LinearLayout>
-	
-			</android.support.design.card.MaterialCardView>
-			<android.support.design.card.MaterialCardView
-				android:id="@+id/card_connectionlost_hint"
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:orientation="vertical"
-				android:layout_marginLeft="16dp"
-				android:layout_marginStart="16dp"
-				android:layout_marginEnd="16dp"
-				android:layout_marginRight="16dp"
-				android:layout_marginBottom="16dp">
-		
-				<LinearLayout
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:orientation="vertical"
-					android:paddingLeft="16dp"
-					android:paddingStart="16dp"
-					android:paddingTop="16dp"
-					android:paddingRight="16dp"
-					android:paddingEnd="16dp">
-					<TextView
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						style="@style/Text.List.Title"
-						android:text="@string/settings_cred_connection_title" />
-					<TextView
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						style="@style/Text.List.Subtitle"
-						android:text="@string/settings_cred_connection_desc" />
-					<Button
-						android:id="@+id/card_connectionlost_retrybutton"
+						android:id="@+id/cred_card_retry"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						android:text="@string/dialog_reconnect"
