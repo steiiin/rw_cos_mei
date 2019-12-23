@@ -9,7 +9,7 @@ using Android.App;
 
 /// <summary>
 /// 
-/// Version: 2.0
+/// Version: 3.0
 /// 
 /// </summary>
 

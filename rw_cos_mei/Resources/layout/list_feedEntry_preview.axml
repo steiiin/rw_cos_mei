@@ -5,30 +5,36 @@
 	android:layout_width="match_parent"
 	android:layout_height="wrap_content">
 	
-	<Button
-		android:id="@+id/btn_attachment"
+	<ImageView
+		android:id="@+id/img_preview"
 		
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:paddingRight="72dp"
-				
-		android:text="#ATTACHMENT.EXT#"
-		android:textAlignment="textStart" 
-		style="@style/Widget.AppCompat.Button.Colored" />
+		android:scaleType="fitStart"
+		
+		android:background="@android:color/transparent"
+		android:minHeight="40dp" />
 
 	<ProgressBar
-		android:id="@+id/progress_working"
-						
+		android:id="@+id/progress_preview"
+		
 		android:elevation="8dp"
 		
 		android:layout_height="30dp"
 		android:layout_width="30dp"
-		android:layout_marginRight="8dp"
 		
-		android:layout_gravity="right|center_vertical"
+		android:layout_gravity="center"
 	
-	    android:indeterminateTint="#fff"
+	    android:indeterminateTint="#f00"
 		android:indeterminateTintMode="src_atop"
 	    android:indeterminateOnly="true" />
+
+	<View
+		android:layout_width="match_parent"
+		android:layout_height="1dp"
+		
+		android:layout_gravity="bottom"
+				
+		android:background="@color/divider_dim" />
 
 </FrameLayout>

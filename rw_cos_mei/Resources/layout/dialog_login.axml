@@ -37,6 +37,7 @@
 		android:layout_height="wrap_content"
 		android:minHeight="56dp"
 		
+		app:passwordToggleEnabled="true"
 		app:errorEnabled="true"
 		app:errorTextAppearance="@style/Text.Input.Error">
 

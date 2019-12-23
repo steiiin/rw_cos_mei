@@ -13,6 +13,7 @@ using AlertDialog = Android.Support.V7.App.AlertDialog;
 using Toolbar = Android.Support.V7.Widget.Toolbar;
 
 using TBL = rw_cos_mei.AppTable;
+using rw_cos_mei.Helper;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///Activity_Settings
@@ -279,7 +280,7 @@ namespace rw_cos_mei
         {
 
             List<string> intervalTitles = new List<string>();
-            foreach (var item in listSpinnerIntervalValues) { intervalTitles.Add(TBL.GetSyncIntervalSettingDescription(this, item)); }
+            foreach (var item in listSpinnerIntervalValues) { intervalTitles.Add(TBL.GetSyncIntervalSettingDescriptor(this, item).Description); }
 
             ArrayAdapter<string> adapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerItem, intervalTitles);
             adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
@@ -303,7 +304,7 @@ namespace rw_cos_mei
 
                 TBL.UpdateSyncInterval(interval);
 
-                JobSchedulerHelper.CreateSyncJob(this, TBL.GetSyncIntervalSettingTiming(interval));
+                JobSchedulerHelper.CreateSyncJob(this, TBL.GetSyncIntervalSettingDescriptor(this, interval).Timespan);
             }
 
         }

@@ -19,6 +19,7 @@ using Toolbar = Android.Support.V7.Widget.Toolbar;
 
 using TBL = rw_cos_mei.AppTable;
 using Java.Lang;
+using rw_cos_mei.Helper;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///Activity_Main
@@ -44,6 +45,7 @@ namespace rw_cos_mei
         {
 
             public TextView TOOLBAR_REFRESHTIMER;
+            public Android.Support.V4.Widget.SwipeRefreshLayout REFRESH_SWIPE;
 
             public BottomNavigationView BOTTOMNAVIGATION;
             public ViewPager VIEWPAGER;
@@ -82,7 +84,7 @@ namespace rw_cos_mei
             {
                 Activity_Init.InitRoutine(this);
             }
-
+            
             //Eventhandler erstellen
             CreateViewHandler(HandlerMethod.ADD_HANDLERS);
 
@@ -125,12 +127,8 @@ namespace rw_cos_mei
             {
                 case (Resource.Id.menu_sync):
 
-                    if (TBL.SP_Object.State != SharepointAPIState.WORKING)
-                    {
+                    RefreshCloud();
 
-                        RefreshCloud();
-
-                    }
                     break;
 
                 case (Resource.Id.menu_settings):
@@ -149,8 +147,25 @@ namespace rw_cos_mei
         }
         private async void RefreshCloud()
         {
-            TBL.BlockSyncService();
-            await TBL.SP_Object.UpdateNewsFeed();
+            if (TBL.SP_Object.State != SharepointAPIState.WORKING)
+            {
+
+                TBL.BlockSyncService();
+                await TBL.SP_Object.UpdateNewsFeed();
+
+            }
+        }
+
+        private void ShowFirstStartNag()
+        {
+
+            var firstStart = new AlertDialog.Builder(this)
+                   .SetTitle(GetString(Resource.String.firststart_title))
+                   .SetMessage(GetString(Resource.String.firststart_msg))
+                   .SetCancelable(true)
+                   .SetPositiveButton(Resource.String.dialog_reconnect, (ss, ee) => { TBL.IsFirstStart = false; TBL.SaveSettings(this); })
+                   .Show();
+
         }
 
         //###################################################################################
@@ -201,8 +216,11 @@ namespace rw_cos_mei
                 c.VIEWPAGER.PageSelected += VIEWPAGER_PageSelected;
 
                 c.VIEWPAGER_ADAPTER.FeedItemSelected += LIST_FEED_ItemSelected;
+
                 c.VIEWPAGER_ADAPTER.ShiftsItemSelected += LIST_SHIFTS_ItemSelected;
                 c.VIEWPAGER_ADAPTER.ShiftsItemAttachmentRetrieveError += LIST_SHIFTS_AttachmentRetrieveError;
+
+                c.VIEWPAGER_ADAPTER.RequestRefresh += VIEWPAGER_ADAPTER_RequestRefresh;
                 
             }
             else
@@ -218,8 +236,18 @@ namespace rw_cos_mei
                 c.VIEWPAGER_ADAPTER.ShiftsItemSelected -= LIST_SHIFTS_ItemSelected;
                 c.VIEWPAGER_ADAPTER.ShiftsItemAttachmentRetrieveError -= LIST_SHIFTS_AttachmentRetrieveError;
 
+                c.VIEWPAGER_ADAPTER.RequestRefresh -= VIEWPAGER_ADAPTER_RequestRefresh;
+
             }
             
+        }
+
+        private void VIEWPAGER_ADAPTER_RequestRefresh(object sender, EventArgs e)
+        {
+
+            c.REFRESH_SWIPE = (Android.Support.V4.Widget.SwipeRefreshLayout)sender;
+            RefreshCloud();
+
         }
 
         private void CreateToolbar()
@@ -306,34 +334,43 @@ namespace rw_cos_mei
         }
         private void ViewStateChanger(SharepointAPIState state)
         {
+
+            //Progress
+            if(state == SharepointAPIState.WORKING)
+            {
+
+                TBL.BlockSyncService();
+
+                //Progressindikator anzeigen. Vollbild, wenn keine Daten.
+                if (TBL.IsFeedEmpty)
+                {
+                    c.REFRESH_PROGRESS.Visibility = ViewStates.Gone;
+                    c.REFRESH_PROGRESS_OVERLAY.Visibility = ViewStates.Visible;
+                }
+                else
+                {
+                    c.REFRESH_PROGRESS_OVERLAY.Visibility = ViewStates.Gone;
+                    c.REFRESH_PROGRESS.Visibility = ViewStates.Visible;
+                }
+
+            }
+            else
+            {
+                c.REFRESH_PROGRESS.Visibility = ViewStates.Gone;
+                c.REFRESH_PROGRESS_OVERLAY.Visibility = ViewStates.Gone;
+                if (c.REFRESH_SWIPE != null) { c.REFRESH_SWIPE.Refreshing = false; }
+            }
             
+            //Status
             switch (state)
             {
-                case SharepointAPIState.WORKING:
-
-                    TBL.BlockSyncService();
-
-                    //Progressindikator anzeigen. Vollbild, wenn keine Daten.
-                    if (TBL.IsFeedEmpty)
-                    {
-                        c.REFRESH_PROGRESS.Visibility = ViewStates.Gone;
-                        c.REFRESH_PROGRESS_OVERLAY.Visibility = ViewStates.Visible;
-                    }
-                    else
-                    {
-                        c.REFRESH_PROGRESS_OVERLAY.Visibility = ViewStates.Gone;
-                        c.REFRESH_PROGRESS.Visibility = ViewStates.Visible;
-                    }
-
-                    break;
-
                 case SharepointAPIState.WRONG_LOGIN:
 
                     TBL.UnBlockSyncService();
 
                     if (dialogError != null) { dialogError.Dismiss(); }
                     if (dialogWrongLogin != null) { dialogWrongLogin.Dismiss(); }
-
+                    
                     //Dialog anzeigen, der in die Einstellungen führt.
                     int title = Resource.String.main_dialog_wronglogin_title;
                     int msg = Resource.String.main_dialog_wronglogin_msg;
@@ -341,6 +378,15 @@ namespace rw_cos_mei
                     {
                         title = Resource.String.main_dialog_nologin_title;
                         msg = Resource.String.main_dialog_nologin_msg;
+
+                        if(TBL.IsFirstStart)
+                        {
+                            title = Resource.String.firststart_title;
+                            msg = Resource.String.firststart_msg;
+                            TBL.IsFirstStart = false;
+                            TBL.SaveSettings(this);
+                        }
+
                     }
 
                     dialogWrongLogin = new AlertDialog.Builder(this)
@@ -358,9 +404,6 @@ namespace rw_cos_mei
 
                     if (dialogError != null) { dialogError.Dismiss(); }
                     if (dialogWrongLogin != null) { dialogWrongLogin.Dismiss(); }
-
-                    c.REFRESH_PROGRESS.Visibility = ViewStates.Gone;
-                    c.REFRESH_PROGRESS_OVERLAY.Visibility = ViewStates.Gone;
                     
                     //Dialog anzeigen, der WIEDERHOLEN anbietet.
                     dialogError = new AlertDialog.Builder(this)
@@ -375,10 +418,7 @@ namespace rw_cos_mei
                 case SharepointAPIState.CONNECTION_LOST:
 
                     TBL.UnBlockSyncService();
-
-                    c.REFRESH_PROGRESS.Visibility = ViewStates.Gone;
-                    c.REFRESH_PROGRESS_OVERLAY.Visibility = ViewStates.Gone;
-
+                    
                     if (dialogWrongLogin != null) { dialogWrongLogin.Dismiss(); }
                     if (dialogError != null) { dialogError.Dismiss(); }
 
@@ -407,17 +447,21 @@ namespace rw_cos_mei
 
                     break;
 
+                case SharepointAPIState.LOGGED_IN:
+
+                    if (dialogWrongLogin != null) { dialogWrongLogin.Dismiss(); }
+                    if (dialogError != null) { dialogError.Dismiss(); }
+                    
+                    break;
+
                 case SharepointAPIState.OK:
                 case SharepointAPIState.OFFLINE:
-
+                
                     TBL.UnBlockSyncService();
 
                     if (dialogWrongLogin != null) { dialogWrongLogin.Dismiss(); }
                     if (dialogError != null) { dialogError.Dismiss(); }
-
-                    c.REFRESH_PROGRESS.Visibility = ViewStates.Gone;
-                    c.REFRESH_PROGRESS_OVERLAY.Visibility = ViewStates.Gone;
-
+                    
                     UpdateRefreshTimer();
 
                     //Zeige Datenbank-Zeug
@@ -487,6 +531,7 @@ namespace rw_cos_mei
                     break;
 
             }
+            
 
             if (string.IsNullOrWhiteSpace(ErrorText)) { return; }
 
@@ -500,7 +545,7 @@ namespace rw_cos_mei
         {
 
             EntryAttachment attachment = TBL.GetShiftsEntry(e.EntryKey).ShiftAttachment;
-            FileOpen.Open(this, attachment.FileLocalUrl);
+            FileOpen.Open(this, attachment.LocalFilePath);
 
         }
         
@@ -520,8 +565,11 @@ namespace rw_cos_mei
             public ViewPagerAdapter(FragmentManager manager) : base(manager) { }
 
             public event EventHandler<Adapters.ListFeedAdapterItemSelectedEventArgs> FeedItemSelected;
+
             public event EventHandler<Adapters.ListShiftsAdapterItemSelectedEventArgs> ShiftsItemSelected;
             public event EventHandler<Adapters.AttachmentRetrieveErrorEventArgs> ShiftsItemAttachmentRetrieveError;
+
+            public event EventHandler RequestRefresh;
             
             //###################################################################################
 
@@ -553,6 +601,7 @@ namespace rw_cos_mei
                     FRAGMENT_FEED = (Fragments.Fragment_ListFeed)frag;
 
                     FRAGMENT_FEED.ItemSelected += FeedItemSelected;
+                    FRAGMENT_FEED.RequestRefresh += FRAGMENT_RequestRefresh;
 
                     if (inflate_pending_feed)
                     {
@@ -569,6 +618,8 @@ namespace rw_cos_mei
                     FRAGMENT_SHIFTS.ItemSelected += ShiftsItemSelected;
                     FRAGMENT_SHIFTS.AttachmentRetrieveError += ShiftsItemAttachmentRetrieveError;
 
+                    FRAGMENT_SHIFTS.RequestRefresh += FRAGMENT_RequestRefresh;
+
                     if (inflate_pending_shifts)
                     {
                         inflate_pending_shifts = false;
@@ -580,6 +631,11 @@ namespace rw_cos_mei
                 
             }
 
+            private void FRAGMENT_RequestRefresh(object sender, EventArgs e)
+            {
+                RequestRefresh?.Invoke(sender, e);
+            }
+            
             //###################################################################################
 
             bool inflate_pending_feed = false;
@@ -1201,6 +1257,7 @@ namespace rw_cos_mei
             
             private ListView LIST_FEED;
             private Adapters.ListFeedAdapter ADAPTER_FEED;
+            private Android.Support.V4.Widget.SwipeRefreshLayout LIST_REFRESH;
 
             private const string BUNDLE_LIST_SCROLLOFFSET = "bundle_list_scrolloffset";
             private const string BUNDLE_LIST_SCROLLINDEX = "bundle_list_scrollindex";
@@ -1208,6 +1265,7 @@ namespace rw_cos_mei
             //##########################################################################
             
             public event EventHandler<Adapters.ListFeedAdapterItemSelectedEventArgs> ItemSelected;
+            public event EventHandler RequestRefresh;
 
             //##########################################################################
 
@@ -1241,7 +1299,8 @@ namespace rw_cos_mei
                 LIST_FEED.LayoutChange += LIST_FEED_LayoutChange;
                 LIST_FEED.ItemClick += LIST_FEED_ItemClick;
                 LIST_FEED.ScrollStateChanged += LIST_FEED_ScrollStateChanged;
-                
+                LIST_REFRESH.Refresh += GetRefresh;
+
             }       
             public override void OnPause()
             {
@@ -1250,7 +1309,8 @@ namespace rw_cos_mei
                 LIST_FEED.LayoutChange -= LIST_FEED_LayoutChange;
                 LIST_FEED.ItemClick -= LIST_FEED_ItemClick;
                 LIST_FEED.ScrollStateChanged -= LIST_FEED_ScrollStateChanged;
-                
+                LIST_REFRESH.Refresh -= GetRefresh;
+
             }
             
             public override void OnSaveInstanceState(Bundle outState)
@@ -1287,7 +1347,9 @@ namespace rw_cos_mei
                 View v = inflater.Inflate(Resource.Layout.fragment_main_list_feed, null);
                 LIST_FEED = v.FindViewById<ListView>(Resource.Id.main_list_feed);
                 LIST_FEED.Divider = null;
-                
+
+                LIST_REFRESH = v.FindViewById<Android.Support.V4.Widget.SwipeRefreshLayout>(Resource.Id.main_refresh_feed);
+                                
                 if (inflate_pending)
                 {
                     inflate_pending = false;
@@ -1296,15 +1358,19 @@ namespace rw_cos_mei
 
                 return v;
             }
-
+            
             private void GetScrollPosition(out int position, out int offset)
             {
                 position = LIST_FEED.FirstVisiblePosition; View v = LIST_FEED.GetChildAt(0);
                 offset = (v == null) ? 0 : (v.Top - LIST_FEED.PaddingTop);
             }
+            private void GetRefresh(object sender, EventArgs e)
+            {
+                RequestRefresh?.Invoke(LIST_REFRESH, new EventArgs());
+            }
 
             //##########################################################################
-            
+
             private int lastHeight = -1;
 
             private void LIST_FEED_LayoutChange(object sender, View.LayoutChangeEventArgs e)
@@ -1342,6 +1408,7 @@ namespace rw_cos_mei
 
             private ListView LIST_SHIFTS;
             private Adapters.ListShiftsAdapter ADAPTER_SHIFTS;
+            private Android.Support.V4.Widget.SwipeRefreshLayout LIST_REFRESH;
 
             private const string BUNDLE_LIST_SCROLLOFFSET = "bundle_list_shifts_scrolloffset";
             private const string BUNDLE_LIST_SCROLLINDEX = "bundle_list_shifts_scrollindex";
@@ -1350,6 +1417,8 @@ namespace rw_cos_mei
 
             public event EventHandler<Adapters.ListShiftsAdapterItemSelectedEventArgs> ItemSelected;
             public event EventHandler<Adapters.AttachmentRetrieveErrorEventArgs> AttachmentRetrieveError;
+
+            public event EventHandler RequestRefresh;
 
             //##########################################################################
 
@@ -1381,7 +1450,9 @@ namespace rw_cos_mei
 
                 LIST_SHIFTS.ItemClick += LIST_SHIFTS_ItemClick;
                 LIST_SHIFTS.ScrollStateChanged += LIST_SHIFTS_ScrollStateChanged;
-                
+
+                LIST_REFRESH.Refresh += GetRefresh;
+
             }
             public override void OnPause()
             {
@@ -1390,6 +1461,8 @@ namespace rw_cos_mei
 
                 LIST_SHIFTS.ItemClick -= LIST_SHIFTS_ItemClick;
                 LIST_SHIFTS.ScrollStateChanged -= LIST_SHIFTS_ScrollStateChanged;
+
+                LIST_REFRESH.Refresh -= GetRefresh;
 
             }
 
@@ -1427,6 +1500,7 @@ namespace rw_cos_mei
             {
                 View v = inflater.Inflate(Resource.Layout.fragment_main_list_shifts, null);
                 LIST_SHIFTS = v.FindViewById<ListView>(Resource.Id.main_list_shifts);
+                LIST_REFRESH = v.FindViewById<Android.Support.V4.Widget.SwipeRefreshLayout>(Resource.Id.main_refresh_shifts);
 
                 LIST_SHIFTS.Divider = null;
 
@@ -1446,6 +1520,10 @@ namespace rw_cos_mei
             {
                 position = LIST_SHIFTS.FirstVisiblePosition; View v = LIST_SHIFTS.GetChildAt(0);
                 offset = (v == null) ? 0 : (v.Top - LIST_SHIFTS.PaddingTop);
+            }
+            private void GetRefresh(object sender, EventArgs e)
+            {
+                RequestRefresh?.Invoke(LIST_REFRESH, new EventArgs());
             }
 
             //##########################################################################
@@ -1475,47 +1553,35 @@ namespace rw_cos_mei
             {
 
                 v.CONVERTVIEW.Tag = "BLOCKED";
+                v.PROGRESS.Visibility = ViewStates.Visible;
 
-                if (x.ShiftAttachment.IsAttachmentDownloaded)
-                {
-                    v.CONVERTVIEW.Tag = null;
-                    ItemSelected?.Invoke(this, new Adapters.ListShiftsAdapterItemSelectedEventArgs(x.Key, x.ShiftAttachment.Key));
-                }
-                else
+                TBL.SP_Object.GetNewsFeedAttachment(x.ShiftAttachment,
+                delegate (Adapters.AttachmentRetrieveErrorReason reason)
                 {
 
-                    v.PROGRESS.Visibility = ViewStates.Visible;
-
-                    TBL.SP_Object.GetNewsFeedAttachment(x.ShiftAttachment,
-                    delegate (Adapters.AttachmentRetrieveErrorReason reason)
+                    if (reason != Adapters.AttachmentRetrieveErrorReason.RELOGIN_REQUIRED)
                     {
-
-                        if (reason != Adapters.AttachmentRetrieveErrorReason.RELOGIN_REQUIRED)
-                        {
-                            v.PROGRESS.Visibility = ViewStates.Gone;
-                            v.CONVERTVIEW.Tag = null;
-                        }
-
-                        AttachmentRetrieveError?.Invoke(this, new Adapters.AttachmentRetrieveErrorEventArgs(reason));
-
-                    },
-                    delegate (string localPath)
-                    {
-
                         v.PROGRESS.Visibility = ViewStates.Gone;
-
-                        x.ShiftAttachment.UpdateAttachment(localPath);
-                        TBL.MarkReadShiftsEntry(x.Key);
-
                         v.CONVERTVIEW.Tag = null;
-                        ADAPTER_SHIFTS.VisualizeShiftsEntryState(x, v);
+                    }
 
-                        ItemSelected?.Invoke(this, new Adapters.ListShiftsAdapterItemSelectedEventArgs(x.Key, x.ShiftAttachment.Key));
+                    AttachmentRetrieveError?.Invoke(this, new Adapters.AttachmentRetrieveErrorEventArgs(reason));
 
-                    });
+                },
+                delegate (string localPath)
+                {
 
-                }
+                    v.PROGRESS.Visibility = ViewStates.Gone;
+                    
+                    TBL.MarkReadShiftsEntry(x.Key);
 
+                    v.CONVERTVIEW.Tag = null;
+                    ADAPTER_SHIFTS.VisualizeShiftsEntryState(x, v);
+
+                    ItemSelected?.Invoke(this, new Adapters.ListShiftsAdapterItemSelectedEventArgs(x.Key, x.ShiftAttachment.Key));
+
+                });
+                
             }
             
         }

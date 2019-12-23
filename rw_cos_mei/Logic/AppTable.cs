@@ -25,24 +25,21 @@ namespace rw_cos_mei
 
     public class AppTable
     {
+
+        public const string CRED_USERNAME = "cred_username";
+        public const string CRED_PASSWORD = "cred_password";
+
+        public const string PREF_SP_BEARER = "pref_sp_bearer";
+        public const string PREF_SP_OAUTHT = "pref_sp_oauth";
         
-        public const string PREF_USERNAME = "settings_username";
-        public const string PREF_PASSWORD = "settings_password";
-        public const string PREF_SEC_USERNAME = "settings_username_keystore";
-        public const string PREF_SEC_PASSWORD = "settings_password_keystore";
+        public const string PREF_SYNCINTERVAL = "pref_sync_interval";
+        public const string PREF_SYNCNOTIFY = "pref_sync_notification";
+        public const string PREF_LASTREFRESH = "pref_sync_lastrefresh";
 
-        public const string PREF_SHAREPOINT_BEARER = "settings_bearer_Token";
-        public const string PREF_SHAREPOINT_OAUTHT = "settings_oauth_Token";
+        public const string PREF_BOTTOMNAV_ID = "pref_bottomnav_id";
+        public const string PREF_FIRSTSTART = "pref_firststart";
 
-        public const string PREF_SYNCINTERVAL = "settings_sync_interval";
-        public const string PREF_SYNCNOTIFY = "settings_sync_notification";
-        public const string PREF_LASTREFRESH = "settings_sync_lastrefresh";
-
-        public const string PREF_BOTTOMNAV_ID = "settings_bottomnav_id";
-
-        public const string PREF_REGION_ID = "settings_region_id";
-
-        public const int SETTINGS_OLDFEED_MONTHOFFSET = 12;
+        public const int PREF_FEED_AUTOREMOVE = 12;
         
         //###################################################################################
 
@@ -77,6 +74,16 @@ namespace rw_cos_mei
             ONE_A_DAY,
             ONE_IN_THREE_DAYS
         }
+        public class SyncIntervalSettingDescriptor
+        {
+            public string Description { get; private set; }
+            public int Timespan { get; private set; }
+            public SyncIntervalSettingDescriptor(string description, int timespan)
+            {
+                Description = description;
+                Timespan = timespan;
+            }
+        }
 
         //############################################################
 
@@ -84,49 +91,32 @@ namespace rw_cos_mei
         public static SyncIntervalSetting SyncInterval { get; private set; }
         public static bool IsSyncBlocked { get; private set; } = false;
         
-        public static string GetSyncIntervalSettingDescription(Context c, SyncIntervalSetting interval)
+        public static SyncIntervalSettingDescriptor GetSyncIntervalSettingDescriptor(Context c, SyncIntervalSetting interval)
         {
 
             switch (interval)
             {
                 case SyncIntervalSetting.THREE_HOURS:
-                    return c.GetString(Resource.String.settings_sync_time_op0);
+                    return new SyncIntervalSettingDescriptor(c.GetString(Resource.String.settings_sync_time_op0), 
+                                                             3 * 60 * 60 * 1000);
 
                 case SyncIntervalSetting.TWO_A_DAY:
-                    return c.GetString(Resource.String.settings_sync_time_op1);
+                    return new SyncIntervalSettingDescriptor(c.GetString(Resource.String.settings_sync_time_op1),
+                                                             12 * 60 * 60 * 1000);
 
                 case SyncIntervalSetting.ONE_A_DAY:
-                    return c.GetString(Resource.String.settings_sync_time_op2);
+                    return new SyncIntervalSettingDescriptor(c.GetString(Resource.String.settings_sync_time_op2),
+                                                             24 * 60 * 60 * 1000);
 
                 case SyncIntervalSetting.ONE_IN_THREE_DAYS:
-                    return c.GetString(Resource.String.settings_sync_time_op3);
+                    return new SyncIntervalSettingDescriptor(c.GetString(Resource.String.settings_sync_time_op3),
+                                                             72 * 60 * 60 * 1000);
 
                 default:
-                    return c.GetString(Resource.String.settings_sync_time_op2);
+                    return new SyncIntervalSettingDescriptor(c.GetString(Resource.String.settings_sync_time_op2),
+                                                             24 * 60 * 60 * 1000);
             }
             
-        }
-        public static int GetSyncIntervalSettingTiming(SyncIntervalSetting interval)
-        {
-
-            switch (interval)
-            {
-                case SyncIntervalSetting.THREE_HOURS:
-                    return 3 * 60 * 60 * 1000;
-
-                case SyncIntervalSetting.TWO_A_DAY:
-                    return 12 * 60 * 60 * 1000;
-
-                case SyncIntervalSetting.ONE_A_DAY:
-                    return 24 * 60 * 60 * 1000;
-
-                case SyncIntervalSetting.ONE_IN_THREE_DAYS:
-                    return 72 * 60 * 60 * 1000;
-
-                default:
-                    return 24 * 60 * 60 * 1000;
-            }
-
         }
         
         public static void UpdateSyncInterval(SyncIntervalSetting interval)
@@ -155,6 +145,10 @@ namespace rw_cos_mei
 
         public static DateTime LastTableRefresh { get; private set; }
 
+        public static bool IsFirstStart { get; set; }
+
+        //###################################################################################
+
         private static Dictionary<string, FeedEntry> _tableFeed;
         private static Dictionary<string, ShiftsEntry> _tableShifts;
 
@@ -171,7 +165,7 @@ namespace rw_cos_mei
             if(_tableShifts == null) { _tableShifts = new Dictionary<string, ShiftsEntry>(); }
 
             //Rohentries verarbeiten
-            DateTime oldOffset = DateTime.Now.AddMonths(-SETTINGS_OLDFEED_MONTHOFFSET);
+            DateTime oldOffset = DateTime.Now.AddMonths(-PREF_FEED_AUTOREMOVE);
 
             foreach (var item in list)
             {
@@ -233,6 +227,8 @@ namespace rw_cos_mei
                 }
 
             }
+
+            //Listen sortieren
 
             if (reportNew && NotificationType != Notification.NotifySettings.NotifySettingsType.NO_NOTIFICATION)
             {
@@ -381,7 +377,7 @@ namespace rw_cos_mei
 
             //Benachrichtungen
             Notify_Object = new Notification(context);
-
+            
             //Einstellungen laden
             LoadSettings(context);
 
@@ -400,32 +396,16 @@ namespace rw_cos_mei
             cc = context;
 
             //Anmeldung
-            string get_username = prefs.GetString(PREF_USERNAME, string.Empty);
-            string get_password = prefs.GetString(PREF_PASSWORD, string.Empty);
-            string get_sec_username = prefs.GetString(PREF_SEC_USERNAME, string.Empty);
-            string get_sec_password = prefs.GetString(PREF_SEC_PASSWORD, string.Empty);
-
-            if (!string.IsNullOrWhiteSpace(get_sec_username) && !string.IsNullOrWhiteSpace(get_sec_password))
-            {
-                var scs = new SecureCredentialStore(context);
-                scs.Decrypt(get_sec_username, get_sec_password);
-                Username = scs.User;
-                Password = scs.Pass;
-            }
-            else
-            {
-                var cs = new CredentialStore();
-                cs.DecryptCredentials(get_username, get_password);
-                Username = cs.Username;
-                Password = cs.Password;
-            }
+            string get_username = prefs.GetString(CRED_USERNAME, string.Empty);
+            string get_password = prefs.GetString(CRED_PASSWORD, string.Empty);
             
-            BearerToken  = prefs.GetString(PREF_SHAREPOINT_BEARER, string.Empty);
-            OAuthToken = prefs.GetString(PREF_SHAREPOINT_OAUTHT, string.Empty);
-
-            //Region
-            currentDateRegion = prefs.GetString(PREF_REGION_ID, CultureInfo.CurrentCulture.Name);
-
+            var se = new SecureEncryptor(context);
+            Username = se.Decrypt(get_username);
+            Password = se.Decrypt(get_password);
+            
+            BearerToken  = prefs.GetString(PREF_SP_BEARER, string.Empty);
+            OAuthToken = prefs.GetString(PREF_SP_OAUTHT, string.Empty);
+            
             //Listen
             _tableFeed = new Dictionary<string, FeedEntry>();
             _tableShifts = new Dictionary<string, ShiftsEntry>();
@@ -437,6 +417,7 @@ namespace rw_cos_mei
 
             //Benachrichtigung-Einstellungen
             NotificationType = (Notification.NotifySettings.NotifySettingsType)prefs.GetInt(PREF_SYNCNOTIFY, (int)Notification.NotifySettings.NotifySettingsType.FEED_AND_SHIFTS);
+            IsFirstStart = prefs.GetBoolean(PREF_FIRSTSTART, true);
 
             //MainActivity
             BottomNavigationSelectedId = prefs.GetInt(PREF_BOTTOMNAV_ID, Resource.Id.menu_feed);
@@ -447,25 +428,23 @@ namespace rw_cos_mei
             ISharedPreferences prefs = PreferenceManager.GetDefaultSharedPreferences(context);
             ISharedPreferencesEditor editor = prefs.Edit();
 
-            var ss = new SecureCredentialStore(context);
-            ss.Encrypt(Username, Password);
+            var se = new SecureEncryptor(context);
+            string enc_username = se.Encrypt(Username);
+            string enc_password = se.Encrypt(Password);
             
-            editor.PutString(PREF_USERNAME, string.Empty); 
-            editor.PutString(PREF_PASSWORD, string.Empty);
-            editor.PutString(PREF_SEC_USERNAME, ss.Enc_User);
-            editor.PutString(PREF_SEC_PASSWORD, ss.Enc_Pass);
+            editor.PutString(CRED_USERNAME, enc_username);
+            editor.PutString(CRED_PASSWORD, enc_password);
 
-            editor.PutString(PREF_SHAREPOINT_BEARER, BearerToken);
-            editor.PutString(PREF_SHAREPOINT_OAUTHT, OAuthToken);
+            editor.PutString(PREF_SP_BEARER, BearerToken);
+            editor.PutString(PREF_SP_OAUTHT, OAuthToken);
 
             editor.PutInt(PREF_SYNCINTERVAL, (int)SyncInterval);
             editor.PutInt(PREF_SYNCNOTIFY, (int)NotificationType);
             editor.PutString(PREF_LASTREFRESH, EncodeDateToString(LastTableRefresh)); 
 
             editor.PutInt(PREF_BOTTOMNAV_ID, BottomNavigationSelectedId);
-
-            editor.PutString(PREF_REGION_ID, currentDateRegion);
-
+            editor.PutBoolean(PREF_FIRSTSTART, IsFirstStart);
+            
             editor.Apply();
         }
 
@@ -538,7 +517,7 @@ namespace rw_cos_mei
                 if (month <= 0) { return false; }
 
                 //Jahr
-                if (Helper.IsTextInteger(split[2]) && split[2].Length == 4)
+                if (Helper.Converter.IsTextInteger(split[2]) && split[2].Length == 4)
                 {
                     int year = int.Parse(split[2]);
                     if (month == item.Date.Month && year != item.Date.Year) { year = item.Date.Year; } //Tippfehler ausmerzen
@@ -624,7 +603,6 @@ namespace rw_cos_mei
         //###################################################################################
 
         private const string currentDateFormat = "yyyy/MM/dd HH:mm:ss";
-        private static string currentDateRegion;
 
         public static string EncodeDateToString(DateTime date)
         {
@@ -633,202 +611,33 @@ namespace rw_cos_mei
         public static DateTime DecodeStringToDate(string date, DateTime defaultDate)
         {
 
-            if(!DateTime.TryParseExact(date, currentDateFormat, null, System.Globalization.DateTimeStyles.None, out DateTime decodedDate))
+            if(!DateTime.TryParseExact(date, currentDateFormat, null, DateTimeStyles.None, out DateTime decodedDate))
             {
-                if(!DateTime.TryParse(date, new CultureInfo(currentDateRegion), DateTimeStyles.None, out decodedDate))
-                {
-                    decodedDate = defaultDate;
-                }
+                decodedDate = defaultDate;
             }
             return decodedDate;
             
         }
 
         //###################################################################################
-
-        private class CredentialStore
+        
+        private class SecureEncryptor
         {
 
-            public CredentialStore()
-            {
+            private readonly Context _context;
+            private KeyStore storeObject;
 
-                Username = "";
-                Password = "";
-                EncryptedUsername = "";
-                EncryptedPassword = "";
+            private readonly IKey Key_private;
+            private readonly IPublicKey Key_public;
 
-                try
-                {
-                    enc_salt = Encoding.ASCII.GetBytes(GetSalt);
-                    enc_pass = GetPassword;
-                }
-                catch (Exception)
-                {
-                    enc_salt = Encoding.ASCII.GetBytes("salt_rw_cos_mei");
-                    enc_pass = "com.steiiin.rw_mei_cos";
-                }
-                
-            }
+            private readonly static string AndroidKeyStore = "AndroidKeyStore";
+            private readonly static string KeyTransformation = "RSA/ECB/PKCS1Padding";
 
-            //###################################################################################
+            private readonly static string KEYALIAS_CREDENTIALS = "CRED_KEY";
 
-            private string GetSalt { get { return Android.OS.Build.Id + Android.OS.Build.User + "########"; } }
-            private string GetPassword { get { return Android.OS.Build.Serial + "com.steiiin.rw_cos_mei"; } }
+            //###############################################################################
 
-            //###################################################################################
-
-            private readonly string enc_pass;
-            private readonly byte[] enc_salt;
-            
-            //###################################################################################
-
-            private static class Crypto
-            {
-                
-                public static string Encrypt(string clear_text, string pass, byte[] salt)
-                {
-
-                    try
-                    {
-
-                        var enc = GetEnc(pass, salt);
-                        if (string.IsNullOrWhiteSpace(clear_text) || string.IsNullOrWhiteSpace(pass)) return "";
-
-                        byte[] encryptedBytes;
-                        using (ICryptoTransform encryptor = enc.CreateEncryptor(enc.Key, enc.IV))
-                        {
-                            byte[] bytesToEncrypt = Encoding.UTF8.GetBytes(clear_text);
-                            encryptedBytes = InMemoryCrypt(bytesToEncrypt, encryptor);
-                        }
-                        return Convert.ToBase64String(encryptedBytes);
-
-                    }
-                    catch (Exception) { }
-
-                    return "";
-                    
-                }
-                public static string Decrypt(string enc_text, string pass, byte[] salt)
-                {
-
-                    try
-                    {
-
-                        var enc = GetEnc(pass, salt);
-                        if (string.IsNullOrWhiteSpace(enc_text) || string.IsNullOrWhiteSpace(pass) || !IsBase64String(enc_text)) return "";
-
-                        byte[] descryptedBytes;
-                        using (ICryptoTransform decryptor = enc.CreateDecryptor(enc.Key, enc.IV))
-                        {
-                            byte[] encryptedBytes = Convert.FromBase64String(enc_text);
-                            descryptedBytes = InMemoryCrypt(encryptedBytes, decryptor);
-                        }
-                        return Encoding.UTF8.GetString(descryptedBytes);
-
-                    }
-                    catch (Exception) { }
-                    return "";
-
-                }
-
-                //###################################################################################
-                
-                private static byte[] InMemoryCrypt(byte[] data, ICryptoTransform transform)
-                {
-
-                    try
-                    {
-
-                        MemoryStream memory = new MemoryStream();
-                        using (Stream stream = new CryptoStream(memory, transform, CryptoStreamMode.Write))
-                        {
-                            stream.Write(data, 0, data.Length);
-                        }
-                        return memory.ToArray();
-
-                    }
-                    catch (Exception)
-                    {
-                        return new MemoryStream().ToArray();
-                    }
-                   
-                }
-                private static RijndaelManaged GetEnc(string pass, byte[] salt)
-                {
-
-                    try
-                    {
-
-                        var key = new Rfc2898DeriveBytes(pass, salt);
-
-                        var algorithm = new RijndaelManaged();
-                        int bytesForKey = algorithm.KeySize / 8;
-                        int bytesForIV = algorithm.BlockSize / 8;
-                        algorithm.Key = key.GetBytes(bytesForKey);
-                        algorithm.IV = key.GetBytes(bytesForIV);
-                        return algorithm;
-
-                    }
-                    catch (Exception)
-                    {
-                        return null;
-                    }
-                                       
-                }
-
-                //###################################################################################
-
-                private static bool IsBase64String(string s)
-                {
-                    try
-                    {
-
-                        s = s.Trim();
-                        return (s.Length % 4 == 0) && Regex.IsMatch(s, @"^[a-zA-Z0-9\+/]*={0,3}$", RegexOptions.None);
-
-                    }
-                    catch (Exception) { }
-                    return false;
-                }
-
-            }
-
-            //###################################################################################
-
-            public void DecryptCredentials(string e_user, string e_pass)
-            {
-
-                Username = Crypto.Decrypt(e_user, enc_pass, enc_salt);
-                Password = Crypto.Decrypt(e_pass, enc_pass, enc_salt);
-
-                EncryptedUsername = e_user;
-                EncryptedPassword = e_pass;
-
-            }
-            public void EncryptCredentials(string user, string pass)
-            {
-
-                EncryptedUsername = Crypto.Encrypt(user, enc_pass, enc_salt);
-                EncryptedPassword = Crypto.Encrypt(pass, enc_pass, enc_salt);
-
-                Username = user;
-                Password = pass;
-
-            }
-
-            //###################################################################################
-
-            public string Username { get; private set; }
-            public string Password { get; private set; }
-
-            public string EncryptedUsername { get; private set; }
-            public string EncryptedPassword { get; private set; }
-
-        }
-        private class SecureCredentialStore
-        {
-
-            public SecureCredentialStore(Context context)
+            public SecureEncryptor(Context context)
             {
 
                 _context = context;
@@ -837,7 +646,7 @@ namespace rw_cos_mei
                 storeObject.Load(null);
 
 
-                if(!storeObject.ContainsAlias(KEYALIAS_CREDENTIALS))
+                if (!storeObject.ContainsAlias(KEYALIAS_CREDENTIALS))
                 {
                     CreateKey_Credentials();
                 }
@@ -847,12 +656,6 @@ namespace rw_cos_mei
 
             }
 
-            private readonly Context _context;
-            private KeyStore storeObject;
-
-            private readonly IKey Key_private;
-            private readonly IPublicKey Key_public;
-
             private void CreateKey_Credentials()
             {
 
@@ -861,10 +664,10 @@ namespace rw_cos_mei
                 if (Build.VERSION.SdkInt < BuildVersionCodes.M)
                 {
 
-                    Android.Icu.Util.Calendar calendar = Android.Icu.Util.Calendar.Instance;
-                    calendar.Add(Android.Icu.Util.CalendarField.Year, 20);
+                    Java.Util.Calendar calendar = Java.Util.Calendar.Instance;
+                    calendar.Add(Java.Util.CalendarField.Year, 20);
 
-                    Date startDate = Android.Icu.Util.Calendar.Instance.Time;
+                    Date startDate = Java.Util.Calendar.Instance.Time;
                     Date endDate = calendar.Time;
 
 #pragma warning disable 0618
@@ -880,7 +683,7 @@ namespace rw_cos_mei
                     builder.SetEndDate(endDate);
 
                     generator.Initialize(builder.Build());
-                        
+
                 }
                 else
                 {
@@ -891,25 +694,10 @@ namespace rw_cos_mei
                     generator.Initialize(builder.Build());
 
                 }
-                
+
                 generator.GenerateKeyPair();
 
             }
-
-            //###############################################################################
-
-            private readonly static string AndroidKeyStore = "AndroidKeyStore";
-            private readonly static string KeyTransformation = "RSA/ECB/PKCS1Padding";
-
-            private readonly static string KEYALIAS_CREDENTIALS = "CRED_KEY";
-            
-            //###############################################################################
-
-            public string Pass { get; private set; }
-            public string User { get; private set; }
-
-            public string Enc_Pass { get; private set; }
-            public string Enc_User { get; private set; }
 
             //###############################################################################
 
@@ -930,7 +718,7 @@ namespace rw_cos_mei
                     return Convert.ToBase64String(bytes);
 
                 }
-                
+
                 public string DecryptString(string data, IKey key)
                 {
                     cipher.Init(Javax.Crypto.CipherMode.DecryptMode, key);
@@ -941,23 +729,21 @@ namespace rw_cos_mei
 
             }
 
-            public void Decrypt(string enc_username, string enc_password)
+            //###############################################################################
+
+            public string Encrypt(string klartext)
             {
-                Enc_User = enc_username;
-                Enc_Pass = enc_password;
-                User = new CipherWrapper(KeyTransformation)?.DecryptString(Enc_User, Key_private);
-                Pass = new CipherWrapper(KeyTransformation)?.DecryptString(Enc_Pass, Key_private);
+                if(string.IsNullOrEmpty(klartext)) { return string.Empty; }
+                return new CipherWrapper(KeyTransformation)?.EncryptString(klartext, Key_public);
             }
-            public void Encrypt(string username, string password)
+            public string Decrypt(string locktext)
             {
-                User = username;
-                Pass = password;
-                Enc_User = new CipherWrapper(KeyTransformation)?.EncryptString(User, Key_public);
-                Enc_Pass = new CipherWrapper(KeyTransformation)?.EncryptString(Pass, Key_public);
+                if (string.IsNullOrEmpty(locktext)) { return string.Empty; }
+                return new CipherWrapper(KeyTransformation)?.DecryptString(locktext, Key_private);
             }
 
         }
-
+        
     }
 
 }

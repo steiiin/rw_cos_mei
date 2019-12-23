@@ -1,7 +1,6 @@
 ﻿using Android.Content;
 using Android.Net;
 using Org.Json;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,13 +8,11 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Uri = System.Uri;
-
 using TBL = rw_cos_mei.AppTable;
+using Uri = System.Uri;
 
 namespace rw_cos_mei
 {
-
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///SharepointAPI
     ///> OK
@@ -23,12 +20,14 @@ namespace rw_cos_mei
 
     public class SharepointAPI
     {
-
         private Context _context;
 
         //#########################################################
 
-        public SharepointAPI(Context context) { _context = context; }
+        public SharepointAPI(Context context)
+        {
+            _context = context;
+        }
 
         //#########################################################
 
@@ -36,11 +35,11 @@ namespace rw_cos_mei
         private readonly string _url_getAdfs = "https://login.microsoftonline.com/GetUserRealm.srf";
         private readonly string _url_getSpToken = "https://login.microsoftonline.com/rst2.srf";
 
-        private readonly string _url_endpoint = "https://maltesercloud.sharepoint.com/sites/mhd/DD/RD/RW_Mei/";
+        private readonly string _url_endpoint = "https://maltesercloud.sharepoint.com/sites/hilfsdienst/2601/";  //  /mhd/DD/RD/RW_Mei/";
 
         //#########################################################
 
-        private const int REQUEST_TIMEOUT = 6000;
+        private const int REQUEST_TIMEOUT = 12000;
 
         //#########################################################
 
@@ -62,7 +61,7 @@ namespace rw_cos_mei
         }
 
         //########################################################
-        
+
         public void SetCredentials(string username, string password)
         {
             _username = username;
@@ -80,7 +79,6 @@ namespace rw_cos_mei
 
         public async Task<SharepointAPIState> CreateLogin()
         {
-
             InvokeStateChanged(SharepointAPIState.WORKING);
 
             if (!IsOnline()) { return SharepointAPIState.CONNECTION_LOST; }
@@ -94,7 +92,6 @@ namespace rw_cos_mei
 
             try
             {
-
                 //Anmeldung ###########################################################################################################################################
                 //Federate-Login der Malteser abrufen
 
@@ -124,7 +121,6 @@ namespace rw_cos_mei
 
                         if (response.Response?.StatusCode == HttpStatusCode.OK)
                         {
-
                             string responseData = GetResponseData(response.Response); response.Close();
 
                             XElement x = XElement.Parse(responseData);
@@ -166,7 +162,6 @@ namespace rw_cos_mei
 
                                     if (response.Response?.StatusCode == HttpStatusCode.OK)
                                     {
-
                                         responseData = GetResponseData(response.Response); response.Close();
 
                                         x = XElement.Parse(responseData);
@@ -208,7 +203,6 @@ namespace rw_cos_mei
 
                                                 if (response.Response?.StatusCode == HttpStatusCode.OK)
                                                 {
-
                                                     responseData = GetResponseData(response.Response); response.Close();
 
                                                     x = XElement.Parse(responseData);
@@ -244,7 +238,6 @@ namespace rw_cos_mei
 
                                                             if (response.Response?.StatusCode == HttpStatusCode.OK)
                                                             {
-
                                                                 //#############################################################################################################################
                                                                 //Digest beantragen
 
@@ -280,7 +273,6 @@ namespace rw_cos_mei
 
                                                                         if (response.Response?.StatusCode == HttpStatusCode.OK)
                                                                         {
-
                                                                             responseData = GetResponseData(response.Response); response.Close();
                                                                             x = XElement.Parse(responseData);
 
@@ -290,38 +282,26 @@ namespace rw_cos_mei
                                                                             TBL.UpdateTokens(_bearer, _spOauth);
 
                                                                             return SharepointAPIState.LOGGED_IN;
-
                                                                         }
                                                                         return SharepointAPIState.SERVER_ERROR;
-
                                                                 }
-                                                                
                                                             }
                                                             return SharepointAPIState.SERVER_ERROR;
-
                                                     }
-                                                    
                                                 }
                                                 return SharepointAPIState.SERVER_ERROR;
-
                                         }
-
                                     }
                                     return SharepointAPIState.SERVER_ERROR;
-
                             }
-                            
                         }
                         return SharepointAPIState.SERVER_ERROR;
-
                 }
-                
             }
             catch (Exception)
             {
                 return SharepointAPIState.SERVER_ERROR;
             }
-
         }
 
         //########################################################
@@ -332,136 +312,51 @@ namespace rw_cos_mei
         }
         public async Task UpdateNewsFeed(bool doNotify, bool relogin)
         {
-           
+            List<string> feedAnchors = new List<string>();
+            feedAnchors.Add("rw_Mei/news_mei/");
+            //feedAnchors.Add("QM/");
+            //feedAnchors.Add("");
+
+            var state = SharepointAPIState.WORKING;
             InvokeStateChanged(SharepointAPIState.WORKING);
 
-            if (!IsOnline()) { InvokeStateChanged(SharepointAPIState.CONNECTION_LOST); return; }
-            if (string.IsNullOrWhiteSpace(_username)) { InvokeStateChanged(SharepointAPIState.WRONG_LOGIN); return; }
-            if (string.IsNullOrWhiteSpace(_password)) { InvokeStateChanged(SharepointAPIState.WRONG_LOGIN); return; }
-
-            if (!string.IsNullOrWhiteSpace(_spOauth)) { _cookieJar = CreateOAuthCookie(); } else { _cookieJar = new CookieContainer(); }
-
-            string query = "_api/web/lists/getbytitle('Neues%20aus%20der%20Rettungswache')/items?$select=ID,Title,Body,Modified,AttachmentFiles,Author/Name,Author/Title&$orderby=Modified%20desc&$expand=AttachmentFiles,Author/Id";
-            try
+            foreach (var item in feedAnchors)
             {
-
-                HttpWebRequest request = GetRequest(new Uri(_url_endpoint + query));
-                request.Headers.Add("X-RequestDigest", _bearer);
-                request.Accept = "application/json; odata=verbose";
-
-                ResponseObject response = await GetResponse(request);
-                switch (response.StatusCode)
-                {
-                    case ResponseObject.ResponseObjectStatusCode.CONNECTION_LOST:
-
-                        InvokeStateChanged(SharepointAPIState.CONNECTION_LOST);
-                        return;
-
-                    case ResponseObject.ResponseObjectStatusCode.FORBIDDEN:
-
-                        if(relogin)
-                        {
-
-                            var loginState = await CreateLogin();
-                            if (loginState == SharepointAPIState.LOGGED_IN)
-                            { 
-                                await UpdateNewsFeed(doNotify, false);
-                                return;
-                            }
-                            InvokeStateChanged(loginState);
-                            return;
-                        }
-
-                        InvokeStateChanged(SharepointAPIState.WRONG_LOGIN);
-                        
-                        return;
-
-                    case ResponseObject.ResponseObjectStatusCode.ERROR:
-                    case ResponseObject.ResponseObjectStatusCode.UNSET:
-                    default:
-
-                        InvokeStateChanged(SharepointAPIState.SERVER_ERROR);
-                        return;
-
-                    case ResponseObject.ResponseObjectStatusCode.OK:
-
-                        if (response.Response?.StatusCode == HttpStatusCode.OK)
-                        {
-
-                            string responseData = GetResponseData(response.Response); response.Close();
-
-                            JSONObject feedDoc = new JSONObject(responseData);
-                            var results = feedDoc.GetJSONObject("d").GetJSONArray("results");
-
-                            var listFeed = new List<FeedEntry>();
-                            for (int i = 0; i < results.Length(); i++)
-                            {
-                                var c = results.GetJSONObject(i);
-
-                                string title = c.GetString("Title");
-                                string key = title.Trim(' ').ToLower() + "#" + c.GetString("Id");
-
-                                string body = c.GetString("Body");
-                                if (body == "null") { body = string.Empty; }
-                                if (!DateTime.TryParse(c.GetString("Modified"), out DateTime date)) { date = DateTime.Now; }
-                                string author = c.GetJSONObject("Author").GetString("Title");
-
-                                List<EntryAttachment> attachmentList = new List<EntryAttachment>();
-                                var attachmentObjects = c.GetJSONObject("AttachmentFiles").GetJSONArray("results");
-
-                                for (int j = 0; j < attachmentObjects.Length(); j++)
-                                {
-                                    var d = attachmentObjects.GetJSONObject(j);
-
-                                    string filename = d.GetString("FileName");
-                                    string rel_url = d.GetString("ServerRelativeUrl");
-
-                                    EntryAttachment attachment = new EntryAttachment(filename, rel_url);
-                                    attachmentList.Add(attachment);
-                                }
-
-                                FeedEntry entry = new FeedEntry(key, title, body, date, author, attachmentList);
-                                if (string.IsNullOrWhiteSpace(entry.Body) && entry.Attachments.Count == 0) { }
-                                else { listFeed.Add(entry); }
-
-                            }
-
-                            TBL.UpdateEntries(listFeed, doNotify);
-
-                            InvokeStateChanged(SharepointAPIState.OK);
-                            return;
-
-                        }
-                        InvokeStateChanged(SharepointAPIState.SERVER_ERROR); return;
-
-                }
-                
-                
-
+                state = await RetrieveNewsFeed(doNotify, relogin, item);
             }
-            catch (Exception)
-            {
-                InvokeStateChanged(SharepointAPIState.SERVER_ERROR);
-                return;
-            }
-                        
+
+            InvokeStateChanged(state);
+
         }
 
         public async void GetNewsFeedAttachment(EntryAttachment attachment, Action<Adapters.AttachmentRetrieveErrorReason> onError, Action<string> onDownloaded, bool relogin = true)
         {
-            
-            string tmpRaw = Path.GetTempFileName();
-            string nameEsc = Path.GetFileNameWithoutExtension(attachment.FileName).Replace(" ", "_");
 
-            string extension = Path.GetExtension(attachment.FileRemoteUrl);
+            if(attachment.IsDownloaded)
+            {
+                onDownloaded(attachment.LocalFilePath);
+                return;
+            }
+            int waitTimeout = (1000 / 200) * 10; //10s
+
+            string tmpRaw = Path.GetTempFileName().Replace("tmp", "");
+            string nameEsc = Path.GetFileNameWithoutExtension(attachment.Title).Replace(" ", "_");
+
+            string extension = Path.GetExtension(attachment.RemoteURL);
             string filePath = Path.GetDirectoryName(tmpRaw) + Path.DirectorySeparatorChar + nameEsc + Path.GetFileNameWithoutExtension(tmpRaw) + extension;
-            Uri fileAdress = new Uri(_url_malteserHost + attachment.FileRemoteUrl);
-            
+
             //Request erstellen
             if (!IsOnline()) { onError(Adapters.AttachmentRetrieveErrorReason.CONNECTION_LOST); return; }
             while (State == SharepointAPIState.WORKING)
             {
                 await Task.Delay(200);
+                
+                waitTimeout -= 1;
+                if(waitTimeout < 0)
+                {
+                    onError(Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR);
+                    return;
+                }
             }
 
             if (State == SharepointAPIState.SERVER_ERROR || State == SharepointAPIState.WRONG_LOGIN)
@@ -469,17 +364,19 @@ namespace rw_cos_mei
                 onError(Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR);
                 return;
             }
-            
-            var client = new DownloadClient(fileAdress, filePath, CreateOAuthCookie(), _bearer);
+
+            var client = new DownloadClient(new Uri(attachment.RemoteURL), filePath, CreateOAuthCookie(), _bearer);
             client.DownloadProgressChanged += (ss, ee) => { };
             client.DownloadFinished += async (ss, ee) =>
             {
                 if (ee.DownloadFinished)
                 {
+                    attachment.UpdateAttachmentDownloaded(filePath);
+
                     onDownloaded(filePath);
                     return;
                 }
-                
+
                 if (relogin)
                 {
                     onError(Adapters.AttachmentRetrieveErrorReason.RELOGIN_REQUIRED);
@@ -491,9 +388,182 @@ namespace rw_cos_mei
                     onError(Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR);
                 }
                 return;
-
             };
             client.StartDownloadCallback();
+        }
+
+        private async Task<SharepointAPIState> RetrieveNewsFeed(bool doNotify, bool relogin, string host)
+        {
+
+            InvokeStateChanged(SharepointAPIState.WORKING);
+
+            if (!IsOnline()) { return SharepointAPIState.CONNECTION_LOST; } // InvokeStateChanged(SharepointAPIState.CONNECTION_LOST); return; }
+            if (string.IsNullOrWhiteSpace(_username)) { return SharepointAPIState.WRONG_LOGIN; } // InvokeStateChanged(SharepointAPIState.WRONG_LOGIN); return; }
+            if (string.IsNullOrWhiteSpace(_password)) { return SharepointAPIState.WRONG_LOGIN; } // InvokeStateChanged(SharepointAPIState.WRONG_LOGIN); return; }
+
+            if (!string.IsNullOrWhiteSpace(_spOauth)) { _cookieJar = CreateOAuthCookie(); } else { _cookieJar = new CookieContainer(); }
+
+            var listFeed = new List<FeedEntry>();
+
+            string query = host + "_api/SitePages/pages?$select=Id,Title,Modified,CanvasJson1,lastModifiedBy,promotedState,Url&$orderby=Modified%20desc&$expand=lastModifiedBy"; // "_api/web/lists/getbytitle('news_mei')/items?$select=ID,Title,Body,Modified,AttachmentFiles,Author/Name,Author/Title&$orderby=Modified%20desc&$expand=AttachmentFiles,Author/Id";
+            try
+            {
+                HttpWebRequest request = GetRequest(new Uri(_url_endpoint + query));
+                request.Headers.Add("X-RequestDigest", _bearer);
+                request.Accept = "application/json; odata=verbose";
+
+                ResponseObject response = await GetResponse(request);
+                switch (response.StatusCode)
+                {
+                    case ResponseObject.ResponseObjectStatusCode.CONNECTION_LOST:
+
+                        return SharepointAPIState.CONNECTION_LOST; //InvokeStateChanged(SharepointAPIState.CONNECTION_LOST); return;
+
+                    case ResponseObject.ResponseObjectStatusCode.FORBIDDEN:
+
+                        if (relogin)
+                        {
+                            var loginState = await CreateLogin();
+                            if (loginState == SharepointAPIState.LOGGED_IN)
+                            {
+                                return await RetrieveNewsFeed(doNotify, false, host);
+                            }
+                            return loginState; //InvokeStateChanged(loginState); return;
+                        }
+
+                        return SharepointAPIState.WRONG_LOGIN; // InvokeStateChanged(SharepointAPIState.WRONG_LOGIN); return;
+
+                    case ResponseObject.ResponseObjectStatusCode.ERROR:
+                    case ResponseObject.ResponseObjectStatusCode.UNSET:
+                    default:
+
+                        return SharepointAPIState.SERVER_ERROR; //InvokeStateChanged(SharepointAPIState.SERVER_ERROR); return;
+
+                    case ResponseObject.ResponseObjectStatusCode.OK:
+
+                        if (response.Response?.StatusCode == HttpStatusCode.OK)
+                        {
+                            string responseData = GetResponseData(response.Response); response.Close();
+
+                            JSONObject feedDoc = new JSONObject(responseData);
+                            var results = feedDoc.GetJSONObject("d").GetJSONArray("results");
+
+                            for (int i = 0; i < results.Length(); i++)
+                            {
+                                var c = results.GetJSONObject(i);
+
+                                const string TITLE = "Title";
+                                const string ID = "Id";
+                                const string MODIFIED = "Modified";
+                                const string AUTHOR = "LastModifiedBy";
+                                const string STATE = "PromotedState";
+                                const string CONTENT = "CanvasJson1";
+                                const string PAGEURL = "Url";
+
+                                if (!c.Has(TITLE) || !c.Has(ID) || !c.Has(MODIFIED) || !c.Has(AUTHOR) || !c.Has(STATE) || !c.Has(PAGEURL)) { break; }
+
+                                string title = c.GetString(TITLE);
+                                string key = "#" + c.GetInt(ID).ToString() + "_" + title.Trim(' ').ToLower();
+
+                                if (!DateTime.TryParse(c.GetString(MODIFIED), out DateTime date)) { date = DateTime.Now; }
+
+                                string author = _context.GetString(Resource.String.feedentry_unknown);
+                                if (c.GetJSONObject(AUTHOR).Has("Name")) { author = c.GetJSONObject(AUTHOR).GetString("Name"); }
+
+                                string body = "";
+                                //string body = _url_endpoint + "/" + host + c.GetString(PAGEURL);
+
+                                bool isVisible = c.GetInt(STATE) == 2; //Promoted, sonst ausgeblendet
+                                if (isVisible && c.Has(CONTENT))
+                                {
+                                    //Dokument parsen
+                                    string contentText = c.GetString(CONTENT);
+                                    var contentJson = GetJsonArray(contentText);
+                                    if (contentJson == null) { break; }
+
+                                    var attachmentList = new List<EntryAttachment>();
+                                    for (int j = 0; j < contentJson.Length(); j++)
+                                    {
+                                        const string WEBPARTS = "webPartData";
+                                        if (contentJson.GetJSONObject(j).Has(WEBPARTS))
+                                        {
+
+                                            var webPartData = contentJson.GetJSONObject(j).GetJSONObject(WEBPARTS);
+                                            if (webPartData != null)
+                                            {
+                                                string webPartId = webPartData.GetString("id");
+
+                                                switch (webPartId)
+                                                {
+                                                    case "b7dd04e1-19ce-4b24-9132-b60a1c2b910d":
+
+                                                        //Eingebettetes Dokument --> Als Anhang speichern
+                                                        if (!webPartData.Has("properties") || !webPartData.GetJSONObject("properties").Has("file")) { break; }
+
+                                                        string fileUrl = webPartData.GetJSONObject("properties").GetString("file");
+                                                        string fileName = Path.GetFileName(fileUrl);
+                                                        attachmentList.Add(new EntryAttachment(fileName, fileUrl, false));
+
+                                                        break;
+
+                                                    case "6410b3b6-d440-4663-8744-378976dc041e":
+
+                                                        //Link --> Wenn Datei als Anhang, sonst als Hyperlink
+                                                        if (!webPartData.Has("serverProcessedContent") ||
+                                                            !webPartData.GetJSONObject("serverProcessedContent").Has("links") ||
+                                                            !webPartData.GetJSONObject("serverProcessedContent").GetJSONObject("links").Has("url")) { break; }
+                                                        if (!webPartData.GetJSONObject("serverProcessedContent").Has("searchablePlainTexts") ||
+                                                            !webPartData.GetJSONObject("serverProcessedContent").GetJSONObject("searchablePlainTexts").Has("title")) { break; }
+
+                                                        string url = webPartData.GetJSONObject("serverProcessedContent").GetJSONObject("links").GetString("url");
+                                                        string link_title = webPartData.GetJSONObject("serverProcessedContent").GetJSONObject("searchablePlainTexts").GetString("title");
+                                                        
+                                                        if(url.StartsWith("/:")) { url = _url_malteserHost + url; }
+
+                                                        attachmentList.Add(new EntryAttachment(link_title, url, true));
+
+                                                        break;
+
+                                                    default:
+
+                                                        string content = webPartData.ToString();
+
+                                                        break;
+                                                }
+                                            }
+
+                                        }
+                                        else
+                                        {
+                                            if (contentJson.GetJSONObject(j).Has("innerHTML") && 
+                                                contentJson.GetJSONObject(j).Has("controlType") && contentJson.GetJSONObject(j).GetInt("controlType") == 4)
+                                            {
+                                                string bodytext = contentJson.GetJSONObject(j).GetString("innerHTML");
+                                                bodytext = Helper.Converter.GetPlainOfHtml(bodytext);
+                                                body += bodytext;
+                                            }
+                                        }
+                                    }
+
+                                    FeedEntry entry = new FeedEntry(key, title, date, author, body, attachmentList);
+                                    //TODO: ist ohne Inhalt prüfen
+                                    listFeed.Add(entry);
+                                }
+                            }
+
+                            TBL.UpdateEntries(listFeed, doNotify);
+
+                            return SharepointAPIState.OK; //InvokeStateChanged(SharepointAPIState.OK); return;
+                        }
+
+                        return SharepointAPIState.SERVER_ERROR; //InvokeStateChanged(SharepointAPIState.SERVER_ERROR); return;
+
+                }
+            }
+            catch (Exception)
+            {
+                return SharepointAPIState.SERVER_ERROR; //InvokeStateChanged(SharepointAPIState.SERVER_ERROR); return;
+            }
 
         }
 
@@ -547,7 +617,6 @@ namespace rw_cos_mei
         }
         private async Task<HttpWebRequest> GetRequest_POSTAsync(HttpWebRequest request, RequestContentType content, RequestContentType accept, string post)
         {
-
             //Post in Byte kodieren
             byte[] data = new System.Text.UTF8Encoding().GetBytes(post);
 
@@ -560,18 +629,22 @@ namespace rw_cos_mei
                     request.Accept = "*/*;";
 
                     break;
+
                 case RequestContentType.JSON:
                     request.Accept = "application / json; odata = verbose";
 
                     break;
+
                 case RequestContentType.WWW_FORM:
                     request.Accept = "application/x-www-form-urlencoded;";
 
                     break;
+
                 case RequestContentType.XML:
                     request.Accept = "text/xml;";
 
                     break;
+
                 case RequestContentType.SOAP:
                     request.Accept = "application/soap+xml;";
 
@@ -584,14 +657,17 @@ namespace rw_cos_mei
                     request.ContentType = "application/json; odata=verbose";
 
                     break;
+
                 case RequestContentType.WWW_FORM:
                     request.ContentType = "application/x-www-form-urlencoded;";
 
                     break;
+
                 case RequestContentType.XML:
                     request.ContentType = "text/xml;";
 
                     break;
+
                 case RequestContentType.SOAP:
                     request.ContentType = "application/soap+xml;";
 
@@ -605,26 +681,22 @@ namespace rw_cos_mei
 
             try
             {
-
                 Stream poststream = await request.GetRequestStreamAsync();
                 poststream.Write(data, 0, data.Length);
                 poststream.Close();
 
                 return request;
-
             }
             catch (Exception)
             {
                 return null;
             }
-
         }
 
         //########################################################
 
         private class ResponseObject
         {
-
             public enum ResponseObjectStatusCode
             {
                 OK,
@@ -657,7 +729,6 @@ namespace rw_cos_mei
                 StatusCode = ResponseObjectStatusCode.UNSET;
                 Response.Close();
             }
-
         }
 
         private async Task<ResponseObject> GetResponse(HttpWebRequest request)
@@ -676,26 +747,24 @@ namespace rw_cos_mei
             }
             catch (WebException e)
             {
-                
-                if(((HttpWebResponse)e.Response)?.StatusCode == HttpStatusCode.Forbidden)
+                if (((HttpWebResponse)e.Response)?.StatusCode == HttpStatusCode.Forbidden)
                 {
                     return new ResponseObject(ResponseObject.ResponseObjectStatusCode.FORBIDDEN);
                 }
-                if(e.Response?.ContentLength>0)
+                if (e.Response?.ContentLength > 0)
                 {
-                    if(GetResponseData((HttpWebResponse)e.Response).Contains("FailedAuthentication")) { return new ResponseObject(ResponseObject.ResponseObjectStatusCode.FORBIDDEN); }
+                    if (GetResponseData((HttpWebResponse)e.Response).Contains("FailedAuthentication")) { return new ResponseObject(ResponseObject.ResponseObjectStatusCode.FORBIDDEN); }
                 }
-                if(e.Status == WebExceptionStatus.NameResolutionFailure || e.Status == WebExceptionStatus.ProxyNameResolutionFailure || e.Status == WebExceptionStatus.Timeout || e.Status == WebExceptionStatus.SendFailure || e.Status == WebExceptionStatus.ReceiveFailure)
+                if (e.Status == WebExceptionStatus.NameResolutionFailure || e.Status == WebExceptionStatus.ProxyNameResolutionFailure || e.Status == WebExceptionStatus.Timeout || e.Status == WebExceptionStatus.SendFailure || e.Status == WebExceptionStatus.ReceiveFailure)
                 {
                     return new ResponseObject(ResponseObject.ResponseObjectStatusCode.CONNECTION_LOST);
                 }
-                
+
                 return new ResponseObject(ResponseObject.ResponseObjectStatusCode.ERROR);
             }
         }
         private string GetResponseData(HttpWebResponse response)
         {
-
             string result = string.Empty;
 
             StreamReader stream = new StreamReader(response.GetResponseStream());
@@ -703,19 +772,45 @@ namespace rw_cos_mei
             stream.Close();
 
             return result;
-
         }
-        
+
+        //########################################################
+
+        private JSONObject GetJsonObject(string json)
+        {
+            try
+            {
+                return new JSONObject(json);
+            }
+            catch (JSONException)
+            {
+                return null;
+            }
+        }
+        private JSONArray GetJsonArray(string json)
+        {
+            try
+            {
+                return new JSONArray(json);
+            }
+            catch (JSONException)
+            {
+                return null;
+            }
+        }
+
         //########################################################
 
         private class DownloadClientFinishedEventArgs
         {
-            public DownloadClientFinishedEventArgs(bool finished) { DownloadFinished = finished; }
+            public DownloadClientFinishedEventArgs(bool finished)
+            {
+                DownloadFinished = finished;
+            }
             public bool DownloadFinished { get; }
         }
         private class DownloadClient
         {
-
             public event EventHandler<int> DownloadProgressChanged;
             public event EventHandler<DownloadClientFinishedEventArgs> DownloadFinished;
 
@@ -730,19 +825,15 @@ namespace rw_cos_mei
 
             public DownloadClient(Uri remotePath, string localPath, CookieContainer jar, string bearer)
             {
-
                 _filePath = localPath;
                 _remotePath = remotePath;
                 _cookieJar = jar;
                 _digest = bearer;
-
             }
             public async void StartDownloadCallback()
             {
-
                 try
                 {
-
                     HttpWebRequest request = (HttpWebRequest)WebRequest.Create(_remotePath);
 
                     request.Method = "GET";
@@ -760,12 +851,10 @@ namespace rw_cos_mei
                             return;
                         }
                     }
-
                 }
                 catch (Exception) { }
 
                 DownloadFinished?.Invoke(this, new DownloadClientFinishedEventArgs(false));
-
             }
 
             //##################################################################################
@@ -777,20 +866,21 @@ namespace rw_cos_mei
 
                 try
                 {
-
                     byte[] buffer = new byte[1024];
 
                     FileStream fileStream = File.OpenWrite(_filePath);
                     using (Stream input = response.GetResponseStream())
                     {
-                        total = input.Length;
+                        total = response.ContentLength;
 
                         int size = input.Read(buffer, 0, buffer.Length);
                         while (size > 0)
                         {
                             fileStream.Write(buffer, 0, size);
                             received += size;
-                            DownloadProgressChanged?.Invoke(this, (int)(received / total) * 100);
+
+                            int perc = (int)(received / total) * 100; if(perc<0) { perc = 0; } if(perc>100) { perc = 100; }
+                            DownloadProgressChanged?.Invoke(this, perc);
 
                             size = input.Read(buffer, 0, buffer.Length);
                         }
@@ -802,14 +892,11 @@ namespace rw_cos_mei
                     FileInfo fi = new FileInfo(_filePath);
 
                     return System.IO.File.Exists(_filePath);
-
                 }
                 catch (Exception) { }
 
                 return false;
-
             }
-
         }
 
     }
@@ -828,8 +915,11 @@ namespace rw_cos_mei
     }
     public class SharepointAPIStateChangedEventArgs : EventArgs
     {
-        public SharepointAPIStateChangedEventArgs(SharepointAPIState state) { State = state; }
+        public SharepointAPIStateChangedEventArgs(SharepointAPIState state)
+        {
+            State = state;
+        }
         public SharepointAPIState State { get; }
     }
-    
+
 }

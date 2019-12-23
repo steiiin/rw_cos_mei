@@ -46,7 +46,6 @@
 	<android.support.v4.widget.NestedScrollView
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		
 		app:layout_behavior="@string/appbar_scrolling_view_behavior">
 		
 		<LinearLayout
@@ -112,40 +111,50 @@
 				android:layout_marginBottom="8dp"
 				
 				android:background="@color/divider_dim" />
-			
+
 			<LinearLayout
 				android:id="@+id/list_attachments"
 				
 				android:layout_height="wrap_content"
-				android:layout_width="match_parent">
+				android:layout_width="match_parent"
+				
+				android:orientation="vertical">
 
-				<FrameLayout
+				<FrameLayout 
+					
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content">
-
-				<Button
-					android:layout_width="match_parent"
-					android:layout_height="wrap_content"
-						
-					android:text="#ATTECHMENT.EXT#"
-					style="@style/Widget.AppCompat.Button.Colored"
-						
-					android:textAlignment="textStart" 
-					android:layout_marginRight="72dp" />
-					
-					<ProgressBar
-						android:layout_height="36dp"
-						android:layout_width="36dp"
-						android:layout_marginRight="22dp"
-						
-						android:layout_gravity="right|center_vertical"/>
-					
-				</FrameLayout>
+	
+					<Button
+		
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:paddingRight="72dp"
 				
+						android:text="#ATTECHMENT.EXT# 12345677892039428"
+						android:textAlignment="textStart" 
+						style="@style/Widget.AppCompat.Button.Colored" />
+
+					<ProgressBar
+						
+						android:elevation="8dp"
+		
+						android:layout_height="30dp"
+						android:layout_width="30dp"
+						android:layout_marginRight="8dp"
+		
+						android:layout_gravity="right|center_vertical"
+	
+						android:indeterminateTint="#fff"
+						android:indeterminateTintMode="src_atop"
+						android:indeterminateOnly="true" />
+
+				</FrameLayout>
+
 			</LinearLayout>
 		
 		</LinearLayout>
 	
 	</android.support.v4.widget.NestedScrollView>
-
+	
 </android.support.design.widget.CoordinatorLayout>

@@ -20,7 +20,7 @@ namespace rw_cos_mei
     public class DatabaseHelper : SQLiteOpenHelper
     {
 
-        public const string DATABASE_NAME = "db_rw_cos_mei_feedsave";
+        public const string DATABASE_NAME = "db_rw_cos_mei_storage";
         public const int DATABASE_VERSION = 1;
 
         public const string FEED_TABLE = "db_feed";
@@ -187,7 +187,7 @@ namespace rw_cos_mei
         
         public void SaveFeedEntry(FeedEntry item)
         {
-
+            
             //Datensatz erstellen
             string read = DatabaseHelper.BOOL_FALSE;
             if (item.MarkedRead) { read = DatabaseHelper.BOOL_TRUE; }
@@ -197,7 +197,7 @@ namespace rw_cos_mei
             values.Put(DatabaseHelper.FEED_TABLE_COL_TITLE, item.Title);
             values.Put(DatabaseHelper.FEED_TABLE_COL_DATE, TBL.EncodeDateToString(item.Date));
             values.Put(DatabaseHelper.FEED_TABLE_COL_AUTHOR, item.Author);
-            values.Put(DatabaseHelper.FEED_TABLE_COL_BODY, item.Body);
+            values.Put(DatabaseHelper.FEED_TABLE_COL_BODY, item.BodyText);
             values.Put(DatabaseHelper.FEED_TABLE_COL_READ, read);
 
             //Datenbank aktualisieren
@@ -214,7 +214,7 @@ namespace rw_cos_mei
         }
         public void SaveShiftsEntry(ShiftsEntry item, bool overwrite)
         {
-
+            
             //Datensatz erstellen
             string read = DatabaseHelper.BOOL_FALSE;
             if (item.MarkedRead) { read = DatabaseHelper.BOOL_TRUE; }
@@ -256,15 +256,15 @@ namespace rw_cos_mei
         }
         public void SaveAttachment(EntryAttachment item, string owner, int ownerID, bool overwrite)
         {
-
+            
             //Datensatz erstellen
             ContentValues values = new ContentValues();
             values.Put(DatabaseHelper.ATTACH_TABLE_COL_KEY, item.Key);
             values.Put(DatabaseHelper.ATTACH_TABLE_COL_OWNER, owner);
             values.Put(DatabaseHelper.ATTACH_TABLE_COL_OWNERID, ownerID);
-            values.Put(DatabaseHelper.ATTACH_TABLE_COL_FILENAME, item.FileName);
-            values.Put(DatabaseHelper.ATTACH_TABLE_COL_REMOTE, item.FileRemoteUrl);
-            values.Put(DatabaseHelper.ATTACH_TABLE_COL_LOCAL, item.FileLocalUrl);
+            values.Put(DatabaseHelper.ATTACH_TABLE_COL_FILENAME, item.Title);
+            values.Put(DatabaseHelper.ATTACH_TABLE_COL_REMOTE, item.RemoteURL);
+            values.Put(DatabaseHelper.ATTACH_TABLE_COL_LOCAL, item.LocalFilePath);
 
             //Datenbank aktualisieren
             if (item.ID < 0)
@@ -292,7 +292,7 @@ namespace rw_cos_mei
 
         public void MarkReadFeedEntryAll()
         {
-
+            
             if(!Open()) { return; }
 
             string read = DatabaseHelper.BOOL_TRUE;
@@ -307,7 +307,7 @@ namespace rw_cos_mei
         }
         public void MarkReadFeedEntry(FeedEntry item)
         {
-
+            
             string read = DatabaseHelper.BOOL_FALSE;
             if (item.MarkedRead) { read = DatabaseHelper.BOOL_TRUE; }
 
@@ -334,7 +334,7 @@ namespace rw_cos_mei
         }
         public void MarkReadShiftsEntry(ShiftsEntry item)
         {
-
+            
             string read = DatabaseHelper.BOOL_FALSE;
             if (item.MarkedRead) { read = DatabaseHelper.BOOL_TRUE; }
 
@@ -372,7 +372,7 @@ namespace rw_cos_mei
             List<ShiftsEntry> listShifts = new List<ShiftsEntry>();
 
             List<int> oldFeed = new List<int>(); List<int> oldShift = new List<int>();
-            DateTime oldOffset = DateTime.Now.AddMonths(-TBL.SETTINGS_OLDFEED_MONTHOFFSET);
+            DateTime oldOffset = DateTime.Now.AddMonths(-TBL.PREF_FEED_AUTOREMOVE);
             var dictAttachments = GetStoredAttachments();
 
             //Feed laden
@@ -467,10 +467,11 @@ namespace rw_cos_mei
             string key = c.GetString(ID_key);
             string title = c.GetString(ID_title);
 
-            DateTime date = TBL.DecodeStringToDate(c.GetString(ID_date), DateTime.Now.AddMonths(-TBL.SETTINGS_OLDFEED_MONTHOFFSET));
+            DateTime date = TBL.DecodeStringToDate(c.GetString(ID_date), DateTime.Now.AddMonths(-TBL.PREF_FEED_AUTOREMOVE));
 
             string author = c.GetString(ID_author);
             string body = c.GetString(ID_body);
+
             string read = c.GetString(ID_read);
 
             var listAttachments = new SortedList<int, EntryAttachment>();
@@ -479,7 +480,7 @@ namespace rw_cos_mei
                 listAttachments = dictAttachments[DatabaseHelper.OWNER_FEED][sql_id];
             }
 
-            FeedEntry result = new FeedEntry(key, title, body, date, author, listAttachments.Values.ToList()) { MarkedRead = (read == DatabaseHelper.BOOL_TRUE), ID = sql_id };
+            FeedEntry result = new FeedEntry(key, title, date, author, body, listAttachments.Values.ToList()) { MarkedRead = (read == DatabaseHelper.BOOL_TRUE), ID = sql_id };
             return result;
 
         }
@@ -501,7 +502,7 @@ namespace rw_cos_mei
             int year = c.GetInt(ID_year);
             string title = c.GetString(ID_title);
 
-            DateTime update = TBL.DecodeStringToDate(c.GetString(ID_update), DateTime.Now.AddMonths(-TBL.SETTINGS_OLDFEED_MONTHOFFSET));
+            DateTime update = TBL.DecodeStringToDate(c.GetString(ID_update), DateTime.Now.AddMonths(-TBL.PREF_FEED_AUTOREMOVE));
             
             string version = c.GetString(ID_version);
             string read = c.GetString(ID_read);

@@ -311,9 +311,6 @@
     <AndroidResource Include="Resources\drawable-xxxhdpi\ic_theme_user.png" />
   </ItemGroup>
   <ItemGroup>
-    <AndroidResource Include="Resources\layout\activity_feedEntry.axml" />
-  </ItemGroup>
-  <ItemGroup>
     <AndroidResource Include="Resources\layout\activity_settings.axml" />
   </ItemGroup>
   <ItemGroup>
@@ -371,7 +368,10 @@
     <AndroidResource Include="Resources\drawable-xhdpi\ic_notifications_off.png" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Assets\" />
+    <AndroidResource Include="Resources\layout\list_feedEntry_preview.axml">
+      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
+      <SubType>Designer</SubType>
+    </AndroidResource>
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\drawable-hdpi\ic_action_scrollup.png" />
@@ -409,6 +409,15 @@
       <Generator>MSBuild:UpdateGeneratedFiles</Generator>
       <SubType>Designer</SubType>
     </AndroidResource>
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\layout\activity_feedEntry.axml">
+      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
+      <SubType>Designer</SubType>
+    </AndroidResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Assets\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

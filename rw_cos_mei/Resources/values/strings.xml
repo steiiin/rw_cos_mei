@@ -13,7 +13,7 @@
   <string name="app_notify_msg_feed">Meldungen</string>
   <string name="app_notify_msg_new">Neuer Dienstplan:</string>
   <string name="app_notify_msg_version">Neue Dienstplanversion:</string>
-  
+   
   <!-- Main -->
   <string name="main_list_feed_unread_title">Ungelesen (%1$d)</string>
   <string name="main_list_feed_nounread_title">Keine ungelesenen Neuigkeiten</string>
@@ -40,9 +40,14 @@
   <string name="main_snack_connect">Keine Internetverbindung.</string>
   <string name="main_snack_error">Cloud reagiert nicht. Kein Anhang.</string>
   <string name="main_snack_relogin">Warte, wird neu eingeloggt ...</string>
+
+  <string name="firststart_title">Neues Sharepoint</string>
+  <string name="firststart_msg">Aufgrund der neuen Version musst du dich erneut anmelden \n\nLeider sind deswegen auch keine älteren Neuigkeiten &amp; Dienstpläne verfügbar.</string>
+  <string name="app_notify_msg_firststart">Neue Sharepoints. Bitte Anmelden.</string>
   
   <!-- FeedEntry -->
   <string name="feedentry_from">Von: %1$s</string>
+  <string name="feedentry_unknown">Unbekannt</string>
   
   <!-- Dialoge -->
   <string name="dialog_toSettings">Zu den Einstellungen</string>

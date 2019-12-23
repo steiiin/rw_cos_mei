@@ -1,19 +1,18 @@
 ﻿using Android.App;
 using Android.Content;
+using Android.Graphics;
+using Android.Graphics.Pdf;
 using Android.OS;
 using Android.Support.Design.Widget;
 using Android.Support.V7.App;
 using Android.Views;
 using Android.Widget;
-
 using Org.Jsoup;
 using Org.Jsoup.Nodes;
-
+using rw_cos_mei.Helper;
 using System;
-
-using Toolbar = Android.Support.V7.Widget.Toolbar;
-
 using TBL = rw_cos_mei.AppTable;
+using Toolbar = Android.Support.V7.Widget.Toolbar;
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -27,12 +26,12 @@ namespace rw_cos_mei
     [Activity(Label = "@string/app_name")]
     public class Activity_FeedEntry : AppCompatActivity
     {
-        
+
         public const string BUNDLE_ENTRYKEY = "bundle_entrykey";
 
         private class ViewHolder
         {
-            
+
             public TextView APPBAR_TITLE;
 
             public TextView TXT_DATE;
@@ -43,7 +42,7 @@ namespace rw_cos_mei
             public View DIVIDER_BODY;
 
             public LinearLayout LIST_ATTACHMENTS;
-            
+
         }
         private ViewHolder c;
 
@@ -65,7 +64,7 @@ namespace rw_cos_mei
 
             CreateViewholder();
             CreateToolbar();
-                                    
+
         }
 
         protected override void OnResume()
@@ -81,7 +80,7 @@ namespace rw_cos_mei
             CreateViewHandler(HandlerMethod.ADD_HANDLERS);
 
             base.OnResume();
-            
+
         }
         protected override void OnPause()
         {
@@ -128,20 +127,19 @@ namespace rw_cos_mei
             c.TXT_TITLE.Text = _currentEntry.Title;
             c.TXT_AUTHOR.Text = GetString(Resource.String.feedentry_from, _currentEntry.Author);
 
-            if (string.IsNullOrEmpty(_currentEntry.Body))
+            if (string.IsNullOrEmpty(_currentEntry.BodyText))
             {
                 c.TXT_BODY.Visibility = ViewStates.Gone;
                 c.DIVIDER_BODY.Visibility = ViewStates.Gone;
             }
             else
             {
-                c.TXT_BODY.Text = GetPlainOfHtml(_currentEntry.Body);
-                c.TXT_BODY.MovementMethod = Android.Text.Method.LinkMovementMethod.Instance;
+                c.TXT_BODY.Text = GetPlainOfHtml(_currentEntry.BodyText);
                 c.DIVIDER_BODY.Visibility = ViewStates.Visible;
             }
-            
+
             _currentAttachmentAdapter = new Adapters.ListFeedAttachmentAdapter(this, c.LIST_ATTACHMENTS, _currentEntry);
-            
+
         }
         private void CreateToolbar()
         {
@@ -162,7 +160,7 @@ namespace rw_cos_mei
 
         private void CreateViewHandler(HandlerMethod method)
         {
-            
+
             if (method == HandlerMethod.ADD_HANDLERS)
             {
 
@@ -216,7 +214,16 @@ namespace rw_cos_mei
         {
 
             EntryAttachment attachment = TBL.GetFeedEntry(e.EntryKey)?.GetAttachment(e.AttachmentKey);
-            FileOpen.Open(this, attachment.FileLocalUrl);
+            if (attachment.IsDownloadable)
+            {
+                bool success = Helper.FileOpen.Open(this, attachment.LocalFilePath);
+                if(!success) { AttachmentAdapter_AttachmentRetrieveError(null, new Adapters.AttachmentRetrieveErrorEventArgs(Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR)); }
+            }
+            else
+            {
+                bool success = Helper.FileOpen.OpenWeb(this, attachment.RemoteURL);
+                if (!success) { AttachmentAdapter_AttachmentRetrieveError(null, new Adapters.AttachmentRetrieveErrorEventArgs(Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR)); }
+            }
 
         }
 
@@ -277,12 +284,12 @@ namespace rw_cos_mei
 
             private readonly Context _context;
             private FeedEntry _entry;
-            
+
             //####################################################################################
 
             public event EventHandler<ListFeedAttachmentAdapterEntrySelected> EntrySelected;
             public event EventHandler<Adapters.AttachmentRetrieveErrorEventArgs> AttachmentRetrieveError;
-            
+
             //####################################################################################
 
             private class Viewholder
@@ -292,13 +299,26 @@ namespace rw_cos_mei
                 public Button BTN_ATTACHMENT;
                 public ProgressBar PROGRESS_INDICATOR;
             }
+            private class PreviewViewholder
+            {
+                public View CONVERTVIEW;
+
+                public ImageView PREVIEW_IMAGE;
+                public ProgressBar PROGRESS_INDICATOR;
+            }
+
+            private PreviewViewholder _thisPreview;
+            private float _thisPreviewRatio;
 
             //####################################################################################
-            
+
             public ListFeedAttachmentAdapter(Context context, LinearLayout parent, FeedEntry entry)
             {
                 _context = context;
                 _entry = entry;
+
+                _thisPreview = null;
+                _thisPreviewRatio = -1;
 
                 Inflate(parent);
             }
@@ -309,36 +329,106 @@ namespace rw_cos_mei
             {
 
                 parent.RemoveAllViews();
-                if(_entry.Attachments.Count == 0) { return; }
+                if (_entry.Attachments.Count == 0) { return; }
 
+                bool firstItem = true;
                 foreach (var item in _entry.Attachments)
                 {
+                    
+                    if (firstItem)
+                    {
 
+                        //PreviewHolder erstellen
+                        _thisPreview = new PreviewViewholder
+                        {
+                            CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feedEntry_preview, parent, false)
+                        };
+
+                        _thisPreview.PREVIEW_IMAGE = _thisPreview.CONVERTVIEW.FindViewById<ImageView>(Resource.Id.img_preview);
+                        _thisPreview.PROGRESS_INDICATOR = _thisPreview.CONVERTVIEW.FindViewById<ProgressBar>(Resource.Id.progress_preview);
+
+                        //Preview an Events koppeln
+                        CreatePreview(item);
+                        parent.LayoutChange += Parent_LayoutChange;
+
+                        //Hinzufügen
+                        parent.AddView(_thisPreview.CONVERTVIEW);
+                        firstItem = false;
+
+                    }
+
+                    //Button erstellen
                     Viewholder hold = new Viewholder
                     {
                         CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feedEntry_attachment, parent, false)
                     };
+                    hold.CONVERTVIEW.SetBackgroundColor(Color.Beige);
 
                     hold.BTN_ATTACHMENT = hold.CONVERTVIEW.FindViewById<Button>(Resource.Id.btn_attachment);
                     hold.PROGRESS_INDICATOR = hold.CONVERTVIEW.FindViewById<ProgressBar>(Resource.Id.progress_working);
-                    
+
                     hold.PROGRESS_INDICATOR.Visibility = ViewStates.Gone;
 
-                    hold.BTN_ATTACHMENT.Text = item.FileName;
+                    hold.BTN_ATTACHMENT.Text = item.Title;
                     hold.BTN_ATTACHMENT.Click += (s, e) =>
                     {
                         if (hold.BTN_ATTACHMENT.Tag != null) { return; }
 
                         ViewAttachment(hold, item);
                     };
-                    if(item.IsAttachmentDownloaded)
+                    if (item.IsDownloaded)
                     {
                         hold.BTN_ATTACHMENT.BackgroundTintList = Android.Content.Res.ColorStateList.ValueOf(Android.Graphics.Color.Rgb(180, 180, 180));
                     }
-                                                           
+
                     parent.AddView(hold.CONVERTVIEW);
                 }
-                
+
+
+            }
+            
+            private void CreatePreview(EntryAttachment e)
+            {
+                if (!e.IsDownloadable) { _thisPreview.CONVERTVIEW.Visibility = ViewStates.Gone; return; }
+
+                TBL.SP_Object.GetNewsFeedAttachment(e,
+                delegate (Adapters.AttachmentRetrieveErrorReason reason)
+                {
+                    _thisPreview.CONVERTVIEW.Visibility = ViewStates.Gone;
+                },
+                delegate (string path)
+                {
+
+                    var generator = new Helper.PreviewGenerator(path);
+                    if (generator.IsAvailable)
+                    {
+
+                        _thisPreview.PREVIEW_IMAGE.SetImageBitmap(generator.RenderedPreviewImage);
+
+                        //Ratio berechnen
+                        _thisPreviewRatio = (float)generator.RenderedPreviewImage.Height / (float)generator.RenderedPreviewImage.Width;
+                        UpdatePreviewRatio();
+
+                    }
+                    else
+                    {
+                        _thisPreview.CONVERTVIEW.Visibility = ViewStates.Gone;
+                    }
+
+                });
+
+            }
+            private void UpdatePreviewRatio()
+            {
+
+                if (_thisPreviewRatio <= 0) { return; }
+                if (_thisPreview.PREVIEW_IMAGE == null) { return; }
+
+                int width = _thisPreview.PREVIEW_IMAGE.Width;
+                int height = (int)(width * _thisPreviewRatio);
+
+                _thisPreview.PREVIEW_IMAGE.LayoutParameters = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, height);
+                _thisPreview.PROGRESS_INDICATOR.Visibility = ViewStates.Gone;
 
             }
 
@@ -348,47 +438,47 @@ namespace rw_cos_mei
             {
 
                 hold.BTN_ATTACHMENT.Tag = "BLOCKED";
+                hold.PROGRESS_INDICATOR.Visibility = ViewStates.Visible;
 
-                if (item.IsAttachmentDownloaded)
+                TBL.SP_Object.GetNewsFeedAttachment(item,
+                delegate (Adapters.AttachmentRetrieveErrorReason reason)
                 {
-                    hold.BTN_ATTACHMENT.Tag = null;
-                    EntrySelected?.Invoke(this, new ListFeedAttachmentAdapterEntrySelected(_entry.Key, item.Key));
-                }
-                else
-                {
-                    
-                    hold.PROGRESS_INDICATOR.Visibility = ViewStates.Visible;
 
-                    TBL.SP_Object.GetNewsFeedAttachment(item,
-                    delegate (Adapters.AttachmentRetrieveErrorReason reason) {
-
-                        if(reason != AttachmentRetrieveErrorReason.RELOGIN_REQUIRED)
-                        {
-                            hold.PROGRESS_INDICATOR.Visibility = ViewStates.Gone;
-                            hold.BTN_ATTACHMENT.Tag = null;
-                        }
-                        
-                        AttachmentRetrieveError?.Invoke(this, new AttachmentRetrieveErrorEventArgs(reason));
-
-                    },
-                    delegate (string path) {
-                        
+                    if (reason != AttachmentRetrieveErrorReason.RELOGIN_REQUIRED)
+                    {
                         hold.PROGRESS_INDICATOR.Visibility = ViewStates.Gone;
-
-                        item.UpdateAttachment(path);
-
                         hold.BTN_ATTACHMENT.Tag = null;
-                        hold.BTN_ATTACHMENT.BackgroundTintList = Android.Content.Res.ColorStateList.ValueOf(Android.Graphics.Color.Rgb(180, 180, 180));
+                    }
 
-                        EntrySelected?.Invoke(this, new ListFeedAttachmentAdapterEntrySelected(_entry.Key, item.Key));
+                    AttachmentRetrieveError?.Invoke(this, new AttachmentRetrieveErrorEventArgs(reason));
 
-                    });
+                },
+                delegate (string path)
+                {
 
-                }
+                    hold.PROGRESS_INDICATOR.Visibility = ViewStates.Gone;
+
+                    hold.BTN_ATTACHMENT.Tag = null;
+                    hold.BTN_ATTACHMENT.BackgroundTintList = Android.Content.Res.ColorStateList.ValueOf(Android.Graphics.Color.Rgb(180, 180, 180));
+
+                    EntrySelected?.Invoke(this, new ListFeedAttachmentAdapterEntrySelected(_entry.Key, item.Key));
+
+                });
 
             }
-            
+
+            //####################################################################################
+
+            private void Parent_LayoutChange(object sender, View.LayoutChangeEventArgs e)
+            {
+
+                int width = e.Right - e.Left;
+                if (width > 0) { UpdatePreviewRatio(); }
+
+            }
+
         }
+
         public class ListFeedAttachmentAdapterEntrySelected : EventArgs
         {
             public ListFeedAttachmentAdapterEntrySelected(string entryKey, string attachmentKey)
@@ -401,5 +491,82 @@ namespace rw_cos_mei
 
     }
 
+    //####################################################################
+
+    namespace Helper
+    {
+
+        public class PreviewGenerator
+        {
+
+            public bool IsAvailable { get; private set; } = false;
+            public Bitmap RenderedPreviewImage { get; private set; } = null;
+
+            //####################################################################
+
+            public PreviewGenerator(string filepath)
+            {
+
+                string extension = System.IO.Path.GetExtension(filepath).ToLower();
+                switch (extension)
+                {
+                    case ".pdf":
+
+                        //PDF 
+                        var pdfGen = new GeneratorPDF().Generate(filepath);
+                        if (pdfGen == null) { IsAvailable = false; return; }
+
+                        RenderedPreviewImage = pdfGen;
+                        IsAvailable = true;
+
+                        return;
+
+                    default:
+                        IsAvailable = false;
+                        return;
+                }
+
+            }
+
+            //####################################################################
+
+            public class GeneratorPDF
+            {
+
+                public Bitmap Generate(string path)
+                {
+
+                    try
+                    {
+
+                        var file = new Java.IO.File(path);
+                        var fileDescriptor = ParcelFileDescriptor.Open(file, ParcelFileMode.ReadOnly);
+
+                        var docRenderer = new PdfRenderer(fileDescriptor);
+                        if (docRenderer.PageCount == 0) { return null; }
+
+                        var docPage = docRenderer.OpenPage(0);
+
+                        Bitmap renderedPage = Bitmap.CreateBitmap(docPage.Width, docPage.Height, Bitmap.Config.Argb8888);
+                        docPage.Render(renderedPage, null, null, PdfRenderMode.ForDisplay);
+
+                        return renderedPage;
+
+                    }
+                    catch (Exception)
+                    {
+                        return null;
+                    }
+
+                }
+
+            }
+
+        }
+
+    }
+
 }
+
+
 

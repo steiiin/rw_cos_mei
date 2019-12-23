@@ -34,7 +34,7 @@ namespace rw_cos_mei
             InitRoutine(this);
 
             //Job erstellen
-            JobSchedulerHelper.CreateSyncJob(this, TBL.GetSyncIntervalSettingTiming(TBL.SyncInterval));
+            JobSchedulerHelper.CreateSyncJob(this, TBL.GetSyncIntervalSettingDescriptor(this, TBL.SyncInterval).Timespan);
 
             //App starten
             StartActivity(new Intent(Application.Context, typeof(Activity_Main)));

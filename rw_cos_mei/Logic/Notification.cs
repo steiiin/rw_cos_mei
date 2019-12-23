@@ -204,6 +204,26 @@ namespace rw_cos_mei
 
         }
 
+        public void CreateNewVersionNag()
+        {
+
+            Intent intent = new Intent(NotificationContext, typeof(Activity_Main));
+            intent.SetFlags(ActivityFlags.NewTask);
+            
+            PendingIntent target = PendingIntent.GetActivity(NotificationContext, 0, intent, 0);
+
+            var notify = new NotificationCompat.Builder(NotificationContext, CHANNEL_ID);
+            notify.SetAutoCancel(true);
+            notify.SetSmallIcon(Resource.Drawable.ic_stat_icon);
+            notify.SetContentIntent(target);
+            notify.SetContentTitle(NotificationContext.Resources.GetString(Resource.String.app_notify_title));
+            notify.SetContentText(NotificationContext.Resources.GetString(Resource.String.app_notify_msg_firststart));
+
+            var notificationManager = NotificationManagerCompat.From(NotificationContext);
+            notificationManager.Notify(NOTIFICATION_ID, notify.Build());
+
+        }
+
         //#################################################################################################
         
         private void CreateNotificationChannel()
