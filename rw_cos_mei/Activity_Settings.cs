@@ -5,15 +5,12 @@ using Android.Support.Design.Widget;
 using Android.Support.V7.App;
 using Android.Views;
 using Android.Widget;
-
+using rw_cos_mei.Helper;
 using System;
 using System.Collections.Generic;
-
 using AlertDialog = Android.Support.V7.App.AlertDialog;
-using Toolbar = Android.Support.V7.Widget.Toolbar;
-
 using TBL = rw_cos_mei.AppTable;
-using rw_cos_mei.Helper;
+using Toolbar = Android.Support.V7.Widget.Toolbar;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///Activity_Settings
@@ -26,7 +23,7 @@ namespace rw_cos_mei
     [Activity(Label = "@string/app_name")]
     public class Activity_Settings : AppCompatActivity
     {
-        
+
         private class ViewHolder
         {
 
@@ -40,7 +37,7 @@ namespace rw_cos_mei
             public TextView CARD_HINT_TITLE;
             public TextView CARD_HINT_MSG;
             public Button CARD_HINT_RETRY_BTN;
-            
+
             public Spinner SPINNER_TIME;
 
             public CheckBox CHECK_NOTIFY_NEWFEED;
@@ -48,7 +45,7 @@ namespace rw_cos_mei
             public CheckBox CHECK_NOTIFY_NEWSHIFTSVERSION;
 
             public Button NOTIFICATION_LINK;
-            
+
         }
         private ViewHolder c;
 
@@ -65,7 +62,7 @@ namespace rw_cos_mei
             CreateSpinner();
 
             CreateToolbar();
-                                    
+
         }
 
         protected override void OnResume()
@@ -82,7 +79,7 @@ namespace rw_cos_mei
 
             //Oberfläche an SharepointState anpassen
             ViewStateChanger(TBL.SP_Object.State);
-            if(TBL.SP_Object.State == SharepointAPIState.OFFLINE)
+            if (TBL.SP_Object.State == SharepointAPIState.OFFLINE)
             {
                 CheckCloud();
             }
@@ -101,7 +98,7 @@ namespace rw_cos_mei
         }
 
         //###################################################################################
-        
+
         private void SP_Object_StateChanged(object sender, SharepointAPIStateChangedEventArgs e)
         {
             ViewStateChanger(e.State);
@@ -186,7 +183,7 @@ namespace rw_cos_mei
 
                 NOTIFICATION_LINK = FindViewById<Button>(Resource.Id.btn_notification_link)
             };
-            
+
             //Benachrichtigungs-Checkboxen
             notification_checkbox_initiate = true;
             if (TBL.NotificationType == Notification.NotifySettings.NotifySettingsType.ONLY_FEED ||
@@ -216,16 +213,16 @@ namespace rw_cos_mei
         private void CreateViewHandler(HandlerMethod method)
         {
 
-            if(method == HandlerMethod.ADD_HANDLERS)
+            if (method == HandlerMethod.ADD_HANDLERS)
             {
 
                 TBL.SP_Object.StateChanged += SP_Object_StateChanged;
-                
+
                 c.BTN_CRED.Click += CREDENTIAL_BTN_Click;
                 c.CARD_HINT_RETRY_BTN.Click += CARD_HINT_RETRY_Click;
 
                 c.SPINNER_TIME.ItemSelected += SPINNER_TIME_ItemSelected;
-                
+
                 c.CHECK_NOTIFY_NEWFEED.CheckedChange += CHECK_NOTIFY_CHANGED;
                 c.CHECK_NOTIFY_NEWSHIFTS.CheckedChange += CHECK_NOTIFY_CHANGED;
                 c.CHECK_NOTIFY_NEWSHIFTSVERSION.CheckedChange += CHECK_NOTIFY_CHANGED;
@@ -250,9 +247,9 @@ namespace rw_cos_mei
                 c.NOTIFICATION_LINK.Click -= NOTIFICATION_LINK_Click;
 
             }
-            
+
         }
-        
+
         private void CreateToolbar()
         {
 
@@ -272,7 +269,7 @@ namespace rw_cos_mei
                 txt_version.Text = "Ver. " + Application.Context.ApplicationContext.PackageManager.GetPackageInfo(Application.Context.ApplicationContext.PackageName, 0).VersionName;
             }
             catch (Exception) { }
-            
+
         }
 
         private List<TBL.SyncIntervalSetting> listSpinnerIntervalValues = new List<TBL.SyncIntervalSetting>() { TBL.SyncIntervalSetting.THREE_HOURS, TBL.SyncIntervalSetting.TWO_A_DAY, TBL.SyncIntervalSetting.ONE_A_DAY, TBL.SyncIntervalSetting.ONE_IN_THREE_DAYS };
@@ -287,9 +284,9 @@ namespace rw_cos_mei
 
             c.SPINNER_TIME.Adapter = adapter;
 
-            if(!listSpinnerIntervalValues.Contains(TBL.SyncInterval)) { return; }
+            if (!listSpinnerIntervalValues.Contains(TBL.SyncInterval)) { return; }
             c.SPINNER_TIME.SetSelection(listSpinnerIntervalValues.IndexOf(TBL.SyncInterval));
-                
+
         }
 
         //###################################################################################
@@ -313,13 +310,13 @@ namespace rw_cos_mei
         private void CHECK_NOTIFY_CHANGED(object sender, CompoundButton.CheckedChangeEventArgs e)
         {
 
-            if(notification_checkbox_initiate) { return; }
+            if (notification_checkbox_initiate) { return; }
 
             c.CHECK_NOTIFY_NEWSHIFTSVERSION.Enabled = c.CHECK_NOTIFY_NEWSHIFTS.Checked;
             var state = Notification.NotifySettings.NotifySettingsType.FEED_AND_SHIFTS_AND_VERSIONS;
 
             //Dienstplanversion deaktivieren, wenn aktiv
-            if(!c.CHECK_NOTIFY_NEWSHIFTS.Checked && c.CHECK_NOTIFY_NEWSHIFTSVERSION.Checked) { c.CHECK_NOTIFY_NEWSHIFTSVERSION.Checked = false; }
+            if (!c.CHECK_NOTIFY_NEWSHIFTS.Checked && c.CHECK_NOTIFY_NEWSHIFTSVERSION.Checked) { c.CHECK_NOTIFY_NEWSHIFTSVERSION.Checked = false; }
 
             //Neuen Benachrichtungsstatus ermitteln
             if (c.CHECK_NOTIFY_NEWFEED.Checked)
@@ -362,11 +359,11 @@ namespace rw_cos_mei
             TBL.UpdateSyncNotification(state);
 
         }
-        
+
         private void NOTIFICATION_LINK_Click(object sender, EventArgs e)
         {
 
-            if(Build.VERSION.SdkInt >= BuildVersionCodes.O)
+            if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
             {
 
                 Intent link = new Intent(Android.Provider.Settings.ActionChannelNotificationSettings);
@@ -375,7 +372,7 @@ namespace rw_cos_mei
                 StartActivity(link);
 
             }
-            
+
         }
 
         //###################################################################################
@@ -384,7 +381,7 @@ namespace rw_cos_mei
         {
 
             //Nutzername anpassen
-            if(string.IsNullOrWhiteSpace(TBL.Username))
+            if (string.IsNullOrWhiteSpace(TBL.Username))
             {
                 c.BTN_CRED_USERNAME.Text = Resources.GetString(Resource.String.settings_cred_btn_noone);
             }
@@ -419,7 +416,7 @@ namespace rw_cos_mei
                 case SharepointAPIState.WRONG_LOGIN:
 
                     show_card = true;
-                    if(TBL.IsFeedEmpty)
+                    if (TBL.IsFeedEmpty)
                     {
                         card_title = GetString(Resource.String.settings_cred_nologin_title);
                         card_msg = GetString(Resource.String.settings_cred_nologin_msg);
@@ -443,18 +440,18 @@ namespace rw_cos_mei
 
             c.CARD_HINT_TITLE.Text = card_title;
             c.CARD_HINT_MSG.Text = card_msg;
-            if(show_card) { c.CARD_HINT.Visibility = ViewStates.Visible; }
+            if (show_card) { c.CARD_HINT.Visibility = ViewStates.Visible; }
             else { c.CARD_HINT.Visibility = ViewStates.Gone; }
-            if(show_card_retry) { c.CARD_HINT_RETRY_BTN.Visibility = ViewStates.Visible; }
+            if (show_card_retry) { c.CARD_HINT_RETRY_BTN.Visibility = ViewStates.Visible; }
             else { c.CARD_HINT_RETRY_BTN.Visibility = ViewStates.Gone; }
 
         }
         private void CREDENTIAL_BTN_Click(object sender, EventArgs e)
         {
-            if(c.BTN_CRED.Tag != null) { return; } //Wenn State == Working
+            if (c.BTN_CRED.Tag != null) { return; } //Wenn State == Working
 
             var dialog = new Dialogs.DialogCredentialsInput(this,
-                async (object ss, Dialogs.DialogCredentialsInputEventArgs ee) => 
+                async (object ss, Dialogs.DialogCredentialsInputEventArgs ee) =>
                 {
                     TBL.UpdateCredentials(ee.Username, ee.Password);
 
@@ -462,7 +459,7 @@ namespace rw_cos_mei
                     while (TBL.SP_Object.State == SharepointAPIState.WORKING)
                     {
                         timeout -= 1;
-                        if(timeout <= 0) { return; }
+                        if (timeout <= 0) { return; }
 
                         await System.Threading.Tasks.Task.Delay(200);
                     }
@@ -473,7 +470,7 @@ namespace rw_cos_mei
 
         private void CARD_HINT_RETRY_Click(object sender, EventArgs e)
         {
-            if(TBL.SP_Object.State != SharepointAPIState.WORKING)
+            if (TBL.SP_Object.State != SharepointAPIState.WORKING)
             {
                 RefreshCloud();
             }
@@ -490,7 +487,7 @@ namespace rw_cos_mei
         }
 
     }
-    
+
     namespace Dialogs
     {
 
@@ -513,7 +510,7 @@ namespace rw_cos_mei
 
             }
             private ViewHolder con;
-            
+
             //##################################################################################
 
             public DialogCredentialsInput(Context context, EventHandler<DialogCredentialsInputEventArgs> OnLoginEntered)
@@ -525,7 +522,7 @@ namespace rw_cos_mei
                 LayoutInflater i = LayoutInflater.FromContext(context);
                 View view = i.Inflate(Resource.Layout.dialog_login, null, false);
 
-                con.TEXT_USERNAME = view.FindViewById<TextInputEditText>(Resource.Id.text_username); 
+                con.TEXT_USERNAME = view.FindViewById<TextInputEditText>(Resource.Id.text_username);
                 con.TEXT_PASSWORD = view.FindViewById<TextInputEditText>(Resource.Id.text_password);
                 con.LAYOUT_USERNAME = view.FindViewById<TextInputLayout>(Resource.Id.layout_username);
                 con.LAYOUT_PASSWORD = view.FindViewById<TextInputLayout>(Resource.Id.layout_password);
@@ -537,10 +534,10 @@ namespace rw_cos_mei
                 AlertDialog.Builder builder = new AlertDialog.Builder(context);
                 builder.SetTitle(context.Resources.GetString(Resource.String.settings_dialog_cred_title));
                 builder.SetMessage(context.Resources.GetString(Resource.String.settings_dialog_cred_msg));
-                
-                builder.SetNegativeButton(_context.Resources.GetString(Resource.String.dialog_cancel), (s,e) => { });
+
+                builder.SetNegativeButton(_context.Resources.GetString(Resource.String.dialog_cancel), (s, e) => { });
                 builder.SetPositiveButton(_context.Resources.GetString(Resource.String.dialog_login), (s, e) => { });
-               
+
                 builder.SetView(view);
                 con.dialog = builder.Show();
 
@@ -575,9 +572,9 @@ namespace rw_cos_mei
                     con.dialog.Dismiss();
 
                 };
-                
+
             }
-            
+
         }
         public class DialogCredentialsInputEventArgs
         {
@@ -585,7 +582,7 @@ namespace rw_cos_mei
             public string Username { get; }
             public string Password { get; }
         }
-        
+
     }
 
 }

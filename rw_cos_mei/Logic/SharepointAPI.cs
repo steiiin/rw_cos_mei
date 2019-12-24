@@ -35,7 +35,7 @@ namespace rw_cos_mei
         private readonly string _url_getAdfs = "https://login.microsoftonline.com/GetUserRealm.srf";
         private readonly string _url_getSpToken = "https://login.microsoftonline.com/rst2.srf";
 
-        private readonly string _url_endpoint = "https://maltesercloud.sharepoint.com/sites/hilfsdienst/2601/";  //  /mhd/DD/RD/RW_Mei/";
+        private readonly string _url_endpoint = "https://maltesercloud.sharepoint.com/sites/hilfsdienst/2601/";  //Neuer Endpunkt. Alt: "/mhd/DD/RD/RW_Mei/"
 
         //#########################################################
 
@@ -310,7 +310,7 @@ namespace rw_cos_mei
         {
             await UpdateNewsFeed(false, true);
         }
-        public async Task UpdateNewsFeed(bool doNotify, bool relogin)
+        public async Task<SharepointAPIState> UpdateNewsFeed(bool doNotify, bool relogin)
         {
             List<string> feedAnchors = new List<string>();
             feedAnchors.Add("rw_Mei/news_mei/");
@@ -326,13 +326,14 @@ namespace rw_cos_mei
             }
 
             InvokeStateChanged(state);
+            return state;
 
         }
 
         public async void GetNewsFeedAttachment(EntryAttachment attachment, Action<Adapters.AttachmentRetrieveErrorReason> onError, Action<string> onDownloaded, bool relogin = true)
         {
 
-            if(attachment.IsDownloaded)
+            if (attachment.IsDownloaded)
             {
                 onDownloaded(attachment.LocalFilePath);
                 return;
@@ -350,9 +351,9 @@ namespace rw_cos_mei
             while (State == SharepointAPIState.WORKING)
             {
                 await Task.Delay(200);
-                
+
                 waitTimeout -= 1;
-                if(waitTimeout < 0)
+                if (waitTimeout < 0)
                 {
                     onError(Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR);
                     return;
@@ -517,8 +518,8 @@ namespace rw_cos_mei
 
                                                         string url = webPartData.GetJSONObject("serverProcessedContent").GetJSONObject("links").GetString("url");
                                                         string link_title = webPartData.GetJSONObject("serverProcessedContent").GetJSONObject("searchablePlainTexts").GetString("title");
-                                                        
-                                                        if(url.StartsWith("/:")) { url = _url_malteserHost + url; }
+
+                                                        if (url.StartsWith("/:")) { url = _url_malteserHost + url; }
 
                                                         attachmentList.Add(new EntryAttachment(link_title, url, true));
 
@@ -535,7 +536,7 @@ namespace rw_cos_mei
                                         }
                                         else
                                         {
-                                            if (contentJson.GetJSONObject(j).Has("innerHTML") && 
+                                            if (contentJson.GetJSONObject(j).Has("innerHTML") &&
                                                 contentJson.GetJSONObject(j).Has("controlType") && contentJson.GetJSONObject(j).GetInt("controlType") == 4)
                                             {
                                                 string bodytext = contentJson.GetJSONObject(j).GetString("innerHTML");
@@ -546,8 +547,11 @@ namespace rw_cos_mei
                                     }
 
                                     FeedEntry entry = new FeedEntry(key, title, date, author, body, attachmentList);
-                                    //TODO: ist ohne Inhalt prüfen
-                                    listFeed.Add(entry);
+                                    if(!string.IsNullOrEmpty(body) || attachmentList.Count > 0)
+                                    {
+                                        listFeed.Add(entry);
+                                    }
+                                    
                                 }
                             }
 
@@ -879,7 +883,8 @@ namespace rw_cos_mei
                             fileStream.Write(buffer, 0, size);
                             received += size;
 
-                            int perc = (int)(received / total) * 100; if(perc<0) { perc = 0; } if(perc>100) { perc = 100; }
+                            int perc = (int)(received / total) * 100; if (perc < 0) { perc = 0; }
+                            if (perc > 100) { perc = 100; }
                             DownloadProgressChanged?.Invoke(this, perc);
 
                             size = input.Read(buffer, 0, buffer.Length);

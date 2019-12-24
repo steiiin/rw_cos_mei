@@ -30,16 +30,13 @@ namespace rw_cos_mei
                 //Statische Klassen erstellen
                 TBL.Init(this);
                 TBL.DB_Object.LoadDatabase();
-
-                //Erster Start - Benachrichtigung
-                if (TBL.IsFirstStart)
-                {
-                    TBL.Notify_Object.CreateNewVersionNag();
-                    return;
-                }
-
+                
                 //Feed aktualiseren
-                await TBL.SP_Object.UpdateNewsFeed(true, true);
+                var result = await TBL.SP_Object.UpdateNewsFeed(true, true);
+                if(result == SharepointAPIState.WRONG_LOGIN)
+                {
+                    TBL.Notify_Object.CreateLoginNag();
+                }
                 
                 //Job schließen
                 JobFinished(@params, false);
@@ -74,7 +71,7 @@ namespace rw_cos_mei
         {
 
             var jobBuilder = JobSchedulerHelper.CreateJobBuilderUsingJobId<SyncService>(context, JobSchedulerHelper.JOB_ID);
-            syncInterval = 60000;
+            
             if (Build.VERSION.SdkInt < BuildVersionCodes.N)
             {
                 jobBuilder.SetPeriodic(syncInterval);

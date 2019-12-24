@@ -204,7 +204,7 @@ namespace rw_cos_mei
 
         }
 
-        public void CreateNewVersionNag()
+        public void CreateLoginNag()
         {
 
             Intent intent = new Intent(NotificationContext, typeof(Activity_Main));
@@ -217,7 +217,7 @@ namespace rw_cos_mei
             notify.SetSmallIcon(Resource.Drawable.ic_stat_icon);
             notify.SetContentIntent(target);
             notify.SetContentTitle(NotificationContext.Resources.GetString(Resource.String.app_notify_title));
-            notify.SetContentText(NotificationContext.Resources.GetString(Resource.String.app_notify_msg_firststart));
+            notify.SetContentText(NotificationContext.Resources.GetString(Resource.String.app_notify_msg_login));
 
             var notificationManager = NotificationManagerCompat.From(NotificationContext);
             notificationManager.Notify(NOTIFICATION_ID, notify.Build());
