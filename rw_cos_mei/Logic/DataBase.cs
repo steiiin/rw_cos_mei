@@ -21,7 +21,7 @@ namespace rw_cos_mei
     {
 
         public const string DATABASE_NAME = "db_rw_cos_mei_storage";
-        public const int DATABASE_VERSION = 1;
+        public const int DATABASE_VERSION = 2;
 
         public const string FEED_TABLE = "db_feed";
         public const string FEED_TABLE_COL_ID = "_id";

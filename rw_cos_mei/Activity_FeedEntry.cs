@@ -57,7 +57,13 @@ namespace rw_cos_mei
 
             //entryFeed
             string entryID = Intent.GetStringExtra(BUNDLE_ENTRYKEY);
+            if (savedInstanceState != null) { entryID = savedInstanceState.GetString(BUNDLE_ENTRYKEY, ""); }
             _currentEntry = TBL.GetFeedEntry(entryID);
+
+            if (_currentEntry == null)
+            {
+                Finish(); return;
+            }
 
             //Layout füllen
             SetContentView(Resource.Layout.activity_feedEntry);
@@ -69,7 +75,7 @@ namespace rw_cos_mei
 
         protected override void OnResume()
         {
-
+            
             //Statischen Speicher wiederherstellen, wenn im Hintergrund vom System gelöscht
             if (TBL.SP_Object == null)
             {
@@ -90,7 +96,11 @@ namespace rw_cos_mei
             CreateViewHandler(HandlerMethod.REMOVE_HANDLERS);
 
         }
-
+        protected override void OnSaveInstanceState(Bundle outState)
+        {
+            outState.PutString(BUNDLE_ENTRYKEY, _currentEntry.Key);
+            base.OnSaveInstanceState(outState);
+        }
         //###################################################################################
 
         public override bool OnOptionsItemSelected(IMenuItem item)
@@ -151,7 +161,7 @@ namespace rw_cos_mei
             SupportActionBar.SetDisplayShowCustomEnabled(true);
             SupportActionBar.SetDisplayShowTitleEnabled(false);
 
-            SupportActionBar.SetHomeAsUpIndicator(Resource.Drawable.ic_action_uparrow);
+            SupportActionBar.SetHomeAsUpIndicator(Resource.Drawable.ic_action_return);
             SupportActionBar.SetDisplayHomeAsUpEnabled(true);
 
             c.APPBAR_TITLE.Text = _currentEntry.Date.ToString("dd. MMMM yyyy");
@@ -362,7 +372,6 @@ namespace rw_cos_mei
                     {
                         CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feedEntry_attachment, parent, false)
                     };
-                    hold.CONVERTVIEW.SetBackgroundColor(Color.Beige);
 
                     hold.BTN_ATTACHMENT = hold.CONVERTVIEW.FindViewById<Button>(Resource.Id.btn_attachment);
                     hold.PROGRESS_INDICATOR = hold.CONVERTVIEW.FindViewById<ProgressBar>(Resource.Id.progress_working);

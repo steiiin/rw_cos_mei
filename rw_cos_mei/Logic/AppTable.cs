@@ -37,9 +37,9 @@ namespace rw_cos_mei
         public const string PREF_LASTREFRESH = "pref_sync_lastrefresh";
 
         public const string PREF_BOTTOMNAV_ID = "pref_bottomnav_id";
-        public const string PREF_FIRSTSTART = "pref_firststart";
+        public const string PREF_FIRSTSTART = "pref_first";
 
-        public const int PREF_FEED_AUTOREMOVE = 12;
+        public const int PREF_FEED_AUTOREMOVE = 6;
         
         //###################################################################################
 

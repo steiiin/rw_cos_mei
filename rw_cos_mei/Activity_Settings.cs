@@ -37,6 +37,7 @@ namespace rw_cos_mei
             public TextView CARD_HINT_TITLE;
             public TextView CARD_HINT_MSG;
             public Button CARD_HINT_RETRY_BTN;
+            public Button CARD_HINT_ENTERCRED_BTN;
 
             public Spinner SPINNER_TIME;
 
@@ -174,6 +175,7 @@ namespace rw_cos_mei
                 CARD_HINT_TITLE = FindViewById<TextView>(Resource.Id.cred_card_title),
                 CARD_HINT_MSG = FindViewById<TextView>(Resource.Id.cred_card_msg),
                 CARD_HINT_RETRY_BTN = FindViewById<Button>(Resource.Id.cred_card_retry),
+                CARD_HINT_ENTERCRED_BTN = FindViewById<Button>(Resource.Id.cred_card_login),
 
                 SPINNER_TIME = FindViewById<Spinner>(Resource.Id.spinner_sync_time),
 
@@ -220,6 +222,7 @@ namespace rw_cos_mei
 
                 c.BTN_CRED.Click += CREDENTIAL_BTN_Click;
                 c.CARD_HINT_RETRY_BTN.Click += CARD_HINT_RETRY_Click;
+                c.CARD_HINT_ENTERCRED_BTN.Click += CREDENTIAL_BTN_Click;
 
                 c.SPINNER_TIME.ItemSelected += SPINNER_TIME_ItemSelected;
 
@@ -237,6 +240,7 @@ namespace rw_cos_mei
 
                 c.BTN_CRED.Click -= CREDENTIAL_BTN_Click;
                 c.CARD_HINT_RETRY_BTN.Click -= CARD_HINT_RETRY_Click;
+                c.CARD_HINT_ENTERCRED_BTN.Click -= CREDENTIAL_BTN_Click;
 
                 c.SPINNER_TIME.ItemSelected -= SPINNER_TIME_ItemSelected;
 
@@ -260,7 +264,7 @@ namespace rw_cos_mei
             SupportActionBar.SetDisplayShowCustomEnabled(true);
             SupportActionBar.SetDisplayShowTitleEnabled(false);
 
-            SupportActionBar.SetHomeAsUpIndicator(Resource.Drawable.ic_action_uparrow);
+            SupportActionBar.SetHomeAsUpIndicator(Resource.Drawable.ic_action_return);
             SupportActionBar.SetDisplayHomeAsUpEnabled(true);
 
             try
@@ -393,6 +397,7 @@ namespace rw_cos_mei
             //Wronglogin-Card
             bool show_card = false;
             bool show_card_retry = false;
+            bool show_card_enter = false;
             string card_title = "";
             string card_msg = "";
 
@@ -418,6 +423,7 @@ namespace rw_cos_mei
                     show_card = true;
                     if (TBL.IsFeedEmpty)
                     {
+                        show_card_enter = true;
                         card_title = GetString(Resource.String.settings_cred_nologin_title);
                         card_msg = GetString(Resource.String.settings_cred_nologin_msg);
                     }
@@ -444,6 +450,8 @@ namespace rw_cos_mei
             else { c.CARD_HINT.Visibility = ViewStates.Gone; }
             if (show_card_retry) { c.CARD_HINT_RETRY_BTN.Visibility = ViewStates.Visible; }
             else { c.CARD_HINT_RETRY_BTN.Visibility = ViewStates.Gone; }
+            if (show_card_enter) { c.CARD_HINT_ENTERCRED_BTN.Visibility = ViewStates.Visible; }
+            else { c.CARD_HINT_ENTERCRED_BTN.Visibility = ViewStates.Gone; }
 
         }
         private void CREDENTIAL_BTN_Click(object sender, EventArgs e)

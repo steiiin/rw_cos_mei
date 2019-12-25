@@ -372,6 +372,8 @@ namespace rw_cos_mei
             {
                 if (ee.DownloadFinished)
                 {
+                    if(State == SharepointAPIState.CONNECTION_LOST) { InvokeStateChanged(SharepointAPIState.LOGGED_IN); }
+
                     attachment.UpdateAttachmentDownloaded(filePath);
 
                     onDownloaded(filePath);

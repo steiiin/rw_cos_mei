@@ -6,7 +6,7 @@
   <item android:id="@+id/menu_sync"
         local:showAsAction="always"
         android:title="@string/menu_sync"
-        android:icon="@drawable/ic_action_sync" />
+        android:icon="@drawable/ic_action_refresh" />
   
   <item android:id="@+id/menu_settings"
         local:showAsAction="ifRoom"

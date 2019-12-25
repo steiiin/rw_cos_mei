@@ -55,6 +55,7 @@
   <string name="dialog_cancel">Abbrechen</string>
   <string name="dialog_login">Anmelden</string>
   <string name="dialog_reconnect">Neu verbinden</string>
+  <string name="dialog_credInput">Zugangsdaten eingeben</string>
   
   <!-- Menues -->
   <string name="menu_settings">Einstellungen</string>

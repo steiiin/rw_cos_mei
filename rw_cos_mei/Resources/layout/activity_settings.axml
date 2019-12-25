@@ -96,13 +96,13 @@
 					android:layout_width="40dp"
 					android:layout_height="40dp"
 					android:layout_margin="16dp"
-					android:src="@drawable/ic_theme_user" />
+					android:src="@drawable/ic_theme_loggedin" />
 				<ImageView
 					android:id="@+id/icon_credentialsInput_error"
 					android:layout_width="40dp"
 					android:layout_height="40dp"
 					android:layout_margin="16dp"
-					android:src="@drawable/ic_theme_noconnection" />
+					android:src="@drawable/ic_theme_notconnected" />
 				<ProgressBar
 					android:id="@+id/icon_credentialsInput_working"
 					android:layout_width="40dp"
@@ -173,6 +173,13 @@
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						android:text="@string/dialog_reconnect"
+						android:padding="0dp"
+						style="@style/Widget.AppCompat.Button.Borderless.Colored" />
+					<Button
+						android:id="@+id/cred_card_login"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text="@string/dialog_credInput"
 						android:padding="0dp"
 						style="@style/Widget.AppCompat.Button.Borderless.Colored" />
 
