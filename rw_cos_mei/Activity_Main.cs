@@ -29,12 +29,8 @@ namespace rw_cos_mei
     public class Activity_Main : AppCompatActivity
     {
 
-        private const string BUNDLE_VIEWSWITCHER_INDEX = "bundle_viewflipper";
         public const string BUNDLE_BOTTOMID_INTENT = "bundle_bottomid_intent";
-
-        private const int VIEWSWITCHER_FEED = 0;
-        private const int VIEWSWITCHER_SHIFTS = 1;
-
+        
         //###################################################################################
 
         private class ViewHolder
@@ -151,19 +147,7 @@ namespace rw_cos_mei
 
             }
         }
-
-        private void ShowFirstStartNag()
-        {
-
-            var firstStart = new AlertDialog.Builder(this)
-                   .SetTitle(GetString(Resource.String.firststart_title))
-                   .SetMessage(GetString(Resource.String.firststart_msg))
-                   .SetCancelable(true)
-                   .SetPositiveButton(Resource.String.dialog_reconnect, (ss, ee) => { TBL.IsFirstStart = false; TBL.SaveSettings(this); })
-                   .Show();
-
-        }
-
+        
         //###################################################################################
 
         private void CreateViewholder()
@@ -509,29 +493,13 @@ namespace rw_cos_mei
 
         private void LIST_SHIFTS_AttachmentRetrieveError(object sender, Adapters.AttachmentRetrieveErrorEventArgs e)
         {
-
-            string ErrorText = "";
-            switch (e.Reason)
+            var
+            ErrorText = e.Reason switch
             {
-                case Adapters.AttachmentRetrieveErrorReason.CONNECTION_LOST:
-
-                    ErrorText = GetString(Resource.String.main_snack_connect);
-                    break;
-
-                case Adapters.AttachmentRetrieveErrorReason.RELOGIN_REQUIRED:
-
-                    ErrorText = GetString(Resource.String.main_snack_relogin);
-                    break;
-
-                case Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR:
-                default:
-
-                    ErrorText = GetString(Resource.String.main_snack_error);
-                    break;
-
-            }
-
-
+                Adapters.AttachmentRetrieveErrorReason.CONNECTION_LOST => GetString(Resource.String.main_snack_connect),
+                Adapters.AttachmentRetrieveErrorReason.RELOGIN_REQUIRED => GetString(Resource.String.main_snack_relogin),
+                _ => GetString(Resource.String.main_snack_error),
+            };
             if (string.IsNullOrWhiteSpace(ErrorText)) { return; }
 
             //Snackbar aufrufen
@@ -666,7 +634,7 @@ namespace rw_cos_mei
         public class ListFeedAdapter : BaseAdapter<FeedEntry>
         {
 
-            private Context _context;
+            private readonly Context _context;
 
             private List<SourceHolder> _source;
             private Dictionary<int, ViewHolder> _viewholders;
@@ -1019,10 +987,10 @@ namespace rw_cos_mei
         public class ListShiftsAdapter : BaseAdapter<ShiftsEntry>
         {
 
-            private Context _context;
+            private readonly Context _context;
 
-            private List<SourceHolder> _source;
-            private Dictionary<int, ViewHolder> _viewholders;
+            private readonly List<SourceHolder> _source;
+            private readonly Dictionary<int, ViewHolder> _viewholders;
 
             private enum SourceType
             {
@@ -1116,7 +1084,7 @@ namespace rw_cos_mei
             {
 
                 SourceHolder source = _source[position];
-                ViewHolder v = null;
+                ViewHolder v;
 
                 switch (source.Type)
                 {

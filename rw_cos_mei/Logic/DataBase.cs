@@ -79,46 +79,35 @@ namespace rw_cos_mei
         private string SQL_BUILDER_TABLE(TABLE type)
         {
 
-            switch (type)
+            return type switch
             {
-                case TABLE.FEED:
-
-                    return "CREATE TABLE " + FEED_TABLE +
-                           "(" + FEED_TABLE_COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                                 FEED_TABLE_COL_KEY + " TEXT NOT NULL, " +
-                                 FEED_TABLE_COL_TITLE + " TEXT NOT NULL, " +
-                                 FEED_TABLE_COL_DATE + " INTEGER NOT NULL, " +
-                                 FEED_TABLE_COL_AUTHOR + " TEXT NOT NULL, " +
-                                 FEED_TABLE_COL_BODY + " TEXT NOT NULL, " +
-                                 FEED_TABLE_COL_READ + " TEXT NOT NULL);";
-
-                case TABLE.SHIFTS:
-
-                    return "CREATE TABLE " + SHIFT_TABLE +
-                           "(" + SHIFT_TABLE_COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                                 SHIFT_TABLE_COL_KEY + " TEXT NOT NULL, " +
-                                 SHIFT_TABLE_COL_TITLE + " TEXT NOT NULL, " +
-                                 SHIFT_TABLE_COL_MONTH + " INTEGER NOT NULL, " +
-                                 SHIFT_TABLE_COL_YEAR + " INTEGER NOT NULL, " +
-                                 SHIFT_TABLE_COL_UPDATE + " INTEGER NOT NULL, " +
-                                 SHIFT_TABLE_COL_VERSION + " TEXT NOT NULL, " +
-                                 SHIFT_TABLE_COL_READ + " TEXT NOT NULL);";
-
-                case TABLE.ATTACHMENT:
-
-                    return "CREATE TABLE " + ATTACH_TABLE +
-                           "(" + ATTACH_TABLE_COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                                 ATTACH_TABLE_COL_KEY + " TEXT NOT NULL, " +
-                                 ATTACH_TABLE_COL_OWNER + " INTEGER NOT NULL, " +
-                                 ATTACH_TABLE_COL_OWNERID + " TEXT NOT NULL, " +
-                                 ATTACH_TABLE_COL_FILENAME + " TEXT NOT NULL, " +
-                                 ATTACH_TABLE_COL_REMOTE + " TEXT NOT NULL, " +
-                                 ATTACH_TABLE_COL_LOCAL + " TEXT);";
-
-            }
-
-            return "";
-
+                TABLE.FEED => "CREATE TABLE " + FEED_TABLE +
+                                          "(" + FEED_TABLE_COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                                                FEED_TABLE_COL_KEY + " TEXT NOT NULL, " +
+                                                FEED_TABLE_COL_TITLE + " TEXT NOT NULL, " +
+                                                FEED_TABLE_COL_DATE + " INTEGER NOT NULL, " +
+                                                FEED_TABLE_COL_AUTHOR + " TEXT NOT NULL, " +
+                                                FEED_TABLE_COL_BODY + " TEXT NOT NULL, " +
+                                                FEED_TABLE_COL_READ + " TEXT NOT NULL);",
+                TABLE.SHIFTS => "CREATE TABLE " + SHIFT_TABLE +
+                                            "(" + SHIFT_TABLE_COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                                                  SHIFT_TABLE_COL_KEY + " TEXT NOT NULL, " +
+                                                  SHIFT_TABLE_COL_TITLE + " TEXT NOT NULL, " +
+                                                  SHIFT_TABLE_COL_MONTH + " INTEGER NOT NULL, " +
+                                                  SHIFT_TABLE_COL_YEAR + " INTEGER NOT NULL, " +
+                                                  SHIFT_TABLE_COL_UPDATE + " INTEGER NOT NULL, " +
+                                                  SHIFT_TABLE_COL_VERSION + " TEXT NOT NULL, " +
+                                                  SHIFT_TABLE_COL_READ + " TEXT NOT NULL);",
+                TABLE.ATTACHMENT => "CREATE TABLE " + ATTACH_TABLE +
+                                                "(" + ATTACH_TABLE_COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                                                      ATTACH_TABLE_COL_KEY + " TEXT NOT NULL, " +
+                                                      ATTACH_TABLE_COL_OWNER + " INTEGER NOT NULL, " +
+                                                      ATTACH_TABLE_COL_OWNERID + " TEXT NOT NULL, " +
+                                                      ATTACH_TABLE_COL_FILENAME + " TEXT NOT NULL, " +
+                                                      ATTACH_TABLE_COL_REMOTE + " TEXT NOT NULL, " +
+                                                      ATTACH_TABLE_COL_LOCAL + " TEXT);",
+                _ => string.Empty,
+            };
         }
 
         //################################################################################
@@ -147,7 +136,7 @@ namespace rw_cos_mei
     {
 
         private SQLiteDatabase database;
-        private DatabaseHelper dbHelper;
+        private readonly DatabaseHelper dbHelper;
 
         //###############################################################################
 
@@ -497,11 +486,12 @@ namespace rw_cos_mei
             int ID_read = c.GetColumnIndex(DatabaseHelper.SHIFT_TABLE_COL_READ);
 
             int sql_id = c.GetInt(ID_sql_id);
-            string key = c.GetString(ID_key);
+            _ = c.GetString(ID_key);
+            _ = c.GetString(ID_title);
+
             int month = c.GetInt(ID_month);
             int year = c.GetInt(ID_year);
-            string title = c.GetString(ID_title);
-
+            
             DateTime update = TBL.DecodeStringToDate(c.GetString(ID_update), DateTime.Now.AddMonths(-TBL.PREF_FEED_AUTOREMOVE));
             
             string version = c.GetString(ID_version);
