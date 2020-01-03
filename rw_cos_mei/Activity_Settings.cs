@@ -20,7 +20,7 @@ using Toolbar = Android.Support.V7.Widget.Toolbar;
 namespace rw_cos_mei
 {
 
-    [Activity(Label = "@string/app_name")]
+    [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.Splash")]
     public class Activity_Settings : AppCompatActivity
     {
 
@@ -54,6 +54,14 @@ namespace rw_cos_mei
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
+
+            //Statischen Speicher wiederherstellen, wenn im Hintergrund vom System gelöscht
+            if (TBL.SP_Object == null)
+            {
+                Activity_Init.InitRoutine(this);
+            }
+
+            SetTheme(Resource.Style.AppTheme);
             base.OnCreate(savedInstanceState);
 
             //Layout füllen
@@ -68,12 +76,6 @@ namespace rw_cos_mei
 
         protected override void OnResume()
         {
-
-            //Statischen Speicher wiederherstellen, wenn im Hintergrund vom System gelöscht
-            if (TBL.SP_Object == null)
-            {
-                Activity_Init.InitRoutine(this);
-            }
 
             //Eventhandler hinzufügen
             CreateViewHandler(HandlerMethod.ADD_HANDLERS);
@@ -276,7 +278,7 @@ namespace rw_cos_mei
 
         }
 
-        private List<TBL.SyncIntervalSetting> listSpinnerIntervalValues = new List<TBL.SyncIntervalSetting>() { TBL.SyncIntervalSetting.THREE_HOURS, TBL.SyncIntervalSetting.TWO_A_DAY, TBL.SyncIntervalSetting.ONE_A_DAY, TBL.SyncIntervalSetting.ONE_IN_THREE_DAYS };
+        private readonly List<TBL.SyncIntervalSetting> listSpinnerIntervalValues = new List<TBL.SyncIntervalSetting>() { TBL.SyncIntervalSetting.THREE_HOURS, TBL.SyncIntervalSetting.TWO_A_DAY, TBL.SyncIntervalSetting.ONE_A_DAY, TBL.SyncIntervalSetting.ONE_IN_THREE_DAYS };
         private void CreateSpinner()
         {
 
@@ -317,7 +319,7 @@ namespace rw_cos_mei
             if (notification_checkbox_initiate) { return; }
 
             c.CHECK_NOTIFY_NEWSHIFTSVERSION.Enabled = c.CHECK_NOTIFY_NEWSHIFTS.Checked;
-            var state = Notification.NotifySettings.NotifySettingsType.FEED_AND_SHIFTS_AND_VERSIONS;
+            Notification.NotifySettings.NotifySettingsType state;
 
             //Dienstplanversion deaktivieren, wenn aktiv
             if (!c.CHECK_NOTIFY_NEWSHIFTS.Checked && c.CHECK_NOTIFY_NEWSHIFTSVERSION.Checked) { c.CHECK_NOTIFY_NEWSHIFTSVERSION.Checked = false; }
@@ -502,7 +504,7 @@ namespace rw_cos_mei
         public class DialogCredentialsInput
         {
 
-            private Context _context;
+            private readonly Context _context;
 
             //##################################################################################
 
@@ -517,7 +519,7 @@ namespace rw_cos_mei
                 public TextInputLayout LAYOUT_PASSWORD;
 
             }
-            private ViewHolder con;
+            private readonly ViewHolder con;
 
             //##################################################################################
 

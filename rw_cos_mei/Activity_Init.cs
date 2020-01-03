@@ -3,6 +3,7 @@ using Android.Content;
 using Android.OS;
 using Android.Support.V7.App;
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using AlertDialog = Android.Support.V7.App.AlertDialog;
 using TBL = rw_cos_mei.AppTable;
@@ -29,7 +30,7 @@ namespace rw_cos_mei
         protected override void OnResume()
         {
             base.OnResume();
-            
+
             //Statischen Speicher erstellen
             InitRoutine(this);
 

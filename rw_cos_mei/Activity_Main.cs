@@ -25,7 +25,7 @@ using Toolbar = Android.Support.V7.Widget.Toolbar;
 namespace rw_cos_mei
 {
 
-    [Activity(Label = "@string/app_name")]
+    [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.Splash")]
     public class Activity_Main : AppCompatActivity
     {
 
@@ -54,6 +54,13 @@ namespace rw_cos_mei
         protected override void OnCreate(Bundle savedInstanceState)
         {
 
+            //Statischen Speicher wiederherstellen, wenn im Hintergrund vom System gelöscht
+            if (TBL.SP_Object == null)
+            {
+                Activity_Init.InitRoutine(this);
+            }
+
+            SetTheme(Resource.Style.AppTheme);
             base.OnCreate(savedInstanceState);
 
             //Layout füllen
@@ -70,12 +77,6 @@ namespace rw_cos_mei
         protected override void OnResume()
         {
             base.OnResume();
-
-            //Statischen Speicher wiederherstellen, wenn im Hintergrund vom System gelöscht
-            if (TBL.SP_Object == null)
-            {
-                Activity_Init.InitRoutine(this);
-            }
 
             //Eventhandler erstellen
             CreateViewHandler(HandlerMethod.ADD_HANDLERS);
@@ -205,6 +206,10 @@ namespace rw_cos_mei
             }
             else
             {
+
+                //Dialoge schließen
+                if (dialogError != null) { dialogError.Dispose(); dialogError = null; }
+                if (dialogWrongLogin != null) { dialogWrongLogin.Dispose(); dialogWrongLogin = null; }
 
                 //Oberfläche an Sharepoint-Status anpassen
                 TBL.SP_Object.StateChanged -= SP_Object_StateChanged;
@@ -644,7 +649,6 @@ namespace rw_cos_mei
                 NOTHINGNEW,
                 SUB_UNREAD,
                 SUB_OLDER,
-                SECTION_YEAR,
                 SECTION_MONTH,
                 FEEDENTRY
             }
@@ -672,15 +676,11 @@ namespace rw_cos_mei
                 {
                     Type = SourceType.SUB_OLDER;
                 }
-                public void SetSectionYear(int year)
-                {
-                    Type = SourceType.SECTION_YEAR;
-                    SectionYear = year;
-                }
-                public void SetSectionMonth(string month)
+                public void SetSectionMonth(string month, int year)
                 {
                     Type = SourceType.SECTION_MONTH;
                     SectionMonth = month;
+                    SectionYear = year;
                 }
                 public void SetFeedEntry(FeedEntry entry)
                 {
@@ -697,7 +697,6 @@ namespace rw_cos_mei
                 public TextView UNREAD_COUNT;
                 public View UNREAD_MARKALL;
 
-                public TextView SECTION_YEAR;
                 public TextView SECTION_MONTH;
 
                 public TextView ENTRY_TITLE;
@@ -758,24 +757,16 @@ namespace rw_cos_mei
             {
 
                 int lastMonth = -1;
-                int lastYear = -1;
                 foreach (FeedEntry item in entries)
                 {
 
                     //Monats-Subhead
                     if (lastMonth > 0 && item.Date.Month != lastMonth)
                     {
-                        var vSM = new SourceHolder(); vSM.SetSectionMonth(item.Date.ToString("MMMM"));
+                        var vSM = new SourceHolder(); vSM.SetSectionMonth(item.Date.ToString("MMMM"), item.Date.Year);
                         _source.Add(vSM);
                     }
-
-                    //Jahres-Subhead
-                    if (lastYear > 0 && item.Date.Year != lastYear)
-                    {
-                        var vSY = new SourceHolder(); vSY.SetSectionYear(item.Date.Year);
-                        _source.Add(vSY);
-                    }
-                    lastMonth = item.Date.Month; lastYear = item.Date.Year;
+                    lastMonth = item.Date.Month;
 
                     //Entry einfügen
                     var vE = new SourceHolder(); vE.SetFeedEntry(item);
@@ -864,27 +855,6 @@ namespace rw_cos_mei
 
                         return v.CONVERTVIEW;
 
-                    case SourceType.SECTION_YEAR:
-
-                        if (!_viewholders.ContainsKey(position))
-                        {
-
-                            v = new ViewHolder
-                            {
-                                CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feed_subhead_year, parent, false)
-                            };
-
-                            v.SECTION_YEAR = v.CONVERTVIEW.FindViewById<TextView>(Resource.Id.txt_title);
-
-                            _viewholders.Add(position, v);
-
-                        }
-                        v = _viewholders[position];
-
-                        v.SECTION_YEAR.Text = source.SectionYear.ToString();
-
-                        return v.CONVERTVIEW;
-
                     case SourceType.SECTION_MONTH:
 
                         if (!_viewholders.ContainsKey(position))
@@ -902,7 +872,9 @@ namespace rw_cos_mei
                         }
                         v = _viewholders[position];
 
-                        v.SECTION_MONTH.Text = source.SectionMonth;
+                        string sectionText = source.SectionMonth;
+                        if(source.SectionYear != DateTime.Now.Year) { sectionText += " " + source.SectionYear; }
+                        v.SECTION_MONTH.Text = sectionText;
 
                         return v.CONVERTVIEW;
 

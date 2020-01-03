@@ -52,7 +52,7 @@ namespace rw_cos_mei
 
         //#######################################################################################
 
-        private Dictionary<string, EntryAttachment> _attachments;
+        private readonly Dictionary<string, EntryAttachment> _attachments;
         public List<EntryAttachment> Attachments { get { return _attachments.Values.ToList(); } }
         public EntryAttachment GetAttachment(string Key) { return _attachments[Key]; }
 
@@ -271,6 +271,26 @@ namespace rw_cos_mei
                     else if (extension == ".txt")
                     {
                         intent.SetDataAndType(uri, "text/plain");
+                    }
+                    else if (extension == ".bmp")
+                    {
+                        intent.SetDataAndType(uri, "image/bmp");
+                    }
+                    else if (extension == ".jpg" || extension == ".jpeg")
+                    {
+                        intent.SetDataAndType(uri, "image/jpeg");
+                    }
+                    else if (extension == ".gif")
+                    {
+                        intent.SetDataAndType(uri, "image/gif");
+                    }
+                    else if (extension == ".png")
+                    {
+                        intent.SetDataAndType(uri, "image/png");
+                    }
+                    else if (extension == ".webp")
+                    {
+                        intent.SetDataAndType(uri, "image/webp");
                     }
                     else
                     {

@@ -116,11 +116,10 @@
 				android:id="@+id/txt_previewHint"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
-				android:text="@string/feedentry_hint_nopreview"
+				android:text="#PREVIEW_HINT#"
 				android:textAlignment="center"
 				android:textColor="#888"
-				style="@style/Text.List.Overline" 
-				android:visibility="gone" />
+				style="@style/Text.List.Subtitle" />
 
 			<LinearLayout
 				android:id="@+id/list_attachments"

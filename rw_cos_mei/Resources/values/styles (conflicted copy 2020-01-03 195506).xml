@@ -18,8 +18,8 @@
 
     <item name="android:windowBackground">@drawable/bg_activity_splash</item>
     
-    <item name="android:statusBarColor" tools:targetAPI="23">@color/primary_dark</item>     <!-- #000000 -->
-    <item name="android:windowLightStatusBar" tools:targetAPI="23">false</item>   <!-- false -->
+    <item name="android:statusBarColor" tools:targetAPI="23">@color/primary</item>     <!-- #000000 -->
+    <item name="android:windowLightStatusBar" tools:targetAPI="23">true</item>   <!-- false -->
   </style>
 
   <!-- Textstyles -->

@@ -48,6 +48,7 @@
   <!-- FeedEntry -->
   <string name="feedentry_from">Von: %1$s</string>
   <string name="feedentry_unknown">Unbekannt</string>
+  <string name="feedentry_hint_nopreview">Keine Vorschau verfügbar.</string>
   
   <!-- Dialoge -->
   <string name="dialog_toSettings">Zu den Einstellungen</string>

@@ -23,7 +23,7 @@ using Toolbar = Android.Support.V7.Widget.Toolbar;
 namespace rw_cos_mei
 {
 
-    [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.Splash")]
+    [Activity(Label = "@string/app_name")]
     public class Activity_FeedEntry : AppCompatActivity
     {
 
@@ -54,14 +54,6 @@ namespace rw_cos_mei
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
-            
-            //Statischen Speicher wiederherstellen, wenn im Hintergrund vom System gelöscht
-            if (TBL.SP_Object == null)
-            {
-                Activity_Init.InitRoutine(this);
-            }
-
-            SetTheme(Resource.Style.AppTheme);
             base.OnCreate(savedInstanceState);
 
             //entryFeed
@@ -85,6 +77,12 @@ namespace rw_cos_mei
         protected override void OnResume()
         {
             
+            //Statischen Speicher wiederherstellen, wenn im Hintergrund vom System gelöscht
+            if (TBL.SP_Object == null)
+            {
+                Activity_Init.InitRoutine(this);
+            }
+
             //Eventhandler hinzufügen
             CreateViewHandler(HandlerMethod.ADD_HANDLERS);
 
@@ -194,12 +192,28 @@ namespace rw_cos_mei
 
         private void AttachmentAdapter_AttachmentRetrieveError(object sender, Adapters.AttachmentRetrieveErrorEventArgs e)
         {
-            var ErrorText = e.Reason switch
-                {
-                    Adapters.AttachmentRetrieveErrorReason.CONNECTION_LOST => GetString(Resource.String.main_snack_connect),
-                    Adapters.AttachmentRetrieveErrorReason.RELOGIN_REQUIRED => GetString(Resource.String.main_snack_relogin),
-                    _ => GetString(Resource.String.main_snack_error),
-                };
+
+            string ErrorText = "";
+            switch (e.Reason)
+            {
+                case Adapters.AttachmentRetrieveErrorReason.CONNECTION_LOST:
+
+                    ErrorText = GetString(Resource.String.main_snack_connect);
+                    break;
+
+                case Adapters.AttachmentRetrieveErrorReason.RELOGIN_REQUIRED:
+
+                    ErrorText = GetString(Resource.String.main_snack_relogin);
+                    break;
+
+                case Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR:
+                default:
+
+                    ErrorText = GetString(Resource.String.main_snack_error);
+                    break;
+
+            }
+
             if (string.IsNullOrWhiteSpace(ErrorText)) { return; }
 
             //Snackbar aufrufen
@@ -281,7 +295,7 @@ namespace rw_cos_mei
         {
 
             private readonly Context _context;
-            private readonly FeedEntry _entry;
+            private FeedEntry _entry;
 
             //####################################################################################
 
@@ -307,7 +321,7 @@ namespace rw_cos_mei
 
             private PreviewViewholder _thisPreview;
             private float _thisPreviewRatio;
-            private readonly TextView _thisPreviewHint;
+            private TextView _thisPreviewHint;
 
             //####################################################################################
 
@@ -319,7 +333,7 @@ namespace rw_cos_mei
                 _thisPreview = null;
                 _thisPreviewRatio = -1;
                 _thisPreviewHint = hint;
-                _thisPreviewHint.Visibility = ViewStates.Gone;
+                hint.Visibility = ViewStates.Gone;
 
                 Inflate(parent);
             }
@@ -395,6 +409,8 @@ namespace rw_cos_mei
                 delegate (Adapters.AttachmentRetrieveErrorReason reason)
                 {
                     _thisPreview.CONVERTVIEW.Visibility = ViewStates.Gone;
+
+                    _thisPreviewHint.Text = _context.GetString(Resource.String.feedentry_hint_nopreview);
                     _thisPreviewHint.Visibility = ViewStates.Visible;
                 },
                 delegate (string path)
@@ -410,10 +426,14 @@ namespace rw_cos_mei
                         _thisPreviewRatio = (float)generator.RenderedPreviewImage.Height / (float)generator.RenderedPreviewImage.Width;
                         UpdatePreviewRatio();
 
+                        _thisPreviewHint.Visibility = ViewStates.Visible;
+
                     }
                     else
                     {
                         _thisPreview.CONVERTVIEW.Visibility = ViewStates.Gone;
+
+                        _thisPreviewHint.Text = _context.GetString(Resource.String.feedentry_hint_nopreview);
                         _thisPreviewHint.Visibility = ViewStates.Visible;
                     }
 
@@ -523,22 +543,6 @@ namespace rw_cos_mei
 
                         return;
 
-                    case ".jpg":
-                    case ".bmp":
-                    case ".jpeg":
-                    case ".gif":
-                    case ".png":
-                    case ".webp":
-
-                        //Bild
-                        var imgGen = new GeneratorImage().Generate(filepath);
-                        if (imgGen == null) { IsAvailable = false; return; }
-
-                        RenderedPreviewImage = imgGen;
-                        IsAvailable = true;
-
-                        return;
-
                     default:
                         IsAvailable = false;
                         return;
@@ -569,33 +573,6 @@ namespace rw_cos_mei
                         docPage.Render(renderedPage, null, null, PdfRenderMode.ForDisplay);
 
                         return renderedPage;
-
-                    }
-                    catch (Exception)
-                    {
-                        return null;
-                    }
-
-                }
-
-            }
-
-            public class GeneratorImage
-            {
-
-                public Bitmap Generate(string path)
-                {
-
-                    try
-                    {
-
-                        BitmapFactory.Options options = new BitmapFactory.Options
-                        {
-                            InPreferredConfig = Bitmap.Config.Argb8888
-                        };
-
-                        Bitmap image = BitmapFactory.DecodeFile(path);
-                        return image;
 
                     }
                     catch (Exception)

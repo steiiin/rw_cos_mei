@@ -20,7 +20,7 @@ namespace rw_cos_mei
 
     public class SharepointAPI
     {
-        private Context _context;
+        private readonly Context _context;
 
         //#########################################################
 
@@ -312,11 +312,13 @@ namespace rw_cos_mei
         }
         public async Task<SharepointAPIState> UpdateNewsFeed(bool doNotify, bool relogin)
         {
-            List<string> feedAnchors = new List<string>();
-            feedAnchors.Add("rw_Mei/news_mei/");
-            //feedAnchors.Add("QM/");
-            //feedAnchors.Add("");
-
+            List<string> feedAnchors = new List<string>
+            {
+                "rw_Mei/news_mei/"
+                //"QM/",
+                //""
+            };
+            
             var state = SharepointAPIState.WORKING;
             InvokeStateChanged(SharepointAPIState.WORKING);
 
@@ -527,9 +529,26 @@ namespace rw_cos_mei
 
                                                         break;
 
+                                                    case "d1d91016-032f-456d-98a4-721247c305e8":
+
+                                                        //Bild --> Bild als Anhang aufnehmen
+                                                        if (!webPartData.Has("serverProcessedContent") ||
+                                                            !webPartData.GetJSONObject("serverProcessedContent").Has("imageSources") ||
+                                                            !webPartData.GetJSONObject("serverProcessedContent").GetJSONObject("imageSources").Has("imageSource")) { break; }
+
+                                                        string pic_url = webPartData.GetJSONObject("serverProcessedContent").GetJSONObject("imageSources").GetString("imageSource");
+                                                        if (pic_url.StartsWith("/")) { pic_url = _url_malteserHost + pic_url; }
+
+                                                        string pic_filename = Path.GetFileName(pic_url);
+
+                                                        attachmentList.Add(new EntryAttachment(pic_filename, pic_url, false));
+
+                                                        break;
+
                                                     default:
 
                                                         string content = webPartData.ToString();
+                                                        Console.WriteLine(content);
 
                                                         break;
                                                 }
@@ -771,10 +790,8 @@ namespace rw_cos_mei
         }
         private string GetResponseData(HttpWebResponse response)
         {
-            string result = string.Empty;
-
             StreamReader stream = new StreamReader(response.GetResponseStream());
-            result = stream.ReadToEnd();
+            string result = stream.ReadToEnd();
             stream.Close();
 
             return result;
@@ -782,17 +799,6 @@ namespace rw_cos_mei
 
         //########################################################
 
-        private JSONObject GetJsonObject(string json)
-        {
-            try
-            {
-                return new JSONObject(json);
-            }
-            catch (JSONException)
-            {
-                return null;
-            }
-        }
         private JSONArray GetJsonArray(string json)
         {
             try
@@ -851,7 +857,7 @@ namespace rw_cos_mei
                     HttpWebResponse response = (HttpWebResponse)await request.GetResponseAsync();
                     if (response.StatusCode == HttpStatusCode.OK)
                     {
-                        if (WriteFile(response, _filePath))
+                        if (WriteFile(response))
                         {
                             DownloadFinished?.Invoke(this, new DownloadClientFinishedEventArgs(true));
                             return;
@@ -865,9 +871,9 @@ namespace rw_cos_mei
 
             //##################################################################################
 
-            private bool WriteFile(HttpWebResponse response, string filePath)
+            private bool WriteFile(HttpWebResponse response)
             {
-                long total = 0;
+
                 long received = 0;
 
                 try
@@ -877,7 +883,7 @@ namespace rw_cos_mei
                     FileStream fileStream = File.OpenWrite(_filePath);
                     using (Stream input = response.GetResponseStream())
                     {
-                        total = response.ContentLength;
+                        long total = response.ContentLength;
 
                         int size = input.Read(buffer, 0, buffer.Length);
                         while (size > 0)
