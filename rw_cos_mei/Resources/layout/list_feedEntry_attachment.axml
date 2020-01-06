@@ -14,6 +14,10 @@
 				
 		android:text="#ATTACHMENT.EXT#"
 		android:textAlignment="textStart" 
+		
+		android:singleLine="true"
+		android:ellipsize="middle"
+		
 		style="@style/Widget.AppCompat.Button.Colored" />
 
 	<ProgressBar

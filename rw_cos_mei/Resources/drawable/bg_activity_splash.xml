@@ -2,10 +2,10 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
   <item>
     <shape>
-      <solid android:color="#ffffff"/>
+      <solid android:color="@color/primary"/>
     </shape>
   </item>
   <item>
-    <bitmap android:src="@drawable/bg_load" android:gravity="center" android:tint="@color/primary_dark"  />
+    <bitmap android:src="@drawable/bg_load" android:gravity="center" android:tint="#ffffff"  />
   </item>
 </layer-list>

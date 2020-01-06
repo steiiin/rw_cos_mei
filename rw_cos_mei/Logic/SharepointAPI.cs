@@ -39,7 +39,7 @@ namespace rw_cos_mei
 
         //#########################################################
 
-        private const int REQUEST_TIMEOUT = 12000;
+        private const int REQUEST_TIMEOUT = 10000;
 
         //#########################################################
 
@@ -340,14 +340,21 @@ namespace rw_cos_mei
                 onDownloaded(attachment.LocalFilePath);
                 return;
             }
-            int waitTimeout = (1000 / 200) * 10; //10s
+            int waitTimeout = (1 / 200) * 2 * REQUEST_TIMEOUT; //2x Timeout
 
-            string tmpRaw = Path.GetTempFileName().Replace("tmp", "");
-            string nameEsc = Path.GetFileNameWithoutExtension(attachment.Title).Replace(" ", "_");
+            //Dateinamen erstellen
+            string filePath = attachment.LocalFilePath;
+            var fileHandle = new Java.IO.File(filePath);
+            if(!fileHandle.Exists()) {
 
-            string extension = Path.GetExtension(attachment.RemoteURL);
-            string filePath = Path.GetDirectoryName(tmpRaw) + Path.DirectorySeparatorChar + nameEsc + Path.GetFileNameWithoutExtension(tmpRaw) + extension;
+                string attachFilename = Path.GetFileNameWithoutExtension(attachment.Title).Replace(" ", "_");
+                string attachExtension = Path.GetExtension(attachment.RemoteURL);
 
+                fileHandle = Java.IO.File.CreateTempFile(attachFilename, attachExtension, _context.CacheDir);
+                filePath = fileHandle.Path;
+
+            }
+           
             //Request erstellen
             if (!IsOnline()) { onError(Adapters.AttachmentRetrieveErrorReason.CONNECTION_LOST); return; }
             while (State == SharepointAPIState.WORKING)
@@ -357,6 +364,8 @@ namespace rw_cos_mei
                 waitTimeout -= 1;
                 if (waitTimeout < 0)
                 {
+                    fileHandle.Delete();
+
                     onError(Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR);
                     return;
                 }
@@ -364,6 +373,8 @@ namespace rw_cos_mei
 
             if (State == SharepointAPIState.SERVER_ERROR || State == SharepointAPIState.WRONG_LOGIN)
             {
+                fileHandle.Delete();
+
                 onError(Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR);
                 return;
             }
@@ -384,9 +395,23 @@ namespace rw_cos_mei
 
                 if (relogin)
                 {
+
                     onError(Adapters.AttachmentRetrieveErrorReason.RELOGIN_REQUIRED);
-                    await CreateLogin();
-                    GetNewsFeedAttachment(attachment, onError, onDownloaded, false);
+                    var result = await CreateLogin();
+
+                    InvokeStateChanged(result);
+
+                    if (result == SharepointAPIState.LOGGED_IN)
+                    {
+                        GetNewsFeedAttachment(attachment, onError, onDownloaded, false);
+                        return;
+                    }
+                    else
+                    {
+                        if (result == SharepointAPIState.CONNECTION_LOST) { onError(Adapters.AttachmentRetrieveErrorReason.CONNECTION_LOST); }
+                        else { onError(Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR); }
+                    }
+
                 }
                 else
                 {
@@ -879,12 +904,14 @@ namespace rw_cos_mei
                 try
                 {
                     byte[] buffer = new byte[1024];
-
-                    FileStream fileStream = File.OpenWrite(_filePath);
                     using (Stream input = response.GetResponseStream())
                     {
                         long total = response.ContentLength;
+                        var test = new Java.IO.File(_filePath);
 
+                        //TODO: Check, ob File bereits existiert & gleiche Größe, wie der Stream hat >> SKIP
+
+                        FileStream fileStream = File.OpenWrite(_filePath);
                         int size = input.Read(buffer, 0, buffer.Length);
                         while (size > 0)
                         {
@@ -901,8 +928,6 @@ namespace rw_cos_mei
                         fileStream.Flush();
                         fileStream.Close();
                     }
-
-                    FileInfo fi = new FileInfo(_filePath);
 
                     return System.IO.File.Exists(_filePath);
                 }

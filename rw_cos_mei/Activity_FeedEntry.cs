@@ -41,7 +41,6 @@ namespace rw_cos_mei
 
             public View DIVIDER_BODY;
 
-            public TextView TXT_PREVIEWHINT;
             public LinearLayout LIST_ATTACHMENTS;
 
         }
@@ -104,6 +103,7 @@ namespace rw_cos_mei
             outState.PutString(BUNDLE_ENTRYKEY, _currentEntry.Key);
             base.OnSaveInstanceState(outState);
         }
+        
         //###################################################################################
 
         public override bool OnOptionsItemSelected(IMenuItem item)
@@ -133,7 +133,6 @@ namespace rw_cos_mei
                 TXT_AUTHOR = FindViewById<TextView>(Resource.Id.txt_author),
                 TXT_BODY = FindViewById<TextView>(Resource.Id.txt_body),
                 DIVIDER_BODY = FindViewById(Resource.Id.divider_body),
-                TXT_PREVIEWHINT = FindViewById<TextView>(Resource.Id.txt_previewHint),
                 LIST_ATTACHMENTS = FindViewById<LinearLayout>(Resource.Id.list_attachments)
             };
 
@@ -152,7 +151,7 @@ namespace rw_cos_mei
                 c.DIVIDER_BODY.Visibility = ViewStates.Visible;
             }
 
-            _currentAttachmentAdapter = new Adapters.ListFeedAttachmentAdapter(this, c.TXT_PREVIEWHINT, c.LIST_ATTACHMENTS, _currentEntry);
+            _currentAttachmentAdapter = new Adapters.ListFeedAttachmentAdapter(this, c.LIST_ATTACHMENTS, _currentEntry);
 
         }
         private void CreateToolbar()
@@ -301,25 +300,32 @@ namespace rw_cos_mei
             {
                 public View CONVERTVIEW;
 
+                public View PANEL_PREVIEW;
+                public View PANEL_FIRSTATTACHMENT;
+
+                public TextView TXT_PREVIEWHINT;
+
                 public ImageView PREVIEW_IMAGE;
-                public ProgressBar PROGRESS_INDICATOR;
+                public ProgressBar PREVIEW_PROGRESS;
+
+                public Button BTN_FIRST_ATTACHMENT;
+                public ProgressBar PROGRESS_FIRST_ATTACHMENT;
+
+                public View DIVIDER_FIRSTITEM;
             }
 
             private PreviewViewholder _thisPreview;
             private float _thisPreviewRatio;
-            private readonly TextView _thisPreviewHint;
 
             //####################################################################################
 
-            public ListFeedAttachmentAdapter(Context context, TextView hint, LinearLayout parent, FeedEntry entry)
+            public ListFeedAttachmentAdapter(Context context, LinearLayout parent, FeedEntry entry)
             {
                 _context = context;
                 _entry = entry;
 
                 _thisPreview = null;
                 _thisPreviewRatio = -1;
-                _thisPreviewHint = hint;
-                _thisPreviewHint.Visibility = ViewStates.Gone;
 
                 Inflate(parent);
             }
@@ -345,10 +351,30 @@ namespace rw_cos_mei
                             CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feedEntry_preview, parent, false)
                         };
 
+                        _thisPreview.PANEL_PREVIEW = _thisPreview.CONVERTVIEW.FindViewById(Resource.Id.panel_preview);
+                        _thisPreview.PANEL_FIRSTATTACHMENT = _thisPreview.CONVERTVIEW.FindViewById(Resource.Id.panel_button);
+
+                        _thisPreview.TXT_PREVIEWHINT = _thisPreview.CONVERTVIEW.FindViewById<TextView>(Resource.Id.txt_previewHint);
+
                         _thisPreview.PREVIEW_IMAGE = _thisPreview.CONVERTVIEW.FindViewById<ImageView>(Resource.Id.img_preview);
-                        _thisPreview.PROGRESS_INDICATOR = _thisPreview.CONVERTVIEW.FindViewById<ProgressBar>(Resource.Id.progress_preview);
+                        _thisPreview.PREVIEW_PROGRESS = _thisPreview.CONVERTVIEW.FindViewById<ProgressBar>(Resource.Id.progress_preview);
+
+                        _thisPreview.BTN_FIRST_ATTACHMENT = _thisPreview.CONVERTVIEW.FindViewById<Button>(Resource.Id.btn_attachment);
+                        _thisPreview.PROGRESS_FIRST_ATTACHMENT = _thisPreview.CONVERTVIEW.FindViewById<ProgressBar>(Resource.Id.progress_working);
+                        _thisPreview.PANEL_FIRSTATTACHMENT.Visibility = ViewStates.Gone;
+                        
+                        _thisPreview.DIVIDER_FIRSTITEM = _thisPreview.CONVERTVIEW.FindViewById(Resource.Id.divider_firstitem);
+                        if (_entry.Attachments.Count == 1)
+                        {
+                            _thisPreview.DIVIDER_FIRSTITEM.Visibility = ViewStates.Gone;
+                        }
+                        else
+                        {
+                            _thisPreview.DIVIDER_FIRSTITEM.Visibility = ViewStates.Visible;
+                        }
 
                         //Preview an Events koppeln
+                        CreateButton(_thisPreview.BTN_FIRST_ATTACHMENT, _thisPreview.PROGRESS_FIRST_ATTACHMENT, item);
                         CreatePreview(item);
                         parent.LayoutChange += Parent_LayoutChange;
 
@@ -357,45 +383,66 @@ namespace rw_cos_mei
                         firstItem = false;
 
                     }
-
-                    //Button erstellen
-                    Viewholder hold = new Viewholder
+                    else
                     {
-                        CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feedEntry_attachment, parent, false)
-                    };
 
-                    hold.BTN_ATTACHMENT = hold.CONVERTVIEW.FindViewById<Button>(Resource.Id.btn_attachment);
-                    hold.PROGRESS_INDICATOR = hold.CONVERTVIEW.FindViewById<ProgressBar>(Resource.Id.progress_working);
+                        //Button erstellen
+                        Viewholder hold = new Viewholder
+                        {
+                            CONVERTVIEW = LayoutInflater.FromContext(_context).Inflate(Resource.Layout.list_feedEntry_attachment, parent, false)
+                        };
 
-                    hold.PROGRESS_INDICATOR.Visibility = ViewStates.Gone;
+                        hold.BTN_ATTACHMENT = hold.CONVERTVIEW.FindViewById<Button>(Resource.Id.btn_attachment);
+                        hold.PROGRESS_INDICATOR = hold.CONVERTVIEW.FindViewById<ProgressBar>(Resource.Id.progress_working);
 
-                    hold.BTN_ATTACHMENT.Text = item.Title;
-                    hold.BTN_ATTACHMENT.Click += (s, e) =>
-                    {
-                        if (hold.BTN_ATTACHMENT.Tag != null) { return; }
+                        CreateButton(hold.BTN_ATTACHMENT, hold.PROGRESS_INDICATOR, item);
 
-                        ViewAttachment(hold, item);
-                    };
-                    if (item.IsDownloaded)
-                    {
-                        hold.BTN_ATTACHMENT.BackgroundTintList = Android.Content.Res.ColorStateList.ValueOf(Android.Graphics.Color.Rgb(180, 180, 180));
+                        parent.AddView(hold.CONVERTVIEW);
+
                     }
-
-                    parent.AddView(hold.CONVERTVIEW);
+                    firstItem = false;
+                                        
                 }
 
 
             }
             
+            private void CreateButton(Button btn, ProgressBar prg, EntryAttachment item)
+            {
+
+                prg.Visibility = ViewStates.Gone;
+
+                btn.Text = item.Title;
+                btn.Click += (s, e) =>
+                {
+                    if (btn.Tag != null) { return; }
+
+                    ViewAttachment(btn, prg, item);
+                };
+                if (item.IsDownloaded)
+                {
+                    btn.BackgroundTintList = Android.Content.Res.ColorStateList.ValueOf(Android.Graphics.Color.Rgb(180, 180, 180));
+                }
+
+            }
             private void CreatePreview(EntryAttachment e)
             {
-                if (!e.IsDownloadable) { _thisPreview.CONVERTVIEW.Visibility = ViewStates.Gone; return; }
+
+                _thisPreview.TXT_PREVIEWHINT.Visibility = ViewStates.Gone;
+                if (!e.IsDownloadable) { _thisPreview.PANEL_PREVIEW.Visibility = ViewStates.Gone; return; }
 
                 TBL.SP_Object.GetNewsFeedAttachment(e,
                 delegate (Adapters.AttachmentRetrieveErrorReason reason)
                 {
-                    _thisPreview.CONVERTVIEW.Visibility = ViewStates.Gone;
-                    _thisPreviewHint.Visibility = ViewStates.Visible;
+                    if (reason != AttachmentRetrieveErrorReason.RELOGIN_REQUIRED)
+                    {
+                        _thisPreview.PANEL_PREVIEW.Visibility = ViewStates.Gone;
+                        _thisPreview.TXT_PREVIEWHINT.Text = _context.GetString(Resource.String.feedentry_hint_nopreview);
+                        _thisPreview.TXT_PREVIEWHINT.Visibility = ViewStates.Visible;
+
+                        _thisPreview.PANEL_FIRSTATTACHMENT.Visibility = ViewStates.Visible;
+                    }
+                    AttachmentRetrieveError?.Invoke(this, new AttachmentRetrieveErrorEventArgs(reason));
                 },
                 delegate (string path)
                 {
@@ -405,17 +452,28 @@ namespace rw_cos_mei
                     {
 
                         _thisPreview.PREVIEW_IMAGE.SetImageBitmap(generator.RenderedPreviewImage);
-
+                        
                         //Ratio berechnen
                         _thisPreviewRatio = (float)generator.RenderedPreviewImage.Height / (float)generator.RenderedPreviewImage.Width;
                         UpdatePreviewRatio();
 
+                        //Hinweis anzeigen
+                        _thisPreview.BTN_FIRST_ATTACHMENT.Text = _context.GetString(Resource.String.feedentry_hint_btn_further) + " " + _thisPreview.BTN_FIRST_ATTACHMENT.Text;
+                        if(generator.SourcePageCount > 1)
+                        {
+                            _thisPreview.TXT_PREVIEWHINT.Text = _context.GetString(Resource.String.feedentry_hint_onlyfirstpage);
+                            _thisPreview.TXT_PREVIEWHINT.Visibility = ViewStates.Visible;
+                        }
+
                     }
                     else
                     {
-                        _thisPreview.CONVERTVIEW.Visibility = ViewStates.Gone;
-                        _thisPreviewHint.Visibility = ViewStates.Visible;
+                        _thisPreview.PANEL_PREVIEW.Visibility = ViewStates.Gone;
+                        _thisPreview.TXT_PREVIEWHINT.Text = _context.GetString(Resource.String.feedentry_hint_nopreview);
+                        _thisPreview.TXT_PREVIEWHINT.Visibility = ViewStates.Visible;
                     }
+
+                    _thisPreview.PANEL_FIRSTATTACHMENT.Visibility = ViewStates.Visible;
 
                 });
 
@@ -430,17 +488,17 @@ namespace rw_cos_mei
                 int height = (int)(width * _thisPreviewRatio);
 
                 _thisPreview.PREVIEW_IMAGE.LayoutParameters = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, height);
-                _thisPreview.PROGRESS_INDICATOR.Visibility = ViewStates.Gone;
+                _thisPreview.PREVIEW_PROGRESS.Visibility = ViewStates.Gone;
 
             }
 
             //####################################################################################
 
-            private void ViewAttachment(Viewholder hold, EntryAttachment item)
+            private void ViewAttachment(Button btn, ProgressBar prg, EntryAttachment item)
             {
 
-                hold.BTN_ATTACHMENT.Tag = "BLOCKED";
-                hold.PROGRESS_INDICATOR.Visibility = ViewStates.Visible;
+                btn.Tag = "BLOCKED";
+                prg.Visibility = ViewStates.Visible;
 
                 TBL.SP_Object.GetNewsFeedAttachment(item,
                 delegate (Adapters.AttachmentRetrieveErrorReason reason)
@@ -448,8 +506,8 @@ namespace rw_cos_mei
 
                     if (reason != AttachmentRetrieveErrorReason.RELOGIN_REQUIRED)
                     {
-                        hold.PROGRESS_INDICATOR.Visibility = ViewStates.Gone;
-                        hold.BTN_ATTACHMENT.Tag = null;
+                        prg.Visibility = ViewStates.Gone;
+                        btn.Tag = null;
                     }
 
                     AttachmentRetrieveError?.Invoke(this, new AttachmentRetrieveErrorEventArgs(reason));
@@ -458,10 +516,10 @@ namespace rw_cos_mei
                 delegate (string path)
                 {
 
-                    hold.PROGRESS_INDICATOR.Visibility = ViewStates.Gone;
+                    prg.Visibility = ViewStates.Gone;
 
-                    hold.BTN_ATTACHMENT.Tag = null;
-                    hold.BTN_ATTACHMENT.BackgroundTintList = Android.Content.Res.ColorStateList.ValueOf(Android.Graphics.Color.Rgb(180, 180, 180));
+                    btn.Tag = null;
+                    btn.BackgroundTintList = Android.Content.Res.ColorStateList.ValueOf(Android.Graphics.Color.Rgb(180, 180, 180));
 
                     EntrySelected?.Invoke(this, new ListFeedAttachmentAdapterEntrySelected(_entry.Key, item.Key));
 
@@ -502,6 +560,7 @@ namespace rw_cos_mei
         {
 
             public bool IsAvailable { get; private set; } = false;
+            public int SourcePageCount { get; private set; } = 0;
             public Bitmap RenderedPreviewImage { get; private set; } = null;
 
             //####################################################################
@@ -515,12 +574,13 @@ namespace rw_cos_mei
                     case ".pdf":
 
                         //PDF 
-                        var pdfGen = new GeneratorPDF().Generate(filepath);
-                        if (pdfGen == null) { IsAvailable = false; return; }
+                        var pdfGen = new GeneratorPDF(); pdfGen.Generate(filepath);
+                        if (pdfGen.Image == null) { IsAvailable = false; return; }
 
-                        RenderedPreviewImage = pdfGen;
+                        RenderedPreviewImage = pdfGen.Image;
+                        SourcePageCount = pdfGen.PageCount;
                         IsAvailable = true;
-
+                        
                         return;
 
                     case ".jpg":
@@ -531,10 +591,11 @@ namespace rw_cos_mei
                     case ".webp":
 
                         //Bild
-                        var imgGen = new GeneratorImage().Generate(filepath);
-                        if (imgGen == null) { IsAvailable = false; return; }
+                        var imgGen = new GeneratorImage(); imgGen.Generate(filepath);
+                        if (imgGen.Image == null) { IsAvailable = false; return; }
 
-                        RenderedPreviewImage = imgGen;
+                        RenderedPreviewImage = imgGen.Image;
+                        SourcePageCount = imgGen.PageCount;
                         IsAvailable = true;
 
                         return;
@@ -551,7 +612,10 @@ namespace rw_cos_mei
             public class GeneratorPDF
             {
 
-                public Bitmap Generate(string path)
+                public Bitmap Image { get; private set; } = null;
+                public int PageCount { get; private set; } = 0;
+
+                public void Generate(string path)
                 {
 
                     try
@@ -561,29 +625,33 @@ namespace rw_cos_mei
                         var fileDescriptor = ParcelFileDescriptor.Open(file, ParcelFileMode.ReadOnly);
 
                         var docRenderer = new PdfRenderer(fileDescriptor);
-                        if (docRenderer.PageCount == 0) { return null; }
-
+                        if (docRenderer.PageCount == 0) { Image = null; PageCount = 0; return; }
+                        
                         var docPage = docRenderer.OpenPage(0);
 
                         Bitmap renderedPage = Bitmap.CreateBitmap(docPage.Width, docPage.Height, Bitmap.Config.Argb8888);
                         docPage.Render(renderedPage, null, null, PdfRenderMode.ForDisplay);
-
-                        return renderedPage;
+                        
+                        Image = renderedPage;
+                        PageCount = docRenderer.PageCount;
 
                     }
                     catch (Exception)
                     {
-                        return null;
+                        Image = null;
+                        PageCount = 0;
                     }
 
                 }
 
             }
-
             public class GeneratorImage
             {
 
-                public Bitmap Generate(string path)
+                public Bitmap Image { get; private set; } = null;
+                public int PageCount { get; private set; } = 0;
+
+                public void Generate(string path)
                 {
 
                     try
@@ -594,13 +662,14 @@ namespace rw_cos_mei
                             InPreferredConfig = Bitmap.Config.Argb8888
                         };
 
-                        Bitmap image = BitmapFactory.DecodeFile(path);
-                        return image;
+                        Image = BitmapFactory.DecodeFile(path);
+                        PageCount = 1;
 
                     }
                     catch (Exception)
                     {
-                        return null;
+                        Image = null;
+                        PageCount = 0;
                     }
 
                 }

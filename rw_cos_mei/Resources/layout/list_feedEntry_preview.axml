@@ -1,40 +1,101 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout 
+<LinearLayout 
 	xmlns:android="http://schemas.android.com/apk/res/android"
 					
 	android:layout_width="match_parent"
-	android:layout_height="wrap_content">
+	android:layout_height="wrap_content"
+	android:orientation="vertical">
 	
-	<ImageView
-		android:id="@+id/img_preview"
+	<FrameLayout
+		android:id="@+id/panel_preview"
+		
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+		<ImageView
+			android:id="@+id/img_preview"
+		
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:scaleType="fitStart"
+			
+		
+			android:background="@android:color/transparent"
+			android:minHeight="40dp" />
+
+		<ProgressBar
+			android:id="@+id/progress_preview"
+		
+			android:elevation="8dp"
+		
+			android:layout_height="30dp"
+			android:layout_width="30dp"
+		
+			android:layout_gravity="center"
+	
+			android:indeterminateTint="#f00"
+			android:indeterminateTintMode="src_atop"
+			android:indeterminateOnly="true" />
+
+	</FrameLayout>
+
+	<TextView
+		android:id="@+id/txt_previewHint"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="center_horizontal"
+		android:text="#PREVIEW_HINT#"
+		android:textColor="#888"
+		style="@style/Text.List.Overline" 
+		android:visibility="visible" />
+
+	<FrameLayout 
+		android:id="@+id/panel_button"
 		
 		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:scaleType="fitStart"
-		
-		android:background="@android:color/transparent"
-		android:minHeight="40dp" />
-
-	<ProgressBar
-		android:id="@+id/progress_preview"
-		
-		android:elevation="8dp"
-		
-		android:layout_height="30dp"
-		android:layout_width="30dp"
-		
-		android:layout_gravity="center"
+		android:layout_height="wrap_content">
 	
-	    android:indeterminateTint="#f00"
-		android:indeterminateTintMode="src_atop"
-	    android:indeterminateOnly="true" />
+		<Button
+			android:id="@+id/btn_attachment"
+		
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:paddingRight="72dp"
+				
+			android:text="#BTN_ATTACH#"
+			android:textAlignment="textStart" 
+			
+			android:singleLine="true"
+			android:ellipsize="middle"
+			
+			style="@style/Widget.AppCompat.Button.Colored"
+			android:backgroundTint="@color/primary" />
+
+		<ProgressBar
+			android:id="@+id/progress_working"
+						
+			android:elevation="8dp"
+		
+			android:layout_height="30dp"
+			android:layout_width="30dp"
+			android:layout_marginRight="8dp"
+		
+			android:layout_gravity="right|center_vertical"
+	
+			android:indeterminateTint="#fff"
+			android:indeterminateTintMode="src_atop"
+			android:indeterminateOnly="true" />
+
+	</FrameLayout>
+	
 
 	<View
+		android:id="@+id/divider_firstitem"
 		android:layout_width="match_parent"
 		android:layout_height="1dp"
 		
 		android:layout_gravity="bottom"
 				
-		android:background="@color/divider_dim" />
+		android:background="@color/divider_black" />
 
-</FrameLayout>
+</LinearLayout>

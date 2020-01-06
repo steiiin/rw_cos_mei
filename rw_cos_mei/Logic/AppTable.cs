@@ -9,11 +9,8 @@ using Javax.Crypto;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///AppTable (TBL)
@@ -31,7 +28,7 @@ namespace rw_cos_mei
 
         public const string PREF_SP_BEARER = "pref_sp_bearer";
         public const string PREF_SP_OAUTHT = "pref_sp_oauth";
-        
+
         public const string PREF_SYNCINTERVAL = "pref_sync_interval";
         public const string PREF_SYNCNOTIFY = "pref_sync_notification";
         public const string PREF_LASTREFRESH = "pref_sync_lastrefresh";
@@ -40,7 +37,7 @@ namespace rw_cos_mei
         public const string PREF_FIRSTSTART = "pref_first";
 
         public const int PREF_FEED_AUTOREMOVE = 6;
-        
+
         //###################################################################################
 
         public static string Username { get; private set; }
@@ -90,14 +87,14 @@ namespace rw_cos_mei
         public static Notification.NotifySettings.NotifySettingsType NotificationType { get; private set; }
         public static SyncIntervalSetting SyncInterval { get; private set; }
         public static bool IsSyncBlocked { get; private set; } = false;
-        
+
         public static SyncIntervalSettingDescriptor GetSyncIntervalSettingDescriptor(Context c, SyncIntervalSetting interval)
         {
 
             switch (interval)
             {
                 case SyncIntervalSetting.THREE_HOURS:
-                    return new SyncIntervalSettingDescriptor(c.GetString(Resource.String.settings_sync_time_op0), 
+                    return new SyncIntervalSettingDescriptor(c.GetString(Resource.String.settings_sync_time_op0),
                                                              3 * 60 * 60 * 1000);
 
                 case SyncIntervalSetting.TWO_A_DAY:
@@ -116,9 +113,9 @@ namespace rw_cos_mei
                     return new SyncIntervalSettingDescriptor(c.GetString(Resource.String.settings_sync_time_op2),
                                                              24 * 60 * 60 * 1000);
             }
-            
+
         }
-        
+
         public static void UpdateSyncInterval(SyncIntervalSetting interval)
         {
             SyncInterval = interval;
@@ -132,13 +129,13 @@ namespace rw_cos_mei
 
         public static void BlockSyncService() { IsSyncBlocked = true; }
         public static void UnBlockSyncService() { IsSyncBlocked = false; }
-        
+
         //###################################################################################
 
         public static int BottomNavigationSelectedId { get; private set; }
         public static void UpdateBottomNavigationSelectedId(int id)
         {
-            if(id == BottomNavigationSelectedId) { return; }
+            if (id == BottomNavigationSelectedId) { return; }
 
             BottomNavigationSelectedId = id;
         }
@@ -155,14 +152,14 @@ namespace rw_cos_mei
         public static void UpdateEntries(List<FeedEntry> list, bool reportNew = false)
         {
 
-            if(!DB_Object.Open()) { return; }
+            if (!DB_Object.Open()) { return; }
 
             //Benachrichtungen bei neuen Sachen
             var notify = new Notification.NotifySettings(Notify_Object.NotificationContext, NotificationType);
 
             //Table erstellen
-            if(_tableFeed == null) { _tableFeed = new Dictionary<string, FeedEntry>(); }
-            if(_tableShifts == null) { _tableShifts = new Dictionary<string, ShiftsEntry>(); }
+            if (_tableFeed == null) { _tableFeed = new Dictionary<string, FeedEntry>(); }
+            if (_tableShifts == null) { _tableShifts = new Dictionary<string, ShiftsEntry>(); }
 
             //Rohentries verarbeiten
             DateTime oldOffset = DateTime.Now.AddMonths(-PREF_FEED_AUTOREMOVE);
@@ -170,9 +167,10 @@ namespace rw_cos_mei
             foreach (var item in list)
             {
 
-                if(item.Date > oldOffset) { 
+                if (item.Date > oldOffset)
+                {
 
-                    if(IsShiftsEntry(item, out ShiftsEntry shiftsItem))
+                    if (IsShiftsEntry(item, out ShiftsEntry shiftsItem))
                     {
 
                         //ShiftsEntry
@@ -212,7 +210,7 @@ namespace rw_cos_mei
                     {
 
                         //FeedEntry
-                        if(!_tableFeed.ContainsKey(item.Key))
+                        if (!_tableFeed.ContainsKey(item.Key))
                         {
 
                             _tableFeed.Add(item.Key, item);
@@ -259,7 +257,7 @@ namespace rw_cos_mei
                 {
                     _tableFeed.Add(item.Key, item);
                 }
-                
+
             }
             foreach (var item in shifts)
             {
@@ -280,9 +278,9 @@ namespace rw_cos_mei
 
             }
 
-            if(feed.Count > 0 || shifts.Count > 0)
+            if (feed.Count > 0 || shifts.Count > 0)
             {
-                if(LastTableRefresh == DateTime.MinValue) { LastTableRefresh = DateTime.Now; SaveSettings(cc); }
+                if (LastTableRefresh == DateTime.MinValue) { LastTableRefresh = DateTime.Now; SaveSettings(cc); }
             }
 
         }
@@ -306,27 +304,27 @@ namespace rw_cos_mei
         public static List<ShiftsEntry> ShiftsEntries { get { return _tableShifts.Values.OrderByDescending(x => x.Key).ToList(); } }
 
         //###################################################################################
-        
+
         public static void MarkReadFeedEntryAll()
         {
             if (_tableFeed == null) { return; }
-            
+
             //Alle FeedEntries als gelesen markieren
             foreach (var key in new List<string>(_tableFeed.Keys.ToList()))
             {
-                if(!_tableFeed.ContainsKey(key)) { return; }
+                if (!_tableFeed.ContainsKey(key)) { return; }
 
                 var item = _tableFeed[key];
                 item.MarkedRead = true;
                 _tableFeed[key] = item;
-                
+
             }
 
             //Die Einträge in der Datenbank ändern
-            if(!DB_Object.Open()) { return; }
+            if (!DB_Object.Open()) { return; }
             DB_Object.MarkReadFeedEntryAll();
             DB_Object.Close();
-            
+
         }
         public static void MarkReadFeedEntry(string key)
         {
@@ -336,9 +334,9 @@ namespace rw_cos_mei
             var item = _tableFeed[key];
             item.MarkedRead = true;
             _tableFeed[key] = item;
-            
+
             //Einzelnes Item in der Datenbank ändern
-            if(!DB_Object.Open()) { return; }
+            if (!DB_Object.Open()) { return; }
             DB_Object.MarkReadFeedEntry(item);
             DB_Object.Close();
 
@@ -353,7 +351,7 @@ namespace rw_cos_mei
             _tableShifts[key] = item;
 
             //Datenbank ändern
-            if(!DB_Object.Open()) { return; }
+            if (!DB_Object.Open()) { return; }
             DB_Object.MarkReadShiftsEntry(item);
             DB_Object.Close();
 
@@ -371,13 +369,13 @@ namespace rw_cos_mei
 
         public static void Init(Context context)
         {
-            
+
             //Datenbank
             DB_Object = new DataSource(context);
 
             //Benachrichtungen
             Notify_Object = new Notification(context);
-            
+
             //Einstellungen laden
             LoadSettings(context);
 
@@ -398,18 +396,18 @@ namespace rw_cos_mei
             //Anmeldung
             string get_username = prefs.GetString(CRED_USERNAME, string.Empty);
             string get_password = prefs.GetString(CRED_PASSWORD, string.Empty);
-            
+
             var se = new SecureEncryptor(context);
             Username = se.Decrypt(get_username);
             Password = se.Decrypt(get_password);
-            
-            BearerToken  = prefs.GetString(PREF_SP_BEARER, string.Empty);
+
+            BearerToken = prefs.GetString(PREF_SP_BEARER, string.Empty);
             OAuthToken = prefs.GetString(PREF_SP_OAUTHT, string.Empty);
-            
+
             //Listen
             _tableFeed = new Dictionary<string, FeedEntry>();
             _tableShifts = new Dictionary<string, ShiftsEntry>();
-            
+
             LastTableRefresh = DecodeStringToDate(prefs.GetString(PREF_LASTREFRESH, string.Empty), DateTime.MinValue);
 
             //Sync-Einstellungen
@@ -421,7 +419,7 @@ namespace rw_cos_mei
 
             //MainActivity
             BottomNavigationSelectedId = prefs.GetInt(PREF_BOTTOMNAV_ID, Resource.Id.menu_feed);
-            
+
         }
         public static void SaveSettings(Context context)
         {
@@ -431,7 +429,7 @@ namespace rw_cos_mei
             var se = new SecureEncryptor(context);
             string enc_username = se.Encrypt(Username);
             string enc_password = se.Encrypt(Password);
-            
+
             editor.PutString(CRED_USERNAME, enc_username);
             editor.PutString(CRED_PASSWORD, enc_password);
 
@@ -440,11 +438,11 @@ namespace rw_cos_mei
 
             editor.PutInt(PREF_SYNCINTERVAL, (int)SyncInterval);
             editor.PutInt(PREF_SYNCNOTIFY, (int)NotificationType);
-            editor.PutString(PREF_LASTREFRESH, EncodeDateToString(LastTableRefresh)); 
+            editor.PutString(PREF_LASTREFRESH, EncodeDateToString(LastTableRefresh));
 
             editor.PutInt(PREF_BOTTOMNAV_ID, BottomNavigationSelectedId);
             editor.PutBoolean(PREF_FIRSTSTART, IsFirstStart);
-            
+
             editor.Apply();
         }
 
@@ -529,7 +527,8 @@ namespace rw_cos_mei
                 }
 
             }
-            else if (split.Count() == 4 && (split[0] == "dp" || split[0] == "dienstplan") && split[2].StartsWith("ver") && split[3].Contains(".")) {
+            else if (split.Count() == 4 && (split[0] == "dp" || split[0] == "dienstplan") && split[2].StartsWith("ver") && split[3].Contains("."))
+            {
 
                 //Monat
                 int month = -1;
@@ -588,7 +587,7 @@ namespace rw_cos_mei
 
                 //Jahr
                 int year = item.Date.Year;
-                if((item.Date.AddMonths(3) < new DateTime(year, month, item.Date.Day))) { year -= 1; }
+                if ((item.Date.AddMonths(3) < new DateTime(year, month, item.Date.Day))) { year -= 1; }
 
                 string version = split[3].Trim('.').Trim(' ');
 
@@ -611,16 +610,16 @@ namespace rw_cos_mei
         public static DateTime DecodeStringToDate(string date, DateTime defaultDate)
         {
 
-            if(!DateTime.TryParseExact(date, currentDateFormat, null, DateTimeStyles.None, out DateTime decodedDate))
+            if (!DateTime.TryParseExact(date, currentDateFormat, null, DateTimeStyles.None, out DateTime decodedDate))
             {
                 decodedDate = defaultDate;
             }
             return decodedDate;
-            
+
         }
 
         //###################################################################################
-        
+
         private class SecureEncryptor
         {
 
@@ -733,7 +732,7 @@ namespace rw_cos_mei
 
             public string Encrypt(string klartext)
             {
-                if(string.IsNullOrEmpty(klartext)) { return string.Empty; }
+                if (string.IsNullOrEmpty(klartext)) { return string.Empty; }
                 return new CipherWrapper(KeyTransformation)?.EncryptString(klartext, Key_public);
             }
             public string Decrypt(string locktext)
@@ -743,7 +742,7 @@ namespace rw_cos_mei
             }
 
         }
-        
+
     }
 
 }

@@ -49,6 +49,8 @@
   <string name="feedentry_from">Von: %1$s</string>
   <string name="feedentry_unknown">Unbekannt</string>
   <string name="feedentry_hint_nopreview">Keine Vorschau verfügbar.</string>
+  <string name="feedentry_hint_onlyfirstpage">Nur die erste Seite wird als Vorschau angezeigt.</string>
+  <string name="feedentry_hint_btn_further">Weiterlesen: </string>
   
   <!-- Dialoge -->
   <string name="dialog_toSettings">Zu den Einstellungen</string>

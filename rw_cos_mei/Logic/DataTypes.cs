@@ -10,13 +10,6 @@ using System.Linq;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///DataTypes
-///-FeedEntry
-///-ShiftsEntry
-///-EntryAttachment
-///
-/// -Helper
-/// -FileOpen
-/// 
 ///> OK
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -43,7 +36,6 @@ namespace rw_cos_mei
         //#######################################################################################
 
         public int ID { get; set; } = -1;
-
         public string Key { get; }
         public string Title { get; }
         public string Author { get; }
@@ -75,7 +67,6 @@ namespace rw_cos_mei
         //#######################################################################################
 
         public int ID { get; set; } = -1;
-
         public string Key { get; }
         public int Month { get; }
         public int Year { get; }
@@ -93,7 +84,7 @@ namespace rw_cos_mei
         public bool MarkedRead { get; set; }
 
     }
-    
+
     public class EntryAttachment
     {
 
@@ -103,9 +94,9 @@ namespace rw_cos_mei
         {
             Key = url + "#" + title;
             Title = title;
-            
+
             IsDownloadable = false;
-            if(isLink)
+            if (isLink)
             {
 
                 //Sharepointlink bereinigen
@@ -117,7 +108,7 @@ namespace rw_cos_mei
                 if (url_extension.Contains("?")) { url_extension = url_extension.Substring(0, url_extension.IndexOf("?")); }
                 if (new List<string>() { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx" }.Contains(url_extension)) { isFile = true; }
 
-                if(isFile)
+                if (isFile)
                 {
                     url = Path.GetDirectoryName(url) + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(url) + url_extension;
                     IsDownloadable = true;
@@ -141,7 +132,7 @@ namespace rw_cos_mei
             Title = title;
             RemoteURL = url;
 
-            if(localpath == DOWNLOADABLE_HASH)
+            if (localpath == DOWNLOADABLE_HASH)
             {
                 _localPath = string.Empty;
                 IsDownloadable = false;
@@ -151,13 +142,13 @@ namespace rw_cos_mei
                 _localPath = localpath;
                 IsDownloadable = true;
             }
-            
+
         }
 
         //#######################################################################################
 
         public int ID { get; set; } = -1;
-        
+
         public string Key { get; }
         public string Title { get; }
 
@@ -170,12 +161,12 @@ namespace rw_cos_mei
 
         private bool _isDownloaded = false;
         private string _localPath = string.Empty;
-        
+
         //#######################################################################################
 
         public void UpdateAttachmentDownloaded(string localPath)
         {
-            if(!IsDownloadable) { return; }
+            if (!IsDownloadable) { return; }
             if (System.IO.File.Exists(localPath))
             {
                 _localPath = localPath;
@@ -186,7 +177,7 @@ namespace rw_cos_mei
     }
 
     //##############################################
-    
+
     namespace Helper
     {
 
@@ -194,6 +185,13 @@ namespace rw_cos_mei
         {
             ADD_HANDLERS,
             REMOVE_HANDLERS
+        }
+
+        public class Constant
+        {
+
+            public const string STATE_BLOCKED = "#BLOCKED#";
+
         }
 
         public class Converter
@@ -342,7 +340,7 @@ namespace rw_cos_mei
 
                 try
                 {
-                    
+
                     Intent i = new Intent(Intent.ActionView);
                     i.SetData(Android.Net.Uri.Parse(url));
                     context.StartActivity(i);
@@ -353,18 +351,11 @@ namespace rw_cos_mei
                 catch { }
 
                 return false;
-                
+
             }
 
         }
 
     }
 
-    
-
-
-    //##############################################
-    
-    
-    
 }

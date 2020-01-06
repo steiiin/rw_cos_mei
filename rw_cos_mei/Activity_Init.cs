@@ -2,10 +2,6 @@
 using Android.Content;
 using Android.OS;
 using Android.Support.V7.App;
-using System;
-using System.Diagnostics;
-using System.Globalization;
-using AlertDialog = Android.Support.V7.App.AlertDialog;
 using TBL = rw_cos_mei.AppTable;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,14 +15,14 @@ namespace rw_cos_mei
     [Activity(Label = "@string/app_name", MainLauncher = true, Theme = "@style/AppTheme.Splash", NoHistory = true)]
     public class Activity_Init : AppCompatActivity
     {
-        
+
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
         }
-        
+
         //#############################################################################
-        
+
         protected override void OnResume()
         {
             base.OnResume();
@@ -39,7 +35,7 @@ namespace rw_cos_mei
 
             //App starten
             StartActivity(new Intent(Application.Context, typeof(Activity_Main)));
-            
+
         }
 
         public static void InitRoutine(Context context)
@@ -54,7 +50,7 @@ namespace rw_cos_mei
             TBL.UnBlockSyncService();       //BackgroundSync entsperren
 
         }
-        
+
         //#############################################################################
 
         public override void OnBackPressed()

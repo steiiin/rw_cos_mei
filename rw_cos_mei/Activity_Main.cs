@@ -30,7 +30,7 @@ namespace rw_cos_mei
     {
 
         public const string BUNDLE_BOTTOMID_INTENT = "bundle_bottomid_intent";
-        
+
         //###################################################################################
 
         private class ViewHolder
@@ -148,7 +148,7 @@ namespace rw_cos_mei
 
             }
         }
-        
+
         //###################################################################################
 
         private void CreateViewholder()
@@ -201,7 +201,7 @@ namespace rw_cos_mei
                 c.VIEWPAGER_ADAPTER.ShiftsItemSelected += LIST_SHIFTS_ItemSelected;
                 c.VIEWPAGER_ADAPTER.ShiftsItemAttachmentRetrieveError += LIST_SHIFTS_AttachmentRetrieveError;
 
-                c.VIEWPAGER_ADAPTER.RequestRefresh += VIEWPAGER_ADAPTER_RequestRefresh;
+                c.VIEWPAGER_ADAPTER.RefreshCloudRequested += VIEWPAGER_ADAPTER_RequestRefresh;
 
             }
             else
@@ -221,7 +221,7 @@ namespace rw_cos_mei
                 c.VIEWPAGER_ADAPTER.ShiftsItemSelected -= LIST_SHIFTS_ItemSelected;
                 c.VIEWPAGER_ADAPTER.ShiftsItemAttachmentRetrieveError -= LIST_SHIFTS_AttachmentRetrieveError;
 
-                c.VIEWPAGER_ADAPTER.RequestRefresh -= VIEWPAGER_ADAPTER_RequestRefresh;
+                c.VIEWPAGER_ADAPTER.RefreshCloudRequested -= VIEWPAGER_ADAPTER_RequestRefresh;
 
             }
 
@@ -308,6 +308,8 @@ namespace rw_cos_mei
             c.BOTTOMNAVIGATION.Menu.GetItem(e.Position).SetChecked(true);
             BOTTOMNAV_PREVITEM = c.BOTTOMNAVIGATION.Menu.GetItem(e.Position);
             TBL.UpdateBottomNavigationSelectedId(c.BOTTOMNAVIGATION.Menu.GetItem(e.Position).ItemId);
+
+            if (c.REFRESH_SWIPE != null && c.REFRESH_SWIPE.Refreshing) { c.REFRESH_SWIPE.Refreshing = false; }
 
         }
 
@@ -498,8 +500,7 @@ namespace rw_cos_mei
 
         private void LIST_SHIFTS_AttachmentRetrieveError(object sender, Adapters.AttachmentRetrieveErrorEventArgs e)
         {
-            var
-            ErrorText = e.Reason switch
+            var ErrorText = e.Reason switch
             {
                 Adapters.AttachmentRetrieveErrorReason.CONNECTION_LOST => GetString(Resource.String.main_snack_connect),
                 Adapters.AttachmentRetrieveErrorReason.RELOGIN_REQUIRED => GetString(Resource.String.main_snack_relogin),
@@ -541,7 +542,7 @@ namespace rw_cos_mei
             public event EventHandler<Adapters.ListShiftsAdapterItemSelectedEventArgs> ShiftsItemSelected;
             public event EventHandler<Adapters.AttachmentRetrieveErrorEventArgs> ShiftsItemAttachmentRetrieveError;
 
-            public event EventHandler RequestRefresh;
+            public event EventHandler RefreshCloudRequested;
 
             //###################################################################################
 
@@ -573,7 +574,7 @@ namespace rw_cos_mei
                     FRAGMENT_FEED = (Fragments.Fragment_ListFeed)frag;
 
                     FRAGMENT_FEED.ItemSelected += FeedItemSelected;
-                    FRAGMENT_FEED.RequestRefresh += FRAGMENT_RequestRefresh;
+                    FRAGMENT_FEED.RefreshCloudRequested += FRAGMENT_RefreshCloudRequested;
 
                     if (inflate_pending_feed)
                     {
@@ -590,7 +591,7 @@ namespace rw_cos_mei
                     FRAGMENT_SHIFTS.ItemSelected += ShiftsItemSelected;
                     FRAGMENT_SHIFTS.AttachmentRetrieveError += ShiftsItemAttachmentRetrieveError;
 
-                    FRAGMENT_SHIFTS.RequestRefresh += FRAGMENT_RequestRefresh;
+                    FRAGMENT_SHIFTS.RefreshCloudRequested += FRAGMENT_RefreshCloudRequested;
 
                     if (inflate_pending_shifts)
                     {
@@ -603,9 +604,9 @@ namespace rw_cos_mei
 
             }
 
-            private void FRAGMENT_RequestRefresh(object sender, EventArgs e)
+            private void FRAGMENT_RefreshCloudRequested(object sender, EventArgs e)
             {
-                RequestRefresh?.Invoke(sender, e);
+                RefreshCloudRequested?.Invoke(sender, e);
             }
 
             //###################################################################################
@@ -649,7 +650,7 @@ namespace rw_cos_mei
                 NOTHINGNEW,
                 SUB_UNREAD,
                 SUB_OLDER,
-                SECTION_MONTH,
+                SECTION,
                 FEEDENTRY
             }
             private class SourceHolder
@@ -676,9 +677,9 @@ namespace rw_cos_mei
                 {
                     Type = SourceType.SUB_OLDER;
                 }
-                public void SetSectionMonth(string month, int year)
+                public void SetSection(string month, int year)
                 {
-                    Type = SourceType.SECTION_MONTH;
+                    Type = SourceType.SECTION;
                     SectionMonth = month;
                     SectionYear = year;
                 }
@@ -763,7 +764,7 @@ namespace rw_cos_mei
                     //Monats-Subhead
                     if (lastMonth > 0 && item.Date.Month != lastMonth)
                     {
-                        var vSM = new SourceHolder(); vSM.SetSectionMonth(item.Date.ToString("MMMM"), item.Date.Year);
+                        var vSM = new SourceHolder(); vSM.SetSection(item.Date.ToString("MMMM"), item.Date.Year);
                         _source.Add(vSM);
                     }
                     lastMonth = item.Date.Month;
@@ -855,7 +856,7 @@ namespace rw_cos_mei
 
                         return v.CONVERTVIEW;
 
-                    case SourceType.SECTION_MONTH:
+                    case SourceType.SECTION:
 
                         if (!_viewholders.ContainsKey(position))
                         {
@@ -873,7 +874,7 @@ namespace rw_cos_mei
                         v = _viewholders[position];
 
                         string sectionText = source.SectionMonth;
-                        if(source.SectionYear != DateTime.Now.Year) { sectionText += " " + source.SectionYear; }
+                        if (source.SectionYear != DateTime.Now.Year) { sectionText += " " + source.SectionYear; }
                         v.SECTION_MONTH.Text = sectionText;
 
                         return v.CONVERTVIEW;
@@ -1204,7 +1205,7 @@ namespace rw_cos_mei
             //##########################################################################
 
             public event EventHandler<Adapters.ListFeedAdapterItemSelectedEventArgs> ItemSelected;
-            public event EventHandler RequestRefresh;
+            public event EventHandler RefreshCloudRequested;
 
             //##########################################################################
 
@@ -1230,6 +1231,8 @@ namespace rw_cos_mei
                 LIST_FEED.SmoothScrollToPositionFromTop(0, 0);
             }
 
+            //##########################################################################
+
             public override void OnResume()
             {
                 base.OnResume();
@@ -1238,7 +1241,7 @@ namespace rw_cos_mei
                 LIST_FEED.LayoutChange += LIST_FEED_LayoutChange;
                 LIST_FEED.ItemClick += LIST_FEED_ItemClick;
                 LIST_FEED.ScrollStateChanged += LIST_FEED_ScrollStateChanged;
-                LIST_REFRESH.Refresh += GetRefresh;
+                LIST_REFRESH.Refresh += GetRefreshCloud;
 
             }
             public override void OnPause()
@@ -1248,7 +1251,7 @@ namespace rw_cos_mei
                 LIST_FEED.LayoutChange -= LIST_FEED_LayoutChange;
                 LIST_FEED.ItemClick -= LIST_FEED_ItemClick;
                 LIST_FEED.ScrollStateChanged -= LIST_FEED_ScrollStateChanged;
-                LIST_REFRESH.Refresh -= GetRefresh;
+                LIST_REFRESH.Refresh -= GetRefreshCloud;
 
             }
 
@@ -1284,6 +1287,7 @@ namespace rw_cos_mei
             public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
             {
                 View v = inflater.Inflate(Resource.Layout.fragment_main_list_feed, null);
+
                 LIST_FEED = v.FindViewById<ListView>(Resource.Id.main_list_feed);
                 LIST_FEED.Divider = null;
 
@@ -1303,9 +1307,9 @@ namespace rw_cos_mei
                 position = LIST_FEED.FirstVisiblePosition; View v = LIST_FEED.GetChildAt(0);
                 offset = (v == null) ? 0 : (v.Top - LIST_FEED.PaddingTop);
             }
-            private void GetRefresh(object sender, EventArgs e)
+            private void GetRefreshCloud(object sender, EventArgs e)
             {
-                RequestRefresh?.Invoke(LIST_REFRESH, new EventArgs());
+                RefreshCloudRequested?.Invoke(LIST_REFRESH, new EventArgs());
             }
 
             //##########################################################################
@@ -1357,7 +1361,7 @@ namespace rw_cos_mei
             public event EventHandler<Adapters.ListShiftsAdapterItemSelectedEventArgs> ItemSelected;
             public event EventHandler<Adapters.AttachmentRetrieveErrorEventArgs> AttachmentRetrieveError;
 
-            public event EventHandler RequestRefresh;
+            public event EventHandler RefreshCloudRequested;
 
             //##########################################################################
 
@@ -1382,6 +1386,8 @@ namespace rw_cos_mei
                 LIST_SHIFTS.SmoothScrollToPositionFromTop(0, 0);
             }
 
+            //##########################################################################
+
             public override void OnResume()
             {
 
@@ -1390,7 +1396,7 @@ namespace rw_cos_mei
                 LIST_SHIFTS.ItemClick += LIST_SHIFTS_ItemClick;
                 LIST_SHIFTS.ScrollStateChanged += LIST_SHIFTS_ScrollStateChanged;
 
-                LIST_REFRESH.Refresh += GetRefresh;
+                LIST_REFRESH.Refresh += GetRefreshCloud;
 
             }
             public override void OnPause()
@@ -1401,7 +1407,7 @@ namespace rw_cos_mei
                 LIST_SHIFTS.ItemClick -= LIST_SHIFTS_ItemClick;
                 LIST_SHIFTS.ScrollStateChanged -= LIST_SHIFTS_ScrollStateChanged;
 
-                LIST_REFRESH.Refresh -= GetRefresh;
+                LIST_REFRESH.Refresh -= GetRefreshCloud;
 
             }
 
@@ -1438,13 +1444,11 @@ namespace rw_cos_mei
             public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
             {
                 View v = inflater.Inflate(Resource.Layout.fragment_main_list_shifts, null);
+
                 LIST_SHIFTS = v.FindViewById<ListView>(Resource.Id.main_list_shifts);
                 LIST_REFRESH = v.FindViewById<Android.Support.V4.Widget.SwipeRefreshLayout>(Resource.Id.main_refresh_shifts);
 
                 LIST_SHIFTS.Divider = null;
-
-                //LIST_SHIFTS.Divider = ContextCompat.GetDrawable(Context, Resource.Drawable.trans_divider);
-                //LIST_SHIFTS.DividerHeight = (int)TypedValue.ApplyDimension(ComplexUnitType.Dip, 1, Resources.DisplayMetrics);
 
                 if (inflate_pending)
                 {
@@ -1460,9 +1464,9 @@ namespace rw_cos_mei
                 position = LIST_SHIFTS.FirstVisiblePosition; View v = LIST_SHIFTS.GetChildAt(0);
                 offset = (v == null) ? 0 : (v.Top - LIST_SHIFTS.PaddingTop);
             }
-            private void GetRefresh(object sender, EventArgs e)
+            private void GetRefreshCloud(object sender, EventArgs e)
             {
-                RequestRefresh?.Invoke(LIST_REFRESH, new EventArgs());
+                RefreshCloudRequested?.Invoke(LIST_REFRESH, new EventArgs());
             }
 
             //##########################################################################
@@ -1472,7 +1476,7 @@ namespace rw_cos_mei
 
                 ShiftsEntry x = ADAPTER_SHIFTS[e.Position];
                 Adapters.ListShiftsAdapter.ViewHolder v = ADAPTER_SHIFTS.GetViewholder(e.Position);
-                if (x == null || v == null) { return; }
+                if (x == null || v == null || v.CONVERTVIEW.Tag?.ToString() == Helper.Constant.STATE_BLOCKED) { return; }
 
                 ViewAttachment(x, v);
 
@@ -1491,32 +1495,42 @@ namespace rw_cos_mei
             private void ViewAttachment(ShiftsEntry x, Adapters.ListShiftsAdapter.ViewHolder v)
             {
 
-                v.CONVERTVIEW.Tag = "BLOCKED";
+                //Item blockieren
+                v.CONVERTVIEW.Tag = Helper.Constant.STATE_BLOCKED;
+
+                //Wartekreis anzeigen
                 v.PROGRESS.Visibility = ViewStates.Visible;
 
+                //Download starten
                 TBL.SP_Object.GetNewsFeedAttachment(x.ShiftAttachment,
                 delegate (Adapters.AttachmentRetrieveErrorReason reason)
                 {
 
+                    //Wartekreis ausblenden, wenn Download beendet
                     if (reason != Adapters.AttachmentRetrieveErrorReason.RELOGIN_REQUIRED)
                     {
                         v.PROGRESS.Visibility = ViewStates.Gone;
                         v.CONVERTVIEW.Tag = null;
                     }
 
+                    //An das zuständige Fragment melden
                     AttachmentRetrieveError?.Invoke(this, new Adapters.AttachmentRetrieveErrorEventArgs(reason));
 
                 },
                 delegate (string localPath)
                 {
 
+                    //Wartekreis ausblenden
                     v.PROGRESS.Visibility = ViewStates.Gone;
 
+                    //Gelesen markieren
                     TBL.MarkReadShiftsEntry(x.Key);
 
+                    //Blockierung aufheben & Aussehen anpassen
                     v.CONVERTVIEW.Tag = null;
                     ADAPTER_SHIFTS.VisualizeShiftsEntryState(x, v);
 
+                    //Datei öffnen
                     ItemSelected?.Invoke(this, new Adapters.ListShiftsAdapterItemSelectedEventArgs(x.Key, x.ShiftAttachment.Key));
 
                 });
