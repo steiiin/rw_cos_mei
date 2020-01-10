@@ -395,6 +395,7 @@ namespace rw_cos_mei
                         hold.BTN_ATTACHMENT = hold.CONVERTVIEW.FindViewById<Button>(Resource.Id.btn_attachment);
                         hold.PROGRESS_INDICATOR = hold.CONVERTVIEW.FindViewById<ProgressBar>(Resource.Id.progress_working);
 
+                        if (item.Title.ToLower().StartsWith("visualtemplateimage")) { break; }
                         CreateButton(hold.BTN_ATTACHMENT, hold.PROGRESS_INDICATOR, item);
 
                         parent.AddView(hold.CONVERTVIEW);

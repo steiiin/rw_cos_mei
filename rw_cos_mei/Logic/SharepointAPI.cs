@@ -331,97 +331,6 @@ namespace rw_cos_mei
             return state;
 
         }
-
-        public async void GetNewsFeedAttachment(EntryAttachment attachment, Action<Adapters.AttachmentRetrieveErrorReason> onError, Action<string> onDownloaded, bool relogin = true)
-        {
-
-            if (attachment.IsDownloaded)
-            {
-                onDownloaded(attachment.LocalFilePath);
-                return;
-            }
-            int waitTimeout = (1 / 200) * 2 * REQUEST_TIMEOUT; //2x Timeout
-
-            //Dateinamen erstellen
-            string filePath = attachment.LocalFilePath;
-            var fileHandle = new Java.IO.File(filePath);
-            if(!fileHandle.Exists()) {
-
-                string attachFilename = Path.GetFileNameWithoutExtension(attachment.Title).Replace(" ", "_");
-                string attachExtension = Path.GetExtension(attachment.RemoteURL);
-
-                fileHandle = Java.IO.File.CreateTempFile(attachFilename, attachExtension, _context.CacheDir);
-                filePath = fileHandle.Path;
-
-            }
-           
-            //Request erstellen
-            if (!IsOnline()) { onError(Adapters.AttachmentRetrieveErrorReason.CONNECTION_LOST); return; }
-            while (State == SharepointAPIState.WORKING)
-            {
-                await Task.Delay(200);
-
-                waitTimeout -= 1;
-                if (waitTimeout < 0)
-                {
-                    fileHandle.Delete();
-
-                    onError(Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR);
-                    return;
-                }
-            }
-
-            if (State == SharepointAPIState.SERVER_ERROR || State == SharepointAPIState.WRONG_LOGIN)
-            {
-                fileHandle.Delete();
-
-                onError(Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR);
-                return;
-            }
-
-            var client = new DownloadClient(new Uri(attachment.RemoteURL), filePath, CreateOAuthCookie(), _bearer);
-            client.DownloadProgressChanged += (ss, ee) => { };
-            client.DownloadFinished += async (ss, ee) =>
-            {
-                if (ee.DownloadFinished)
-                {
-                    if(State == SharepointAPIState.CONNECTION_LOST) { InvokeStateChanged(SharepointAPIState.LOGGED_IN); }
-
-                    attachment.UpdateAttachmentDownloaded(filePath);
-
-                    onDownloaded(filePath);
-                    return;
-                }
-
-                if (relogin)
-                {
-
-                    onError(Adapters.AttachmentRetrieveErrorReason.RELOGIN_REQUIRED);
-                    var result = await CreateLogin();
-
-                    InvokeStateChanged(result);
-
-                    if (result == SharepointAPIState.LOGGED_IN)
-                    {
-                        GetNewsFeedAttachment(attachment, onError, onDownloaded, false);
-                        return;
-                    }
-                    else
-                    {
-                        if (result == SharepointAPIState.CONNECTION_LOST) { onError(Adapters.AttachmentRetrieveErrorReason.CONNECTION_LOST); }
-                        else { onError(Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR); }
-                    }
-
-                }
-                else
-                {
-                    onError(Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR);
-                }
-                return;
-            };
-            client.StartDownloadCallback();
-        }
-
         private async Task<SharepointAPIState> RetrieveNewsFeed(bool doNotify, bool relogin, string host)
         {
 
@@ -565,6 +474,7 @@ namespace rw_cos_mei
                                                         if (pic_url.StartsWith("/")) { pic_url = _url_malteserHost + pic_url; }
 
                                                         string pic_filename = Path.GetFileName(pic_url);
+                                                        if (pic_filename.ToLower().StartsWith("visualtemplateimage")) { break; }
 
                                                         attachmentList.Add(new EntryAttachment(pic_filename, pic_url, false));
 
@@ -593,11 +503,11 @@ namespace rw_cos_mei
                                     }
 
                                     FeedEntry entry = new FeedEntry(key, title, date, author, body, attachmentList);
-                                    if(!string.IsNullOrEmpty(body) || attachmentList.Count > 0)
+                                    if (!string.IsNullOrEmpty(body) || attachmentList.Count > 0)
                                     {
                                         listFeed.Add(entry);
                                     }
-                                    
+
                                 }
                             }
 
@@ -615,6 +525,96 @@ namespace rw_cos_mei
                 return SharepointAPIState.SERVER_ERROR; //InvokeStateChanged(SharepointAPIState.SERVER_ERROR); return;
             }
 
+        }
+        
+        public async void GetNewsFeedAttachment(EntryAttachment attachment, Action<Adapters.AttachmentRetrieveErrorReason> onError, Action<string> onDownloaded, bool relogin = true)
+        {
+
+            if (attachment.IsDownloaded)
+            {
+                onDownloaded(attachment.LocalFilePath);
+                return;
+            }
+            int waitTimeout = (2 * REQUEST_TIMEOUT) / 200;
+
+            //Dateinamen erstellen
+            string filePath = attachment.LocalFilePath;
+            var fileHandle = new Java.IO.File(filePath);
+            if(!fileHandle.Exists()) {
+
+                string attachFilename = Path.GetFileNameWithoutExtension(attachment.Title).Replace(" ", "_");
+                string attachExtension = Path.GetExtension(attachment.RemoteURL);
+
+                fileHandle = Java.IO.File.CreateTempFile(attachFilename, attachExtension, _context.CacheDir);
+                filePath = fileHandle.Path;
+
+            }
+           
+            //Request erstellen
+            if (!IsOnline()) { onError(Adapters.AttachmentRetrieveErrorReason.CONNECTION_LOST); return; }
+            while (State == SharepointAPIState.WORKING)
+            {
+                await Task.Delay(200);
+
+                waitTimeout -= 1;
+                if (waitTimeout < 0)
+                {
+                    fileHandle.Delete();
+
+                    onError(Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR);
+                    return;
+                }
+            }
+
+            if (State == SharepointAPIState.SERVER_ERROR || State == SharepointAPIState.WRONG_LOGIN)
+            {
+                fileHandle.Delete();
+
+                onError(Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR);
+                return;
+            }
+
+            var client = new DownloadClient(new Uri(attachment.RemoteURL), filePath, CreateOAuthCookie(), _bearer);
+            client.DownloadProgressChanged += (ss, ee) => { };
+            client.DownloadFinished += async (ss, ee) =>
+            {
+                if (ee.DownloadFinished)
+                {
+                    if(State == SharepointAPIState.CONNECTION_LOST) { InvokeStateChanged(SharepointAPIState.LOGGED_IN); }
+
+                    attachment.UpdateAttachmentDownloaded(filePath);
+
+                    onDownloaded(filePath);
+                    return;
+                }
+
+                if (relogin)
+                {
+
+                    onError(Adapters.AttachmentRetrieveErrorReason.RELOGIN_REQUIRED);
+                    var result = await CreateLogin();
+
+                    InvokeStateChanged(result);
+
+                    if (result == SharepointAPIState.LOGGED_IN)
+                    {
+                        GetNewsFeedAttachment(attachment, onError, onDownloaded, false);
+                        return;
+                    }
+                    else
+                    {
+                        if (result == SharepointAPIState.CONNECTION_LOST) { onError(Adapters.AttachmentRetrieveErrorReason.CONNECTION_LOST); }
+                        else { onError(Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR); }
+                    }
+
+                }
+                else
+                {
+                    onError(Adapters.AttachmentRetrieveErrorReason.RETRIEVE_ERROR);
+                }
+                return;
+            };
+            client.StartDownloadCallback();
         }
 
         //########################################################
