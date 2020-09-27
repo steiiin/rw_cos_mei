@@ -34,7 +34,6 @@ namespace rw_cos_mei
         public const string PREF_LASTREFRESH = "pref_sync_lastrefresh";
 
         public const string PREF_BOTTOMNAV_ID = "pref_bottomnav_id";
-        public const string PREF_FIRSTSTART = "pref_first";
 
         public const int PREF_FEED_AUTOREMOVE = 6;
 
@@ -141,8 +140,6 @@ namespace rw_cos_mei
         }
 
         public static DateTime LastTableRefresh { get; private set; }
-
-        public static bool IsFirstStart { get; set; }
 
         //###################################################################################
 
@@ -399,10 +396,13 @@ namespace rw_cos_mei
 
             var se = new SecureEncryptor(context);
             Username = se.Decrypt(get_username);
-            Password = se.Decrypt(get_password);
+            Password = "test";
+            //Password = se.Decrypt(get_password);
 
-            BearerToken = prefs.GetString(PREF_SP_BEARER, string.Empty);
-            OAuthToken = prefs.GetString(PREF_SP_OAUTHT, string.Empty);
+            BearerToken = "jahsvbfdjahvsbkcjbas";
+            //BearerToken = prefs.GetString(PREF_SP_BEARER, string.Empty);
+            //OAuthToken = prefs.GetString(PREF_SP_OAUTHT, string.Empty);
+            OAuthToken = "jhbjcn skjcbkauhvslbajkbsljfchabskjdfhbal";
 
             //Listen
             _tableFeed = new Dictionary<string, FeedEntry>();
@@ -415,7 +415,6 @@ namespace rw_cos_mei
 
             //Benachrichtigung-Einstellungen
             NotificationType = (Notification.NotifySettings.NotifySettingsType)prefs.GetInt(PREF_SYNCNOTIFY, (int)Notification.NotifySettings.NotifySettingsType.FEED_AND_SHIFTS);
-            IsFirstStart = prefs.GetBoolean(PREF_FIRSTSTART, true);
 
             //MainActivity
             BottomNavigationSelectedId = prefs.GetInt(PREF_BOTTOMNAV_ID, Resource.Id.menu_feed);
@@ -441,7 +440,6 @@ namespace rw_cos_mei
             editor.PutString(PREF_LASTREFRESH, EncodeDateToString(LastTableRefresh));
 
             editor.PutInt(PREF_BOTTOMNAV_ID, BottomNavigationSelectedId);
-            editor.PutBoolean(PREF_FIRSTSTART, IsFirstStart);
 
             editor.Apply();
         }

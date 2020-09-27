@@ -110,7 +110,7 @@ namespace rw_cos_mei
 
                 if (isFile)
                 {
-                    url = Path.GetDirectoryName(url) + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(url) + url_extension;
+                    url = url.Substring(0, url.LastIndexOf(".")) + url_extension;
                     IsDownloadable = true;
                 }
 

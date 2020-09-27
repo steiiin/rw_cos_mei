@@ -41,8 +41,6 @@
   <string name="main_snack_error">Cloud reagiert nicht. Kein Anhang.</string>
   <string name="main_snack_relogin">Warte, wird neu eingeloggt ...</string>
 
-  <string name="firststart_title">Neues Sharepoint</string>
-  <string name="firststart_msg">Aufgrund der neuen Version musst du dich erneut anmelden \n\nLeider sind deswegen auch keine älteren Neuigkeiten &amp; Dienstpläne verfügbar.</string>
   <string name="app_notify_msg_login">Melde dich bitte erneut an.</string>
   
   <!-- FeedEntry -->

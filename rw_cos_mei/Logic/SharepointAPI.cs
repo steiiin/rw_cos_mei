@@ -35,7 +35,7 @@ namespace rw_cos_mei
         private readonly string _url_getAdfs = "https://login.microsoftonline.com/GetUserRealm.srf";
         private readonly string _url_getSpToken = "https://login.microsoftonline.com/rst2.srf";
 
-        private readonly string _url_endpoint = "https://maltesercloud.sharepoint.com/sites/hilfsdienst/2601/";  //Neuer Endpunkt. Alt: "/mhd/DD/RD/RW_Mei/"
+        private readonly string _url_endpoint = "https://maltesercloud.sharepoint.com/sites/hilfsdienst/2601/"; 
 
         //#########################################################
 
@@ -574,7 +574,10 @@ namespace rw_cos_mei
                 return;
             }
 
-            var client = new DownloadClient(new Uri(attachment.RemoteURL), filePath, CreateOAuthCookie(), _bearer);
+            //schmutziger Path 3.11, weil die Uri bei Links nicht korrekt erstellt wurde.
+            var patch = attachment.RemoteURL.Replace("https:/m", "https://m");
+
+            var client = new DownloadClient(new Uri(patch), filePath, CreateOAuthCookie(), _bearer);
             client.DownloadProgressChanged += (ss, ee) => { };
             client.DownloadFinished += async (ss, ee) =>
             {
@@ -797,20 +800,12 @@ namespace rw_cos_mei
             }
             catch (WebException e)
             {
-                if (((HttpWebResponse)e.Response)?.StatusCode == HttpStatusCode.Forbidden)
-                {
-                    return new ResponseObject(ResponseObject.ResponseObjectStatusCode.FORBIDDEN);
-                }
-                if (e.Response?.ContentLength > 0)
-                {
-                    if (GetResponseData((HttpWebResponse)e.Response).Contains("FailedAuthentication")) { return new ResponseObject(ResponseObject.ResponseObjectStatusCode.FORBIDDEN); }
-                }
                 if (e.Status == WebExceptionStatus.NameResolutionFailure || e.Status == WebExceptionStatus.ProxyNameResolutionFailure || e.Status == WebExceptionStatus.Timeout || e.Status == WebExceptionStatus.SendFailure || e.Status == WebExceptionStatus.ReceiveFailure)
                 {
                     return new ResponseObject(ResponseObject.ResponseObjectStatusCode.CONNECTION_LOST);
                 }
 
-                return new ResponseObject(ResponseObject.ResponseObjectStatusCode.ERROR);
+                return new ResponseObject(ResponseObject.ResponseObjectStatusCode.FORBIDDEN);
             }
         }
         private string GetResponseData(HttpWebResponse response)

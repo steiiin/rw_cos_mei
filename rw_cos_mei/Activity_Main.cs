@@ -365,13 +365,6 @@ namespace rw_cos_mei
                     {
                         title = Resource.String.main_dialog_nologin_title;
                         msg = Resource.String.main_dialog_nologin_msg;
-
-                        if (TBL.IsFirstStart)
-                        {
-                            title = Resource.String.firststart_title;
-                            msg = Resource.String.firststart_msg;
-                        }
-
                     }
 
                     dialogWrongLogin = new AlertDialog.Builder(this)
@@ -379,7 +372,6 @@ namespace rw_cos_mei
                         .SetMessage(msg)
                         .SetPositiveButton(Resource.String.dialog_toSettings, (ss, ee) =>
                         {
-                            TBL.IsFirstStart = false;
                             TBL.SaveSettings(this);
                             StartSettings();
                         })
